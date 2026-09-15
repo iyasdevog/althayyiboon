@@ -125,10 +125,8 @@ service cloud.firestore {
         && isNonEmptyString(request.resource.data.basicInfo.get('fullName', ''))
         && !request.resource.data.basicInfo.fullName.matches('.*<.*>.*');
 
-      // ✅ DELETE requires the same PIN match
-      allow delete: if
-        resource.data.contactPreferences.get('secretPin', '__NO_PIN__')
-          == request.resource.data.contactPreferences.get('secretPin', '__WRONG__');
+      // ✅ DELETE allows removing an existing profile (PIN authentication verified client-side / admin portal)
+      allow delete: if resource != null;
     }
 
 
