@@ -61,6 +61,22 @@ function saveLocalStorageProfiles(list) {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
 }
 
+// Helper to merge Firestore profiles with LocalStorage profiles (preserves fallback & offline profiles)
+function mergeProfiles(fsProfiles = []) {
+  const localList = getLocalStorageProfiles();
+  if (!localList || localList.length === 0) return fsProfiles;
+
+  const fsIds = new Set(fsProfiles.map(p => p.id));
+  const merged = [...fsProfiles];
+  
+  for (const lp of localList) {
+    if (!fsIds.has(lp.id)) {
+      merged.push(lp);
+    }
+  }
+  return merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+}
+
 // ---------------- PROFILES CRUD ---------------- //
 
 export async function fetchProfilesFromStore() {
@@ -70,7 +86,8 @@ export async function fetchProfilesFromStore() {
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const fsProfiles = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      return mergeProfiles(fsProfiles);
     }
   } catch (err) {
     console.warn("Firestore fetch notice:", err.message);
@@ -80,9 +97,18 @@ export async function fetchProfilesFromStore() {
 
 export async function saveProfileToStore(newProfileData) {
   const searchKeywords = generateSearchKeywords(newProfileData);
+  const secretPin = newProfileData.security?.editPin || newProfileData.contactPreferences?.secretPin || "1234";
   
   const docPayload = {
     ...newProfileData,
+    contactPreferences: {
+      ...newProfileData.contactPreferences,
+      secretPin
+    },
+    security: {
+      ...newProfileData.security,
+      editPin: secretPin
+    },
     status: "approved",
     createdAt: new Date().toISOString(),
     searchKeywords
@@ -103,14 +129,26 @@ export async function saveProfileToStore(newProfileData) {
 
   const localList = getLocalStorageProfiles();
   const completeProfile = { ...docPayload, id: savedId };
-  saveLocalStorageProfiles([completeProfile, ...localList]);
+  saveLocalStorageProfiles([completeProfile, ...localList.filter(p => p.id !== savedId)]);
   return completeProfile;
 }
 
 export async function updateProfileInStore(profileId, updatedFields) {
   const searchKeywords = generateSearchKeywords(updatedFields);
+  const secretPin = updatedFields.security?.editPin || updatedFields.contactPreferences?.secretPin;
+
   const patchData = {
     ...updatedFields,
+    ...(secretPin ? {
+      contactPreferences: {
+        ...updatedFields.contactPreferences,
+        secretPin
+      },
+      security: {
+        ...updatedFields.security,
+        editPin: secretPin
+      }
+    } : {}),
     updatedAt: new Date().toISOString(),
     searchKeywords
   };
@@ -149,7 +187,8 @@ export function subscribeToProfiles(onDataChange) {
     const q = query(colRef, orderBy("createdAt", "desc"));
     return onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
-        onDataChange(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+        const fsProfiles = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        onDataChange(mergeProfiles(fsProfiles));
       } else {
         onDataChange(getLocalStorageProfiles());
       }

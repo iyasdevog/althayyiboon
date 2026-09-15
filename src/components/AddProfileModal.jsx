@@ -53,17 +53,19 @@ const STEPS = [
   { num: 4, label: 'Contact', icon: Phone },
 ];
 
-export default function AddProfileModal({ onClose, onSubmitProfile }) {
+export default function AddProfileModal({ onClose, onSubmitProfile, defaultGender = 'Bride' }) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submittedPin, setSubmittedPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  const initialGender = (defaultGender === 'Groom' || defaultGender === 'Bride') ? defaultGender : 'Bride';
+
   const [formData, setFormData] = useState({
     basicInfo: {
       fullName: '',
-      gender: 'Bride',
+      gender: initialGender,
       age: 22,
       dob: '',
       maritalStatus: 'Unmarried',

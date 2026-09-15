@@ -112,6 +112,18 @@ export function useProfiles() {
   const addNewProfile = async (formData) => {
     const newDoc = await saveProfileToStore(formData);
     setProfiles(prev => [newDoc, ...prev.filter(p => p.id !== newDoc.id)]);
+    
+    // Automatically reset active filters so the new proposal is immediately visible
+    setSearchQuery("");
+    setShowFavoritesOnly(false);
+    const candidateGender = formData.basicInfo?.gender;
+    if (candidateGender && (candidateGender === "Bride" || candidateGender === "Groom")) {
+      setSelectedGender(candidateGender);
+      setFilters(prev => ({ ...defaultFilters, gender: candidateGender }));
+    } else {
+      setSelectedGender("All");
+      setFilters(defaultFilters);
+    }
     return newDoc;
   };
 

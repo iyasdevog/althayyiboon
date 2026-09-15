@@ -136,18 +136,19 @@ export default function FilterSidebar({
 
       {/* 3. Islamic Qualifications (Multi-Select Checkboxes) + Dynamic Approved Filters */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-emerald-400" /> Islamic Degree / Title
+        <div className="flex items-center justify-between gap-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 min-w-0">
+            <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="truncate">Islamic Degree / Title</span>
           </label>
           
           {/* Plus Button to Request Custom Filter */}
           <button
             onClick={onRequestCustomFilter}
-            className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded-lg border border-emerald-500/30 transition-colors"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 hover:border-emerald-400 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
             title="Request new filter option"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-3 h-3 text-emerald-400 stroke-[2.5]" />
             <span>Add Filter</span>
           </button>
         </div>
@@ -187,17 +188,18 @@ export default function FilterSidebar({
       {/* 4. Profession / Occupation */}
       <div className="space-y-2">
 
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <Briefcase className="w-3.5 h-3.5 text-emerald-400" /> Profession / Occupation
+        <div className="flex items-center justify-between gap-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 min-w-0">
+            <Briefcase className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="truncate">Profession / Occupation</span>
           </label>
           
           <button
             onClick={onRequestCustomFilter}
-            className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded-lg border border-emerald-500/30 transition-colors"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 hover:border-emerald-400 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
             title="Request new profession filter option"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-3 h-3 text-emerald-400 stroke-[2.5]" />
             <span>Add Filter</span>
           </button>
         </div>

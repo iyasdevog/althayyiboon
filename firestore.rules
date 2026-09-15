@@ -73,7 +73,7 @@ service cloud.firestore {
         && isNonEmptyString(request.resource.data.basicInfo.fullName)
         && isStringMaxLen(request.resource.data.basicInfo.fullName, 100)
         && request.resource.data.basicInfo.gender in ['Bride', 'Groom']
-        && request.resource.data.basicInfo.age is int
+        && (request.resource.data.basicInfo.age is int || request.resource.data.basicInfo.age is number)
         && request.resource.data.basicInfo.age >= 18
         && request.resource.data.basicInfo.age <= 80
 
@@ -111,9 +111,13 @@ service cloud.firestore {
       // The app sends the user's entered PIN; Firestore verifies it matches
       // what was stored at creation time.
       allow update: if
-        // The stored secretPin field must exist and match what is being submitted
-        resource.data.contactPreferences.get('secretPin', '__NO_PIN__')
-          == request.resource.data.contactPreferences.get('secretPin', '__WRONG__')
+        // The stored secretPin or editPin field must match what is being submitted
+        (
+          resource.data.contactPreferences.get('secretPin', '__NO_PIN__')
+            == request.resource.data.contactPreferences.get('secretPin', '__WRONG__')
+          || resource.data.security.get('editPin', '__NO_PIN__')
+            == request.resource.data.security.get('editPin', '__WRONG__')
+        )
 
         // The secretPin must be a non-trivially-short value
         && resource.data.contactPreferences.secretPin is string
