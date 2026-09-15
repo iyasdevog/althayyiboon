@@ -67,7 +67,8 @@ export function useProfiles() {
     district: "",
     workLocation: "",
     maritalStatus: "",
-    sect: ""
+    sect: "",
+    postedWithin: ""  // "" = all, "1" = today, "7" = last 7d, "30" = last 30d, "90" = last 90d
   };
 
 
@@ -167,6 +168,7 @@ export function useProfiles() {
     if (filters.workLocation) count++;
     if (filters.maritalStatus) count++;
     if (filters.sect) count++;
+    if (filters.postedWithin) count++;
     return count;
   }, [filters]);
 
@@ -253,6 +255,15 @@ export function useProfiles() {
         if (!searchableText.includes(q)) {
           return false;
         }
+      }
+
+      // Posted within filter
+      if (filters.postedWithin) {
+        const days = parseInt(filters.postedWithin, 10);
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        const posted = new Date(profile.createdAt || 0);
+        if (isNaN(posted.getTime()) || posted < cutoff) return false;
       }
 
       return true;

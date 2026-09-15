@@ -11,7 +11,8 @@ import {
   Shield,
   Briefcase,
   Plus,
-  X 
+  X,
+  Clock
 } from 'lucide-react';
 import { 
   KERALA_DISTRICTS, 
@@ -300,6 +301,35 @@ export default function FilterSidebar({
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
+      </div>
+
+      {/* 9. Posted Within */}
+      <div className="space-y-2">
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5 text-emerald-400" /> Posted Within
+        </label>
+        <div className="grid grid-cols-3 gap-1.5">
+          {[
+            { label: "All", value: "" },
+            { label: "Today", value: "1" },
+            { label: "7 Days", value: "7" },
+            { label: "30 Days", value: "30" },
+            { label: "3 Months", value: "90" },
+            { label: "6 Months", value: "180" },
+          ].map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setFilters(prev => ({ ...prev, postedWithin: opt.value }))}
+              className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all border ${
+                filters.postedWithin === opt.value
+                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm shadow-emerald-500/20'
+                  : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
     </div>

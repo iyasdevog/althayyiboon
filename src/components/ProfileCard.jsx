@@ -10,7 +10,30 @@ import {
   Heart,
   ChevronRight,
   Edit,
+  Clock,
 } from 'lucide-react';
+
+// Format createdAt ISO string into a friendly relative label
+function formatPostedDate(dateStr) {
+  if (!dateStr) return null;
+  try {
+    const posted = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - posted;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Posted today';
+    if (diffDays === 1) return 'Posted yesterday';
+    if (diffDays < 30) return `Posted ${diffDays}d ago`;
+    if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `Posted ${months}mo ago`;
+    }
+    return posted.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return null;
+  }
+}
+
 
 export default function ProfileCard({ 
   profile, 
@@ -161,6 +184,17 @@ export default function ProfileCard({
 
         </div>
       </div>
+
+      {/* Posted Date */}
+      {(() => {
+        const label = formatPostedDate(profile.createdAt);
+        return label ? (
+          <div className="flex items-center gap-1 mb-2.5 mt-[-4px]">
+            <Clock className="w-3 h-3 text-slate-500 shrink-0" />
+            <span className="text-[10px] text-slate-500 font-medium">{label}</span>
+          </div>
+        ) : null;
+      })()}
 
       {/* Action Footer */}
       <div className="flex items-center gap-2">
