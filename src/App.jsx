@@ -76,14 +76,12 @@ export default function App() {
       {/* Aggregate Statistics Overview */}
       <StatsBar profiles={profiles} />
 
-      {/* ── Ad Banner (horizontal, below stats) ── */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3">
-        <AdUnit
-          slot="1111111111"
-          format="horizontal"
-          className="w-full"
-        />
-      </div>
+      {/* ── AD SLOT: Horizontal banner (below stats bar) ──────────────────────
+          When ready: uncomment the block below, set your slot ID
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3">
+            <AdUnit slot="YOUR_SLOT_ID" format="horizontal" className="w-full" />
+          </div>
+      ──────────────────────────────────────────────────────────────────── */}
 
       {/* Main Directory Layout Container */}
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex-1 w-full">

@@ -53,16 +53,14 @@ export default function ProfileGrid({
                 onToggleBookmark={onToggleBookmark}
                 onOpenEditModal={onOpenEditModal}
               />
-              {/* Mid-feed ad: inject after every 6th card */}
-              {(idx + 1) % 6 === 0 && idx + 1 < profiles.length && (
-                <div className="col-span-1 sm:col-span-2 xl:col-span-3">
-                  <AdUnit
-                    slot="2222222222"
-                    format="horizontal"
-                    className="w-full py-1"
-                  />
-                </div>
-              )}
+              {/* ── AD SLOT: Mid-feed after every 6 cards ───────────────────────
+                  When ready: uncomment below and set your slot ID
+                  {(idx + 1) % 6 === 0 && idx + 1 < profiles.length && (
+                    <div className="col-span-1 sm:col-span-2 xl:col-span-3">
+                      <AdUnit slot="YOUR_SLOT_ID" format="horizontal" className="w-full py-1" />
+                    </div>
+                  )}
+              ──────────────────────────────────────────────────────────────── */}
             </React.Fragment>
           ))}
         </div>
