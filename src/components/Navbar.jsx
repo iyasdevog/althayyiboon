@@ -6,7 +6,10 @@ export default function Navbar({
   totalProfiles, 
   onToggleMobileFilter, 
   activeFilterCount,
-  onOpenAdminPortal 
+  onOpenAdminPortal,
+  bookmarkCount = 0,
+  showFavoritesOnly = false,
+  onToggleShowFavorites
 }) {
   const [bannerVisible, setBannerVisible] = useState(true);
 
@@ -80,6 +83,26 @@ export default function Navbar({
                 {activeFilterCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-bold flex items-center justify-center shadow-md">
                     {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Favorites / Bookmarked Toggle Button */}
+              <button
+                onClick={onToggleShowFavorites}
+                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all touch-target ${
+                  showFavoritesOnly
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-bold shadow-md shadow-rose-500/10'
+                    : 'bg-slate-800/90 hover:bg-slate-700 text-slate-300 border-slate-700'
+                }`}
+                title="View Saved Bookmarked Proposals"
+                aria-label="View Saved Bookmarked Proposals"
+              >
+                <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly || bookmarkCount > 0 ? 'text-rose-400 fill-rose-400' : 'text-slate-400'}`} />
+                <span className="hidden sm:inline">Saved</span>
+                {bookmarkCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold">
+                    {bookmarkCount}
                   </span>
                 )}
               </button>

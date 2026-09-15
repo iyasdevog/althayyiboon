@@ -46,7 +46,8 @@ export function useProfiles() {
   const [approvedCustomFilters, setApprovedCustomFilters] = useState([]);
   const [filterRequests, setFilterRequests] = useState([]);
 
-  // Bookmark State
+  // Bookmark State & Favorites Filter Toggle
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [bookmarks, setBookmarks] = useState(() => {
     try {
       const saved = localStorage.getItem(BOOKMARKS_KEY);
@@ -70,7 +71,6 @@ export function useProfiles() {
     sect: "",
     postedWithin: ""  // "" = all, "1" = today, "7" = last 7d, "30" = last 30d, "90" = last 90d
   };
-
 
   const [filters, setFilters] = useState(defaultFilters);
 
@@ -125,6 +125,21 @@ export function useProfiles() {
     setProfiles(prev => prev.filter(p => p.id !== profileId));
   };
 
+  // Bulk Admin Operations
+  const bulkDeleteProfiles = async (profileIds) => {
+    for (const id of profileIds) {
+      await deleteProfileFromStore(id);
+    }
+    setProfiles(prev => prev.filter(p => !profileIds.includes(p.id)));
+  };
+
+  const bulkUpdateStatus = async (profileIds, newStatus) => {
+    for (const id of profileIds) {
+      await updateProfileInStore(id, { status: newStatus });
+    }
+    setProfiles(prev => prev.map(p => profileIds.includes(p.id) ? { ...p, status: newStatus } : p));
+  };
+
   // Custom Filter Request Handlers
   const handleUserFilterRequest = async (requestData) => {
     const newItem = await submitFilterRequest(requestData);
@@ -155,10 +170,12 @@ export function useProfiles() {
     setSelectedGender("All");
     setActiveQuickTag("");
     setSearchQuery("");
+    setShowFavoritesOnly(false);
   };
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
+    if (showFavoritesOnly) count++;
     if (filters.gender !== "All") count++;
     if (filters.minAge > 18 || filters.maxAge < 70) count++;
     if (filters.qualifications?.length > 0) count += filters.qualifications.length;
@@ -170,10 +187,16 @@ export function useProfiles() {
     if (filters.sect) count++;
     if (filters.postedWithin) count++;
     return count;
-  }, [filters]);
+  }, [filters, showFavoritesOnly]);
 
   const filteredProfiles = useMemo(() => {
     return profiles.filter(profile => {
+      // Exclude hidden proposals from public directory view
+      if ((profile.status || "approved") === "hidden") return false;
+
+      // Favorites filter
+      if (showFavoritesOnly && !bookmarks.includes(profile.id)) return false;
+
       const basic = profile.basicInfo || {};
       const islamic = profile.islamicBackground || {};
       const edu = profile.educationOccupation || {};
@@ -233,7 +256,6 @@ export function useProfiles() {
         if (!matchesProf) return false;
       }
 
-
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const searchableText = [
@@ -276,12 +298,12 @@ export function useProfiles() {
       }
       return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
     });
-  }, [profiles, filters, searchQuery, sortBy]);
+  }, [profiles, filters, searchQuery, sortBy, showFavoritesOnly, bookmarks]);
 
   return {
     profiles: filteredProfiles,
     rawProfiles: profiles,
-    totalCount: profiles.length,
+    totalCount: profiles.filter(p => (p.status || "approved") !== "hidden").length,
     loading,
     searchQuery,
     setSearchQuery,
@@ -299,9 +321,13 @@ export function useProfiles() {
     setIsMobileFilterOpen,
     bookmarks,
     toggleBookmark,
+    showFavoritesOnly,
+    setShowFavoritesOnly,
     addNewProfile,
     updateProfile,
     deleteProfile,
+    bulkDeleteProfiles,
+    bulkUpdateStatus,
     approvedCustomFilters,
     filterRequests,
     handleUserFilterRequest,

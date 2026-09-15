@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Edit,
   Clock,
+  Share2
 } from 'lucide-react';
+import { shareProfile } from '../utils/shareUtils';
 
 // Format createdAt ISO string into a friendly relative label
 function formatPostedDate(dateStr) {
@@ -40,7 +42,8 @@ export default function ProfileCard({
   onSelectProfile, 
   isBookmarked, 
   onToggleBookmark,
-  onOpenEditModal 
+  onOpenEditModal,
+  onShowToast
 }) {
   const {
     id,
@@ -128,6 +131,7 @@ export default function ProfileCard({
                   ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/80'
               }`}
+              title={isBookmarked ? "Remove from Favorites" : "Save to Favorites"}
             >
               <Heart className={`w-4 h-4 ${isBookmarked ? 'fill-rose-400' : ''}`} />
             </button>
@@ -197,13 +201,24 @@ export default function ProfileCard({
       })()}
 
       {/* Action Footer */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={() => onSelectProfile(profile)}
           className="flex-1 inline-flex items-center justify-center gap-1 py-2.5 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 active:bg-slate-600/90 text-white font-semibold text-xs border border-slate-700/70 transition-colors"
         >
           <span>View Profile</span>
           <ChevronRight className="w-3.5 h-3.5 text-emerald-400" />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            shareProfile(profile, onShowToast);
+          }}
+          className="inline-flex items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+          title="Share Proposal Link"
+        >
+          <Share2 className="w-4 h-4 text-emerald-400" />
         </button>
 
         <a

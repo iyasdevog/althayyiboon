@@ -18,8 +18,9 @@ import {
   Sparkles,
   FileText
 } from 'lucide-react';
+import { shareProfile } from '../utils/shareUtils';
 
-export default function ProfileDetailModal({ profile, onClose, isBookmarked, onToggleBookmark }) {
+export default function ProfileDetailModal({ profile, onClose, isBookmarked, onToggleBookmark, onShowToast }) {
   const [copied, setCopied] = useState(false);
 
   if (!profile) return null;
@@ -47,10 +48,12 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.origin + `?profile=${id}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleShare = () => {
+    shareProfile(profile, (msg) => {
+      setCopied(true);
+      if (onShowToast) onShowToast(msg);
+      setTimeout(() => setCopied(false), 2500);
+    });
   };
 
   const handlePrint = () => {
@@ -116,9 +119,17 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
                     ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
                     : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
                 }`}
-                title="Save Profile"
+                title={isBookmarked ? "Remove from Favorites" : "Save Profile"}
               >
                 <Heart className={`w-4 h-4 ${isBookmarked ? 'fill-rose-400' : ''}`} />
+              </button>
+
+              <button
+                onClick={handleShare}
+                className="p-2 rounded-xl bg-slate-800 text-slate-400 border border-slate-700 hover:text-emerald-300 hover:bg-slate-700 transition-colors"
+                title="Share Proposal"
+              >
+                <Share2 className="w-4 h-4" />
               </button>
 
               <button
@@ -357,26 +368,13 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
             </a>
           )}
 
-          {/* Alternate Contact Call/Email Button */}
-          {contactPreferences.alternateContact && (
-            <a
-              href={contactPreferences.alternateContact.includes("@") 
-                ? `mailto:${contactPreferences.alternateContact.trim()}`
-                : `tel:${contactPreferences.alternateContact.replace(/[^0-9+]/g, "")}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-purple-950/60 hover:bg-purple-900/60 text-purple-200 font-semibold text-xs sm:text-sm border border-purple-700/50 transition-colors"
-            >
-              <Phone className="w-4 h-4 text-purple-400" />
-              <span>{contactPreferences.alternateContact.includes("@") ? "Email Contact" : "Call Alternate"}</span>
-            </a>
-          )}
-
-          {/* Copy Link Button */}
+          {/* Share Button */}
           <button
-            onClick={handleCopyLink}
+            onClick={handleShare}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs sm:text-sm border border-slate-700 transition-colors"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
-            <span>{copied ? 'Link Copied' : 'Share'}</span>
+            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-emerald-400" />}
+            <span>{copied ? 'Link Copied' : 'Share Proposal'}</span>
           </button>
 
         </div>

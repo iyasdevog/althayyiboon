@@ -12,6 +12,7 @@ import RequestFilterModal from './components/RequestFilterModal';
 import Footer from './components/Footer';
 import AdUnit from './components/AdUnit';
 import { useProfiles } from './hooks/useProfiles';
+import { Check, Sparkles } from 'lucide-react';
 
 export default function App() {
   const {
@@ -34,9 +35,13 @@ export default function App() {
     setIsMobileFilterOpen,
     bookmarks,
     toggleBookmark,
+    showFavoritesOnly,
+    setShowFavoritesOnly,
     addNewProfile,
     updateProfile,
     deleteProfile,
+    bulkDeleteProfiles,
+    bulkUpdateStatus,
     approvedCustomFilters,
     filterRequests,
     handleUserFilterRequest,
@@ -51,9 +56,27 @@ export default function App() {
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [isRequestFilterOpen, setIsRequestFilterOpen] = useState(false);
 
+  // Global Toast Notification State
+  const [toastMessage, setToastMessage] = useState("");
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage("");
+    }, 3000);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
       
+      {/* Global Toast Notification Popup */}
+      {toastMessage && (
+        <div className="fixed bottom-5 right-5 z-50 animate-bounce-in bg-emerald-500 text-slate-950 font-bold px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-xs sm:text-sm border border-emerald-400">
+          <Check className="w-4 h-4 text-slate-950 stroke-[3]" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Sticky Header Navbar */}
       <Navbar
         onOpenAddModal={() => setIsAddModalOpen(true)}
@@ -61,6 +84,9 @@ export default function App() {
         onToggleMobileFilter={() => setIsMobileFilterOpen(true)}
         activeFilterCount={activeFilterCount}
         onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
+        bookmarkCount={bookmarks.length}
+        showFavoritesOnly={showFavoritesOnly}
+        onToggleShowFavorites={() => setShowFavoritesOnly(prev => !prev)}
       />
 
       {/* Hero Banner with Search Bar & Quick Tags */}
@@ -104,6 +130,8 @@ export default function App() {
             onSelectProfile={(p) => setSelectedProfile(p)}
             bookmarks={bookmarks}
             onToggleBookmark={toggleBookmark}
+            showFavoritesOnly={showFavoritesOnly}
+            onToggleShowFavorites={() => setShowFavoritesOnly(prev => !prev)}
             onResetFilters={resetFilters}
             sortBy={sortBy}
             setSortBy={setSortBy}
@@ -111,6 +139,7 @@ export default function App() {
               setIsAdminOverrideEdit(false);
               setEditingProfile(p);
             }}
+            onShowToast={showToast}
           />
 
         </div>
@@ -123,6 +152,7 @@ export default function App() {
           onClose={() => setSelectedProfile(null)}
           isBookmarked={bookmarks.includes(selectedProfile.id)}
           onToggleBookmark={toggleBookmark}
+          onShowToast={showToast}
         />
       )}
 
@@ -163,6 +193,8 @@ export default function App() {
           profiles={rawProfiles}
           onDeleteProfile={deleteProfile}
           onUpdateProfile={updateProfile}
+          onBulkDelete={bulkDeleteProfiles}
+          onBulkUpdateStatus={bulkUpdateStatus}
           onSelectEditProfile={(p) => {
             setIsAdminOverrideEdit(true);
             setEditingProfile(p);
