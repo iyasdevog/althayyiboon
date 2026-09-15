@@ -111,19 +111,22 @@ export function useProfiles() {
   // CRUD Handlers
   const addNewProfile = async (formData) => {
     const newDoc = await saveProfileToStore(formData);
-    setProfiles(prev => [newDoc, ...prev.filter(p => p.id !== newDoc.id)]);
     
-    // Automatically reset active filters so the new proposal is immediately visible
+    // Completely clear search query, quick tags, and active filters so candidate appears at the top
     setSearchQuery("");
+    setActiveQuickTag("");
     setShowFavoritesOnly(false);
+    
     const candidateGender = formData.basicInfo?.gender;
-    if (candidateGender && (candidateGender === "Bride" || candidateGender === "Groom")) {
-      setSelectedGender(candidateGender);
-      setFilters(prev => ({ ...defaultFilters, gender: candidateGender }));
-    } else {
-      setSelectedGender("All");
-      setFilters(defaultFilters);
-    }
+    const genderToSet = (candidateGender === "Bride" || candidateGender === "Groom") ? candidateGender : "All";
+    
+    setSelectedGender(genderToSet);
+    setFilters({
+      ...defaultFilters,
+      gender: genderToSet
+    });
+
+    setProfiles(prev => [newDoc, ...prev.filter(p => p.id !== newDoc.id)]);
     return newDoc;
   };
 

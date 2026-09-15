@@ -193,10 +193,12 @@ export function subscribeToProfiles(onDataChange) {
         onDataChange(getLocalStorageProfiles());
       }
     }, (error) => {
-      console.warn("Firestore listener error:", error.message);
+      console.warn("Firestore listener error, falling back to local storage:", error.message);
+      onDataChange(getLocalStorageProfiles());
     });
   } catch (e) {
-    console.warn("Subscribe error:", e.message);
+    console.warn("Subscribe error, falling back to local storage:", e.message);
+    onDataChange(getLocalStorageProfiles());
   }
   return () => {};
 }
