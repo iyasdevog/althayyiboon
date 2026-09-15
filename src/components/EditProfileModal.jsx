@@ -227,6 +227,45 @@ export default function EditProfileModal({
                       </select>
                     </div>
                   </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">
+                        Height
+                        <span className="ml-1 text-emerald-400/70">(cm auto-converts to ft)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.basicInfo.height || ''}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const numMatch = raw.match(/^\s*(\d{2,3})\s*(?:cm)?\s*$/i);
+                          if (numMatch) {
+                            const cm = parseInt(numMatch[1], 10);
+                            if (cm >= 100 && cm <= 250) {
+                              const totalInches = cm / 2.54;
+                              const ft = Math.floor(totalInches / 12);
+                              const inch = Math.round(totalInches % 12);
+                              updateSection('basicInfo', 'height', `${ft} ft ${inch} in (${cm} cm)`);
+                              return;
+                            }
+                          }
+                          updateSection('basicInfo', 'height', raw);
+                        }}
+                        placeholder="e.g. 163 cm  or  5 ft 4 in"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Physical Status</label>
+                      <input
+                        type="text"
+                        value={formData.basicInfo.physicalStatus || ''}
+                        onChange={(e) => updateSection('basicInfo', 'physicalStatus', e.target.value)}
+                        placeholder="Normal / Differently Abled"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Islamic Background */}

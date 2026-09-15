@@ -320,11 +320,30 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">Height (e.g. 5 ft 4 in)</label>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">
+                        Height
+                        <span className="ml-1 text-emerald-400/70 font-normal">(cm or ft — cm auto-converts)</span>
+                      </label>
                       <input
                         type="text"
                         value={formData.basicInfo.height}
-                        onChange={(e) => updateSection('basicInfo', 'height', e.target.value)}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          // If user typed a plain number (cm), auto-convert to feet
+                          const numMatch = raw.match(/^\s*(\d{2,3})\s*(?:cm)?\s*$/i);
+                          if (numMatch) {
+                            const cm = parseInt(numMatch[1], 10);
+                            if (cm >= 100 && cm <= 250) {
+                              const totalInches = cm / 2.54;
+                              const ft = Math.floor(totalInches / 12);
+                              const inch = Math.round(totalInches % 12);
+                              updateSection('basicInfo', 'height', `${ft} ft ${inch} in (${cm} cm)`);
+                              return;
+                            }
+                          }
+                          updateSection('basicInfo', 'height', raw);
+                        }}
+                        placeholder="e.g. 163 cm  or  5 ft 4 in"
                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
                       />
                     </div>

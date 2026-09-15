@@ -172,3 +172,19 @@
   transform: scale(0.98);
   transition: transform 0.1s ease;
 }
+
+/* ===== Hide scrollbar but keep scroll functionality ===== */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== Mobile-first bottom nav safe area ===== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom-env {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
