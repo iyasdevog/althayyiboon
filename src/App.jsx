@@ -10,6 +10,7 @@ import EditProfileModal from './components/EditProfileModal';
 import AdminPortalModal from './components/AdminPortalModal';
 import RequestFilterModal from './components/RequestFilterModal';
 import Footer from './components/Footer';
+import AdUnit from './components/AdUnit';
 import { useProfiles } from './hooks/useProfiles';
 
 export default function App() {
@@ -74,6 +75,15 @@ export default function App() {
 
       {/* Aggregate Statistics Overview */}
       <StatsBar profiles={profiles} />
+
+      {/* ── Ad Banner (horizontal, below stats) ── */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3">
+        <AdUnit
+          slot="1111111111"
+          format="horizontal"
+          className="w-full"
+        />
+      </div>
 
       {/* Main Directory Layout Container */}
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex-1 w-full">

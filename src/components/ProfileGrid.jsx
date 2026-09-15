@@ -1,5 +1,6 @@
 import React from 'react';
 import ProfileCard from './ProfileCard';
+import AdUnit from './AdUnit';
 import { Sparkles, SlidersHorizontal, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function ProfileGrid({ 
@@ -43,15 +44,26 @@ export default function ProfileGrid({
       {/* Profile Cards Grid */}
       {profiles.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-5">
-          {profiles.map(profile => (
-            <ProfileCard
-              key={profile.id}
-              profile={profile}
-              onSelectProfile={onSelectProfile}
-              isBookmarked={bookmarks.includes(profile.id)}
-              onToggleBookmark={onToggleBookmark}
-              onOpenEditModal={onOpenEditModal}
-            />
+          {profiles.map((profile, idx) => (
+            <React.Fragment key={profile.id}>
+              <ProfileCard
+                profile={profile}
+                onSelectProfile={onSelectProfile}
+                isBookmarked={bookmarks.includes(profile.id)}
+                onToggleBookmark={onToggleBookmark}
+                onOpenEditModal={onOpenEditModal}
+              />
+              {/* Mid-feed ad: inject after every 6th card */}
+              {(idx + 1) % 6 === 0 && idx + 1 < profiles.length && (
+                <div className="col-span-1 sm:col-span-2 xl:col-span-3">
+                  <AdUnit
+                    slot="2222222222"
+                    format="horizontal"
+                    className="w-full py-1"
+                  />
+                </div>
+              )}
+            </React.Fragment>
           ))}
         </div>
       ) : (
