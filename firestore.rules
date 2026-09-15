@@ -37,9 +37,9 @@ service cloud.firestore {
       return val is string && val.size() <= maxLen;
     }
 
-    // Validate that a phone number field looks reasonable (7-15 digits, no HTML/scripts)
+    // Validate that a phone number field looks reasonable (5-30 chars, no HTML/scripts)
     function isValidPhone(val) {
-      return val is string && val.size() >= 7 && val.size() <= 20
+      return val is string && val.size() >= 5 && val.size() <= 30
         && !val.matches('.*<.*>.*')       // no HTML tags
         && !val.matches('.*script.*');    // no script injections
     }
