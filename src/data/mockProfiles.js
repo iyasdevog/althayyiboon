@@ -63,6 +63,15 @@ export const MARITAL_STATUSES = [
   "Widowed"
 ];
 
+export const COMPLEXIONS = [
+  "Not Specified",
+  "Very Fair",
+  "Fair",
+  "Wheatish",
+  "Wheatish Medium",
+  "Dark / Brown"
+];
+
 export const WORK_LOCATIONS = [
   "India (Kerala)",
   "India (Outside Kerala)",

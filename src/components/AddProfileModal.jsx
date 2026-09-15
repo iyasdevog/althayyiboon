@@ -13,7 +13,8 @@ import {
   AlertCircle,
   Key,
   Lock,
-  ShieldCheck
+  ShieldCheck,
+  FileText
 } from 'lucide-react';
 import { 
   KERALA_DISTRICTS, 
@@ -21,7 +22,8 @@ import {
   SECTS, 
   COMMUNITY_GROUPS, 
   MARITAL_STATUSES,
-  COMMON_PROFESSIONS 
+  COMMON_PROFESSIONS,
+  COMPLEXIONS
 } from '../data/mockProfiles';
 
 
@@ -40,7 +42,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
       dob: "",
       maritalStatus: "Unmarried",
       height: "5 ft 4 in (163 cm)",
-      physicalStatus: "Normal"
+      physicalStatus: "Normal",
+      color: ""
     },
     islamicBackground: {
       sect: "Sunni",
@@ -315,9 +318,9 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">Height (e.g. 5 ft 4 in / 163 cm)</label>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">Height (e.g. 5 ft 4 in)</label>
                       <input
                         type="text"
                         value={formData.basicInfo.height}
@@ -335,6 +338,18 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
                         placeholder="Normal / Differently Abled"
                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">Color / Complexion (Optional)</label>
+                      <select
+                        value={formData.basicInfo.color || ''}
+                        onChange={(e) => updateSection('basicInfo', 'color', e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="">Select Complexion (Optional)</option>
+                        {COMPLEXIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
                     </div>
                   </div>
 
@@ -643,6 +658,24 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
                           className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
                         />
                       </div>
+                    </div>
+
+                    {/* Special Demands & Partner Expectations Textbox */}
+                    <div className="space-y-1.5 pt-1">
+                      <label className="block text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Special Demands & Partner Expectations (Optional)</span>
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={formData.contactPreferences.expectations || ''}
+                        onChange={(e) => updateSection('contactPreferences', 'expectations', e.target.value)}
+                        placeholder="Type any special demands or expectations regarding the bride or groom (e.g. Expecting religious Wafiyya/Hudawi graduate, non-smoker, residing in Malappuram/Kozhikode, specific family background)..."
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500 custom-scrollbar resize-none"
+                      />
+                      <p className="text-[11px] text-slate-400">
+                        💡 Profile typists can specify detailed expectations regarding height, location, Islamic education, or family status.
+                      </p>
                     </div>
                   </div>
 

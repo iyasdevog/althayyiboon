@@ -51,16 +51,18 @@ export default function AdminPortalModal({
       alert("No profiles to export.");
       return;
     }
-    const headers = ["ID", "Name", "Gender", "Age", "District", "Qualification", "Profession", "Work Country", "WhatsApp", "Phone", "Alternate Contact", "Created At"];
+    const headers = ["ID", "Name", "Gender", "Age", "Color/Complexion", "District", "Qualification", "Profession", "Work Country", "Special Demands", "WhatsApp", "Phone", "Alternate Contact", "Created At"];
     const rows = profiles.map(p => [
       p.id,
       `"${p.basicInfo?.fullName || ''}"`,
       p.basicInfo?.gender || '',
       p.basicInfo?.age || '',
+      `"${p.basicInfo?.color || ''}"`,
       `"${p.locationFamily?.homeDistrict || ''}"`,
       `"${p.islamicBackground?.qualification || ''}"`,
       `"${p.educationOccupation?.profession || ''}"`,
       `"${p.educationOccupation?.workCountry || ''}"`,
+      `"${(p.contactPreferences?.expectations || '').replace(/"/g, '""')}"`,
       `"${p.contactPreferences?.whatsapp || ''}"`,
       `"${p.contactPreferences?.phone || ''}"`,
       `"${p.contactPreferences?.alternateContact || ''}"`,

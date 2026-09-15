@@ -125,10 +125,16 @@ export default function ProfileCard({
             </h3>
             <span className="text-[11px] font-mono font-medium text-slate-500">#{id.slice(-5)}</span>
           </div>
-          <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+          <p className="text-xs text-slate-400 flex flex-wrap items-center gap-1 mt-0.5">
             <span>{basicInfo.maritalStatus || 'Unmarried'}</span>
             <span>•</span>
             <span>{basicInfo.height || 'Height N/A'}</span>
+            {basicInfo.color && basicInfo.color !== "Not Specified" && (
+              <>
+                <span>•</span>
+                <span className="text-amber-300/90">{basicInfo.color}</span>
+              </>
+            )}
           </p>
         </div>
 

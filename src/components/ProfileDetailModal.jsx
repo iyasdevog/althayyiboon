@@ -165,6 +165,12 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
                 <span className="text-slate-400 block text-[11px]">Physical Status</span>
                 <span className="font-semibold text-white">{basicInfo.physicalStatus || 'Normal'}</span>
               </div>
+              {basicInfo.color && basicInfo.color !== "Not Specified" && (
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                  <span className="text-slate-400 block text-[11px]">Color / Complexion</span>
+                  <span className="font-semibold text-amber-300">{basicInfo.color}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -243,9 +249,14 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
             </h3>
             
             {contactPreferences.expectations && (
-              <div className="bg-slate-950/80 p-3.5 rounded-xl border border-emerald-500/20 text-xs">
-                <span className="text-emerald-400 font-bold block text-[11px] mb-1">Partner Expectations</span>
-                <p className="text-slate-200 italic leading-relaxed">"{contactPreferences.expectations}"</p>
+              <div className="bg-slate-950/80 p-4 rounded-xl border border-emerald-500/25 text-xs space-y-1.5">
+                <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                  <span>Special Demands & Partner Expectations</span>
+                </div>
+                <p className="text-slate-200 italic leading-relaxed whitespace-pre-line">
+                  "{contactPreferences.expectations}"
+                </p>
               </div>
             )}
 

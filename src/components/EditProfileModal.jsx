@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { X, Lock, Key, Trash2, Save, AlertCircle, CheckCircle, ShieldCheck, Phone, MessageSquare } from 'lucide-react';
+import { X, Lock, Key, Trash2, Save, AlertCircle, CheckCircle, ShieldCheck, Phone, MessageSquare, FileText } from 'lucide-react';
 import { 
   KERALA_DISTRICTS, 
   ISLAMIC_QUALIFICATIONS, 
   SECTS, 
   COMMUNITY_GROUPS, 
   MARITAL_STATUSES,
-  COMMON_PROFESSIONS 
+  COMMON_PROFESSIONS,
+  COMPLEXIONS
 } from '../data/mockProfiles';
 
 
@@ -24,7 +25,7 @@ export default function EditProfileModal({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [formData, setFormData] = useState({
-    basicInfo: { ...profile.basicInfo },
+    basicInfo: { color: "", ...profile.basicInfo },
     islamicBackground: { ...profile.islamicBackground },
     educationOccupation: { ...profile.educationOccupation },
     locationFamily: { ...profile.locationFamily },
@@ -195,7 +196,7 @@ export default function EditProfileModal({
                 {/* Basic Details */}
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Basic Info</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[11px] text-slate-400 mb-1">Full Name</label>
                       <input
@@ -213,6 +214,17 @@ export default function EditProfileModal({
                         onChange={(e) => updateSection('basicInfo', 'age', Number(e.target.value))}
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Color / Complexion (Optional)</label>
+                      <select
+                        value={formData.basicInfo.color || ''}
+                        onChange={(e) => updateSection('basicInfo', 'color', e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      >
+                        <option value="">Select Complexion (Optional)</option>
+                        {COMPLEXIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -359,6 +371,19 @@ export default function EditProfileModal({
                         onChange={(e) => updateSection('contactPreferences', 'alternateContact', e.target.value)}
                         placeholder="e.g. +91 9123456789 (Uncle) or email@example.com"
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2 space-y-1">
+                      <label className="block text-[11px] text-slate-400 mb-1 flex items-center gap-1">
+                        <FileText className="w-3.5 h-3.5 text-emerald-400" /> Special Demands & Expectations on Bride/Groom (Optional)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={formData.contactPreferences.expectations || ''}
+                        onChange={(e) => updateSection('contactPreferences', 'expectations', e.target.value)}
+                        placeholder="Type any expectations or special demands regarding bride or groom..."
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 custom-scrollbar resize-none"
                       />
                     </div>
 

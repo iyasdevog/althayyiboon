@@ -24,6 +24,7 @@ export function generateSearchKeywords(profile) {
     profile.basicInfo?.fullName,
     profile.basicInfo?.gender,
     profile.basicInfo?.maritalStatus,
+    profile.basicInfo?.color,
     profile.islamicBackground?.qualification,
     profile.islamicBackground?.sect,
     profile.islamicBackground?.subGroup,
@@ -31,7 +32,8 @@ export function generateSearchKeywords(profile) {
     profile.educationOccupation?.profession,
     profile.educationOccupation?.workLocation,
     profile.locationFamily?.homeDistrict,
-    profile.locationFamily?.nativePlace
+    profile.locationFamily?.nativePlace,
+    profile.contactPreferences?.expectations
   ];
 
   fieldsToTokenize.forEach(text => {
