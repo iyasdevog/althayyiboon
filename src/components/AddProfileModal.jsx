@@ -63,7 +63,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
       relationship: "Father",
       phone: "",
       whatsapp: "",
-      contactMethod: "whatsapp_only", // "whatsapp_only" | "both" | "call_only"
+      alternateContact: "",
+      contactMethod: "both", // "whatsapp_only" | "both" | "call_only" | "any"
       expectations: ""
     },
     security: {
@@ -91,9 +92,10 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
       return;
     }
 
-    const { contactMethod, phone, whatsapp } = formData.contactPreferences;
+    const { contactMethod, phone, whatsapp, alternateContact } = formData.contactPreferences;
     const hasPhone = Boolean(phone && phone.trim());
     const hasWhatsapp = Boolean(whatsapp && whatsapp.trim());
+    const hasAlternate = Boolean(alternateContact && alternateContact.trim());
 
     if (contactMethod === "whatsapp_only" && !hasWhatsapp) {
       setErrorMsg("Please provide a WhatsApp number.");
@@ -105,8 +107,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
       setStep(4);
       return;
     }
-    if (!hasPhone && !hasWhatsapp) {
-      setErrorMsg("Please provide at least a Phone or WhatsApp contact number.");
+    if (!hasPhone && !hasWhatsapp && !hasAlternate) {
+      setErrorMsg("Please provide at least one contact detail (WhatsApp, Direct Phone, or Alternate Contact).");
       setStep(4);
       return;
     }
@@ -532,7 +534,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
                     {/* Preferred Contact Mode Selector */}
                     <div>
                       <label className="block text-xs font-semibold text-slate-300 mb-1.5">Preferred Contact Mode *</label>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <button
                           type="button"
                           onClick={() => updateSection('contactPreferences', 'contactMethod', 'whatsapp_only')}
@@ -570,47 +572,68 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
                           <Phone className="w-3.5 h-3.5 text-blue-400" />
                           <span>Call Only</span>
                         </button>
+
+                        <button
+                          type="button"
+                          onClick={() => updateSection('contactPreferences', 'contactMethod', 'any')}
+                          className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                            formData.contactPreferences.contactMethod === 'any'
+                              ? 'bg-purple-500/20 text-purple-300 border-purple-500/40 ring-1 ring-purple-500/50'
+                              : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-900'
+                          }`}
+                        >
+                          <span>Any Contact</span>
+                        </button>
                       </div>
                       {formData.contactPreferences.contactMethod === 'whatsapp_only' && (
                         <p className="text-[11px] text-emerald-400/90 mt-1 flex items-center gap-1">
-                          🔒 Direct Phone Call button will be hidden. Viewers can only contact you via WhatsApp.
+                          🔒 Direct Phone Call button will be hidden. Viewers will be directed to WhatsApp.
                         </p>
                       )}
                     </div>
 
-                    {/* Separate Phone & WhatsApp Number Inputs */}
+                    {/* Separate Phone, WhatsApp & Alternate Contact Inputs */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {formData.contactPreferences.contactMethod !== 'call_only' && (
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-                            <MessageSquare className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp Number *
-                          </label>
-                          <input
-                            type="text"
-                            required={formData.contactPreferences.contactMethod !== 'call_only'}
-                            value={formData.contactPreferences.whatsapp}
-                            onChange={(e) => updateSection('contactPreferences', 'whatsapp', e.target.value)}
-                            placeholder="e.g. +91 9876543210"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
-                          />
-                        </div>
-                      )}
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp Number
+                        </label>
+                        <input
+                          type="text"
+                          required={formData.contactPreferences.contactMethod === 'whatsapp_only'}
+                          value={formData.contactPreferences.whatsapp}
+                          onChange={(e) => updateSection('contactPreferences', 'whatsapp', e.target.value)}
+                          placeholder="e.g. +91 9876543210"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
 
-                      {formData.contactPreferences.contactMethod !== 'whatsapp_only' && (
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-                            <Phone className="w-3.5 h-3.5 text-blue-400" /> Direct Calling Phone Number *
-                          </label>
-                          <input
-                            type="text"
-                            required={formData.contactPreferences.contactMethod !== 'whatsapp_only'}
-                            value={formData.contactPreferences.phone}
-                            onChange={(e) => updateSection('contactPreferences', 'phone', e.target.value)}
-                            placeholder="e.g. +91 9876543210"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
-                          />
-                        </div>
-                      )}
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
+                          <Phone className="w-3.5 h-3.5 text-blue-400" /> Direct Calling Phone Number
+                        </label>
+                        <input
+                          type="text"
+                          required={formData.contactPreferences.contactMethod === 'call_only'}
+                          value={formData.contactPreferences.phone}
+                          onChange={(e) => updateSection('contactPreferences', 'phone', e.target.value)}
+                          placeholder="e.g. +91 9876543210"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
+                          <Phone className="w-3.5 h-3.5 text-purple-400" /> Alternate Contact (Secondary Phone / Landline / Email)
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.contactPreferences.alternateContact || ''}
+                          onChange={(e) => updateSection('contactPreferences', 'alternateContact', e.target.value)}
+                          placeholder="e.g. +91 9123456789 (Relative) or contact@family.com"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
                     </div>
                   </div>
 

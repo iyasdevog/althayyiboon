@@ -51,7 +51,7 @@ export default function AdminPortalModal({
       alert("No profiles to export.");
       return;
     }
-    const headers = ["ID", "Name", "Gender", "Age", "District", "Qualification", "Profession", "Work Country", "Contact Phone", "Created At"];
+    const headers = ["ID", "Name", "Gender", "Age", "District", "Qualification", "Profession", "Work Country", "WhatsApp", "Phone", "Alternate Contact", "Created At"];
     const rows = profiles.map(p => [
       p.id,
       `"${p.basicInfo?.fullName || ''}"`,
@@ -61,7 +61,9 @@ export default function AdminPortalModal({
       `"${p.islamicBackground?.qualification || ''}"`,
       `"${p.educationOccupation?.profession || ''}"`,
       `"${p.educationOccupation?.workCountry || ''}"`,
-      `"${p.contactPreferences?.whatsapp || p.contactPreferences?.phone || ''}"`,
+      `"${p.contactPreferences?.whatsapp || ''}"`,
+      `"${p.contactPreferences?.phone || ''}"`,
+      `"${p.contactPreferences?.alternateContact || ''}"`,
       p.createdAt || ''
     ]);
 
@@ -256,7 +258,9 @@ export default function AdminPortalModal({
                             <span>•</span>
                             <span>{profile.locationFamily?.homeDistrict || 'District N/A'}</span>
                             <span>•</span>
-                            <span className="text-slate-300 font-mono">{profile.contactPreferences?.whatsapp || profile.contactPreferences?.phone}</span>
+                            <span className="text-slate-300 font-mono">
+                              {[profile.contactPreferences?.whatsapp && `WA: ${profile.contactPreferences.whatsapp}`, profile.contactPreferences?.phone && `Tel: ${profile.contactPreferences.phone}`, profile.contactPreferences?.alternateContact && `Alt: ${profile.contactPreferences.alternateContact}`].filter(Boolean).join(" | ") || 'No Contact'}
+                            </span>
                           </div>
                         </div>
 

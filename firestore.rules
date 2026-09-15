@@ -91,6 +91,7 @@ service cloud.firestore {
         && (
           isValidPhone(request.resource.data.contactPreferences.get('phone', ''))
           || isValidPhone(request.resource.data.contactPreferences.get('whatsapp', ''))
+          || isNonEmptyString(request.resource.data.contactPreferences.get('alternateContact', ''))
         )
 
         // status must be "approved" (set by the app; not "admin" etc.)

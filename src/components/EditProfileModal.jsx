@@ -27,7 +27,8 @@ export default function EditProfileModal({
     educationOccupation: { ...profile.educationOccupation },
     locationFamily: { ...profile.locationFamily },
     contactPreferences: { 
-      contactMethod: "whatsapp_only",
+      contactMethod: "both",
+      alternateContact: "",
       ...profile.contactPreferences 
     },
     security: { editPin: profile.security?.editPin || "1234" }
@@ -272,7 +273,7 @@ export default function EditProfileModal({
                   
                   <div>
                     <label className="block text-[11px] text-slate-400 mb-1">Preferred Contact Mode</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <button
                         type="button"
                         onClick={() => updateSection('contactPreferences', 'contactMethod', 'whatsapp_only')}
@@ -282,7 +283,7 @@ export default function EditProfileModal({
                             : 'bg-slate-950 text-slate-400 border-slate-800'
                         }`}
                       >
-                        <MessageSquare className="w-3 h-3 text-emerald-400" /> WhatsApp Only
+                        <MessageSquare className="w-3 h-3 text-emerald-400" /> WhatsApp
                       </button>
                       <button
                         type="button"
@@ -306,38 +307,58 @@ export default function EditProfileModal({
                       >
                         <Phone className="w-3 h-3 text-blue-400" /> Call Only
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => updateSection('contactPreferences', 'contactMethod', 'any')}
+                        className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1 ${
+                          formData.contactPreferences.contactMethod === 'any'
+                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                            : 'bg-slate-950 text-slate-400 border-slate-800'
+                        }`}
+                      >
+                        Any Method
+                      </button>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {formData.contactPreferences.contactMethod !== 'call_only' && (
-                      <div>
-                        <label className="block text-[11px] text-slate-400 mb-1">WhatsApp Number</label>
-                        <input
-                          type="text"
-                          value={formData.contactPreferences.whatsapp}
-                          onChange={(e) => updateSection('contactPreferences', 'whatsapp', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
-                        />
-                      </div>
-                    )}
-                    {formData.contactPreferences.contactMethod !== 'whatsapp_only' && (
-                      <div>
-                        <label className="block text-[11px] text-slate-400 mb-1">Direct Phone Number</label>
-                        <input
-                          type="text"
-                          value={formData.contactPreferences.phone}
-                          onChange={(e) => updateSection('contactPreferences', 'phone', e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
-                        />
-                      </div>
-                    )}
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">WhatsApp Number</label>
+                      <input
+                        type="text"
+                        value={formData.contactPreferences.whatsapp || ''}
+                        onChange={(e) => updateSection('contactPreferences', 'whatsapp', e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Direct Phone Number</label>
+                      <input
+                        type="text"
+                        value={formData.contactPreferences.phone || ''}
+                        onChange={(e) => updateSection('contactPreferences', 'phone', e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] text-slate-400 mb-1">Alternate Contact (Phone / Landline / Email)</label>
+                      <input
+                        type="text"
+                        value={formData.contactPreferences.alternateContact || ''}
+                        onChange={(e) => updateSection('contactPreferences', 'alternateContact', e.target.value)}
+                        placeholder="e.g. +91 9123456789 (Uncle) or email@example.com"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      />
+                    </div>
+
                     <div>
                       <label className="block text-[11px] text-slate-400 mb-1">Secret Edit PIN</label>
                       <input
                         type="text"
                         maxLength="6"
-                        value={formData.security.editPin}
+                        value={formData.security?.editPin || '1234'}
                         onChange={(e) => updateSection('security', 'editPin', e.target.value)}
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 font-mono font-bold"
                       />
