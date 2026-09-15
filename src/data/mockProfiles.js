@@ -35,6 +35,7 @@ export const ISLAMIC_QUALIFICATIONS = [
   "Anwari",
   "Latheefi",
   "Marjani",
+  "Furqani",
   "Sana'iyya",
   "Hadiya",
   "7-Year Course",
