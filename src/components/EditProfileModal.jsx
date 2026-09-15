@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, Key, Trash2, Save, AlertCircle, CheckCircle, ShieldCheck } from 'lucide-react';
+import { X, Lock, Key, Trash2, Save, AlertCircle, CheckCircle, ShieldCheck, Phone, MessageSquare } from 'lucide-react';
 import { 
   KERALA_DISTRICTS, 
   ISLAMIC_QUALIFICATIONS, 
@@ -26,7 +26,10 @@ export default function EditProfileModal({
     islamicBackground: { ...profile.islamicBackground },
     educationOccupation: { ...profile.educationOccupation },
     locationFamily: { ...profile.locationFamily },
-    contactPreferences: { ...profile.contactPreferences },
+    contactPreferences: { 
+      contactMethod: "whatsapp_only",
+      ...profile.contactPreferences 
+    },
     security: { editPin: profile.security?.editPin || "1234" }
   });
 
@@ -266,16 +269,69 @@ export default function EditProfileModal({
                 {/* Contact Preferences */}
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Contact & Expectations</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Contact Phone/WhatsApp</label>
-                      <input
-                        type="text"
-                        value={formData.contactPreferences.whatsapp}
-                        onChange={(e) => updateSection('contactPreferences', 'whatsapp', e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
-                      />
+                  
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Preferred Contact Mode</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateSection('contactPreferences', 'contactMethod', 'whatsapp_only')}
+                        className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1 ${
+                          formData.contactPreferences.contactMethod === 'whatsapp_only'
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : 'bg-slate-950 text-slate-400 border-slate-800'
+                        }`}
+                      >
+                        <MessageSquare className="w-3 h-3 text-emerald-400" /> WhatsApp Only
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateSection('contactPreferences', 'contactMethod', 'both')}
+                        className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center ${
+                          formData.contactPreferences.contactMethod === 'both'
+                            ? 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+                            : 'bg-slate-950 text-slate-400 border-slate-800'
+                        }`}
+                      >
+                        Call & WhatsApp
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateSection('contactPreferences', 'contactMethod', 'call_only')}
+                        className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1 ${
+                          formData.contactPreferences.contactMethod === 'call_only'
+                            ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                            : 'bg-slate-950 text-slate-400 border-slate-800'
+                        }`}
+                      >
+                        <Phone className="w-3 h-3 text-blue-400" /> Call Only
+                      </button>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {formData.contactPreferences.contactMethod !== 'call_only' && (
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">WhatsApp Number</label>
+                        <input
+                          type="text"
+                          value={formData.contactPreferences.whatsapp}
+                          onChange={(e) => updateSection('contactPreferences', 'whatsapp', e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                        />
+                      </div>
+                    )}
+                    {formData.contactPreferences.contactMethod !== 'whatsapp_only' && (
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">Direct Phone Number</label>
+                        <input
+                          type="text"
+                          value={formData.contactPreferences.phone}
+                          onChange={(e) => updateSection('contactPreferences', 'phone', e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                        />
+                      </div>
+                    )}
                     <div>
                       <label className="block text-[11px] text-slate-400 mb-1">Secret Edit PIN</label>
                       <input
