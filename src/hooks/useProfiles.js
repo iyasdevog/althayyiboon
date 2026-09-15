@@ -14,6 +14,25 @@ import {
 
 const BOOKMARKS_KEY = "althayyiboon_bookmarks_v1";
 
+const PROFESSION_KEYWORDS = {
+  "Software Engineer / IT": ["software", "developer", "engineer", "it", "programmer", "coder", "web", "tech", "data", "system", "full stack", "frontend", "backend"],
+  "Doctor / Healthcare": ["doctor", "mbbs", "md", "physician", "surgeon", "dentist", "healthcare", "medical", "pediatrician", "gynecologist"],
+  "Nurse / Paramedical": ["nurse", "nursing", "paramedical", "lab tech", "radiographer", "pharmacist"],
+  "Civil / Mech / Electrical Engineer": ["engineer", "engineering", "civil", "mechanical", "electrical", "electronics", "automotive", "site engineer"],
+  "Teacher / Educator / Lecturer": ["teacher", "educator", "lecturer", "professor", "faculty", "tutor", "school", "college", "headmaster"],
+  "Accountant / Finance / CA": ["account", "finance", "ca", "chartered", "auditor", "tax", "tally", "bookkeeper"],
+  "Business / Entrepreneur": ["business", "entrepreneur", "trader", "shop", "owner", "merchant", "self", "director", "founder"],
+  "Banking Professional": ["bank", "banking", "finance", "clerk", "po", "manager"],
+  "Government / Civil Services": ["government", "govt", "civil service", "psc", "upsc", "clerk", "officer", "police", "revenue"],
+  "Graphic Designer / Media / Content": ["designer", "design", "graphic", "media", "content", "editor", "video", "ui/ux", "animator", "photographer"],
+  "Architect / Interior Designer": ["architect", "architecture", "interior"],
+  "Pharmacist / Medical Rep": ["pharmacist", "pharmacy", "medical rep", "pharma"],
+  "HR / Administrative": ["hr", "human resource", "admin", "administrator", "manager", "executive", "office"],
+  "Islamic Teacher / Usthad": ["usthad", "isla", "islamic teacher", "arabic teacher", "mudarris", "imam", "khateeb", "wafi", "hudawi"],
+  "Student / Pursuing Higher Education": ["student", "studying", "pursuing", "scholar"],
+  "Other / Private Employee": ["employee", "private", "work", "job", "staff", "associate"]
+};
+
 export function useProfiles() {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,11 +62,14 @@ export function useProfiles() {
     minAge: 18,
     maxAge: 70,
     qualifications: [],
+    professions: [],
+    profession: "",
     district: "",
     workLocation: "",
     maritalStatus: "",
     sect: ""
   };
+
 
   const [filters, setFilters] = useState(defaultFilters);
 
@@ -139,6 +161,8 @@ export function useProfiles() {
     if (filters.gender !== "All") count++;
     if (filters.minAge > 18 || filters.maxAge < 70) count++;
     if (filters.qualifications?.length > 0) count += filters.qualifications.length;
+    if (filters.professions?.length > 0) count += filters.professions.length;
+    if (filters.profession) count++;
     if (filters.district) count++;
     if (filters.workLocation) count++;
     if (filters.maritalStatus) count++;
@@ -183,6 +207,30 @@ export function useProfiles() {
         const matchesQual = filters.qualifications.some(q => pQual.toLowerCase().includes(q.toLowerCase()));
         if (!matchesQual) return false;
       }
+
+      const selectedProfs = [
+        ...(filters.professions || []),
+        ...(filters.profession ? [filters.profession] : [])
+      ];
+
+      if (selectedProfs.length > 0) {
+        const pProf = (edu.profession || "").toLowerCase();
+        if (!pProf) return false;
+
+        const matchesProf = selectedProfs.some(filterProf => {
+          const lowerFilter = filterProf.toLowerCase();
+          if (pProf.includes(lowerFilter)) return true;
+
+          const keywords = PROFESSION_KEYWORDS[filterProf] || [];
+          if (keywords.some(kw => pProf.includes(kw))) return true;
+
+          const words = lowerFilter.split(/[\s/(),-]+/).filter(w => w.length >= 3);
+          return words.some(w => pProf.includes(w));
+        });
+
+        if (!matchesProf) return false;
+      }
+
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();

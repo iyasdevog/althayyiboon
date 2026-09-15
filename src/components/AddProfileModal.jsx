@@ -20,8 +20,10 @@ import {
   ISLAMIC_QUALIFICATIONS, 
   SECTS, 
   COMMUNITY_GROUPS, 
-  MARITAL_STATUSES 
+  MARITAL_STATUSES,
+  COMMON_PROFESSIONS 
 } from '../data/mockProfiles';
+
 
 export default function AddProfileModal({ onClose, onSubmitProfile }) {
   const [step, setStep] = useState(1);
@@ -430,12 +432,19 @@ export default function AddProfileModal({ onClose, onSubmitProfile }) {
                       <input
                         type="text"
                         required
+                        list="common-professions-list"
                         value={formData.educationOccupation.profession}
                         onChange={(e) => updateSection('educationOccupation', 'profession', e.target.value)}
                         placeholder="e.g. Software Engineer / Teacher / Business"
                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
                       />
+                      <datalist id="common-professions-list">
+                        {COMMON_PROFESSIONS.map(p => (
+                          <option key={p} value={p} />
+                        ))}
+                      </datalist>
                     </div>
+
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

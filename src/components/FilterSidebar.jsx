@@ -9,6 +9,7 @@ import {
   User, 
   Heart,
   Shield,
+  Briefcase,
   Plus,
   X 
 } from 'lucide-react';
@@ -17,7 +18,8 @@ import {
   ISLAMIC_QUALIFICATIONS, 
   SECTS, 
   MARITAL_STATUSES, 
-  WORK_LOCATIONS 
+  WORK_LOCATIONS,
+  COMMON_PROFESSIONS 
 } from '../data/mockProfiles';
 
 export default function FilterSidebar({ 
@@ -44,9 +46,24 @@ export default function FilterSidebar({
     });
   };
 
+  const handleProfessionToggle = (prof) => {
+    setFilters(prev => {
+      const current = prev.professions || [];
+      const updated = current.includes(prof)
+        ? current.filter(item => item !== prof)
+        : [...current, prof];
+      return { ...prev, professions: updated };
+    });
+  };
+
   // Combine standard qualifications with approved custom qualifications
   const approvedQualFilters = approvedCustomFilters.filter(f => f.category === "Islamic Qualification").map(f => f.name);
   const allQualifications = Array.from(new Set([...ISLAMIC_QUALIFICATIONS, ...approvedQualFilters]));
+
+  // Combine standard professions with approved custom professions
+  const approvedProfFilters = approvedCustomFilters.filter(f => f.category === "General Education" || f.category === "Profession").map(f => f.name);
+  const allProfessions = Array.from(new Set([...COMMON_PROFESSIONS, ...approvedProfFilters]));
+
 
   const filterContent = (
     <div className="space-y-6">
@@ -166,7 +183,58 @@ export default function FilterSidebar({
         </div>
       </div>
 
-      {/* 4. Home District (Kerala) */}
+      {/* 4. Profession / Occupation */}
+      <div className="space-y-2">
+
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Briefcase className="w-3.5 h-3.5 text-emerald-400" /> Profession / Occupation
+          </label>
+          
+          <button
+            onClick={onRequestCustomFilter}
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded-lg border border-emerald-500/30 transition-colors"
+            title="Request new profession filter option"
+          >
+            <Plus className="w-3 h-3" />
+            <span>Add Filter</span>
+          </button>
+        </div>
+
+        <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar rounded-xl bg-slate-900/60 p-2.5 border border-slate-800/80">
+          {allProfessions.map((prof) => {
+            const isChecked = filters.professions?.includes(prof) || filters.profession === prof;
+            const isCustom = approvedProfFilters.includes(prof);
+
+            return (
+              <label
+                key={prof}
+                className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors ${
+                  isChecked ? 'bg-emerald-500/15 text-emerald-300 font-semibold' : 'text-slate-300 hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => handleProfessionToggle(prof)}
+                    className="rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 bg-slate-900"
+                  />
+                  <span>{prof}</span>
+                </div>
+                {isCustom && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Custom
+                  </span>
+                )}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+
+      {/* 5. Home District (Kerala) */}
       <div className="space-y-2">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5 text-emerald-400" /> Home District
@@ -183,7 +251,7 @@ export default function FilterSidebar({
         </select>
       </div>
 
-      {/* 5. Work Location / Country */}
+      {/* 6. Work Location / Country */}
       <div className="space-y-2">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <Globe className="w-3.5 h-3.5 text-emerald-400" /> Work Country / Region
@@ -200,7 +268,7 @@ export default function FilterSidebar({
         </select>
       </div>
 
-      {/* 6. Marital Status */}
+      {/* 7. Marital Status */}
       <div className="space-y-2">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <Heart className="w-3.5 h-3.5 text-emerald-400" /> Marital Status
@@ -217,7 +285,7 @@ export default function FilterSidebar({
         </select>
       </div>
 
-      {/* 7. Sect / Maslak */}
+      {/* 8. Sect / Maslak */}
       <div className="space-y-2">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <Shield className="w-3.5 h-3.5 text-emerald-400" /> Sect / Maslak

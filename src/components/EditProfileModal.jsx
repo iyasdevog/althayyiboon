@@ -5,8 +5,10 @@ import {
   ISLAMIC_QUALIFICATIONS, 
   SECTS, 
   COMMUNITY_GROUPS, 
-  MARITAL_STATUSES 
+  MARITAL_STATUSES,
+  COMMON_PROFESSIONS 
 } from '../data/mockProfiles';
+
 
 export default function EditProfileModal({ 
   profile, 
@@ -259,11 +261,18 @@ export default function EditProfileModal({
                       <label className="block text-[11px] text-slate-400 mb-1">Profession</label>
                       <input
                         type="text"
+                        list="common-professions-list-edit"
                         value={formData.educationOccupation.profession}
                         onChange={(e) => updateSection('educationOccupation', 'profession', e.target.value)}
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
                       />
+                      <datalist id="common-professions-list-edit">
+                        {COMMON_PROFESSIONS.map(p => (
+                          <option key={p} value={p} />
+                        ))}
+                      </datalist>
                     </div>
+
                   </div>
                 </div>
 

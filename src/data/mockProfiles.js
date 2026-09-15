@@ -74,3 +74,23 @@ export const WORK_LOCATIONS = [
   "Bahrain",
   "Other Abroad / Western Countries"
 ];
+
+export const COMMON_PROFESSIONS = [
+  "Software Engineer / IT",
+  "Doctor / Healthcare",
+  "Nurse / Paramedical",
+  "Civil / Mech / Electrical Engineer",
+  "Teacher / Educator / Lecturer",
+  "Accountant / Finance / CA",
+  "Business / Entrepreneur",
+  "Banking Professional",
+  "Government / Civil Services",
+  "Graphic Designer / Media / Content",
+  "Architect / Interior Designer",
+  "Pharmacist / Medical Rep",
+  "HR / Administrative",
+  "Islamic Teacher / Usthad",
+  "Student / Pursuing Higher Education",
+  "Other / Private Employee"
+];
+
