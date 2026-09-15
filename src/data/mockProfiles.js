@@ -24,6 +24,7 @@ export const ISLAMIC_QUALIFICATIONS = [
   "Zahravi",
   "Baqavi",
   "Faizy",
+  "Saqafi",
   "Sa-adi",
   "Hasani",
   "Adani",
