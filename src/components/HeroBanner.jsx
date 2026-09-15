@@ -6,7 +6,7 @@ export default function HeroBanner({ searchQuery, setSearchQuery, selectedGender
     { label: "All Profiles", icon: Sparkles, gender: "All", tag: "" },
     { label: "Brides", icon: null, gender: "Bride", tag: "" },
     { label: "Grooms", icon: null, gender: "Groom", tag: "" },
-    { label: "Wafi & Wafiyya", icon: BookOpen, gender: "All", tag: "wafi" },
+    { label: "Islamic Graduation", icon: BookOpen, gender: "All", tag: "wafi" },
     { label: "Sayyid / Thangal", icon: GraduationCap, gender: "All", tag: "sayyid" },
     { label: "Gulf Professionals", icon: Briefcase, gender: "All", tag: "uae" },
     { label: "Doctors & Engineers", icon: MapPin, gender: "All", tag: "b.tech" },
@@ -32,7 +32,7 @@ export default function HeroBanner({ searchQuery, setSearchQuery, selectedGender
         </h2>
         
         <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
-          Open & transparent community directory. Filter by District, Wafi/Hudawi qualifications, Profession, Sect, and Work location with direct contact access.
+          Open & transparent community directory. Filter by District, Islamic Graduation, Profession, Sect, and Work location with direct contact access.
         </p>
 
         {/* Search Bar Container */}

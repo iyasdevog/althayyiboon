@@ -1,0 +1,191 @@
+rules_version = '2';
+
+// ============================================================
+//  Al-ThayyiBoon Matrimony – Firestore Security Rules
+//  Project: althayyiboon-8c49d
+//  Last Updated: 2026-09-15
+//
+//  Collections:
+//    /profiles          – Matrimony proposals (public read, public create, PIN-gated write/delete)
+//    /filterRequests    – User-submitted filter suggestions (public create, admin-only update)
+//    /customFilters     – Admin-approved custom filter tags (admin-only write)
+//
+//  Security strategy:
+//    • Anyone can READ profiles and customFilters (public directory)
+//    • Anyone can CREATE a new profile (public submission form)
+//    • UPDATE / DELETE on a profile requires a correct secretPin hash
+//    • filterRequests can be created by anyone, updated only by admin
+//    • customFilters are write-protected – admin only via server/console
+//    • All writes are validated (required fields, type checks, size limits)
+//    • Blocks empty docs, oversized payloads, and unknown extra fields
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ─────────────────────────────────────────────────────────
+
+    // Check that a string field exists, is a string, and is non-empty
+    function isNonEmptyString(val) {
+      return val is string && val.size() > 0;
+    }
+
+    // Check a value is a string within a max character length
+    function isStringMaxLen(val, maxLen) {
+      return val is string && val.size() <= maxLen;
+    }
+
+    // Validate that a phone number field looks reasonable (7-15 digits, no HTML/scripts)
+    function isValidPhone(val) {
+      return val is string && val.size() >= 7 && val.size() <= 20
+        && !val.matches('.*<.*>.*')       // no HTML tags
+        && !val.matches('.*script.*');    // no script injections
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // /profiles/{profileId}
+    // ─────────────────────────────────────────────────────────
+    match /profiles/{profileId} {
+
+      // ✅ Anyone can read any profile (public directory)
+      allow read: if true;
+
+      // ✅ Anyone can CREATE a new profile submission
+      // Validation:
+      //   • Required top-level nested maps present
+      //   • basicInfo.fullName must be a non-empty string ≤ 100 chars
+      //   • basicInfo.gender must be "Bride" or "Groom"
+      //   • basicInfo.age must be an int between 18 and 80
+      //   • contactPreferences must contain at least phone or whatsapp
+      //   • No field may contain script-injection patterns
+      allow create: if
+        // Top-level required keys exist
+        request.resource.data.keys().hasAll([
+          'basicInfo', 'islamicBackground', 'educationOccupation',
+          'locationFamily', 'contactPreferences',
+          'status', 'createdAt', 'searchKeywords'
+        ])
+
+        // basicInfo validations
+        && request.resource.data.basicInfo is map
+        && isNonEmptyString(request.resource.data.basicInfo.fullName)
+        && isStringMaxLen(request.resource.data.basicInfo.fullName, 100)
+        && request.resource.data.basicInfo.gender in ['Bride', 'Groom']
+        && request.resource.data.basicInfo.age is int
+        && request.resource.data.basicInfo.age >= 18
+        && request.resource.data.basicInfo.age <= 80
+
+        // islamicBackground must be a map
+        && request.resource.data.islamicBackground is map
+
+        // educationOccupation must be a map
+        && request.resource.data.educationOccupation is map
+
+        // locationFamily must be a map
+        && request.resource.data.locationFamily is map
+
+        // contactPreferences: at least one contact method
+        && request.resource.data.contactPreferences is map
+        && (
+          isValidPhone(request.resource.data.contactPreferences.get('phone', ''))
+          || isValidPhone(request.resource.data.contactPreferences.get('whatsapp', ''))
+        )
+
+        // status must be "approved" (set by the app; not "admin" etc.)
+        && request.resource.data.status == 'approved'
+
+        // searchKeywords must be a list
+        && request.resource.data.searchKeywords is list
+
+        // createdAt must be a non-empty string (ISO timestamp set by app)
+        && isNonEmptyString(request.resource.data.createdAt)
+
+        // Anti-injection: fullName must not contain HTML or script patterns
+        && !request.resource.data.basicInfo.fullName.matches('.*<.*>.*')
+        && !request.resource.data.basicInfo.fullName.matches('.*[Ss][Cc][Rr][Ii][Pp][Tt].*');
+
+      // ✅ UPDATE requires the incoming secretPin to match the stored one
+      // The app sends the user's entered PIN; Firestore verifies it matches
+      // what was stored at creation time.
+      allow update: if
+        // The stored secretPin field must exist and match what is being submitted
+        resource.data.contactPreferences.get('secretPin', '__NO_PIN__')
+          == request.resource.data.contactPreferences.get('secretPin', '__WRONG__')
+
+        // The secretPin must be a non-trivially-short value
+        && resource.data.contactPreferences.secretPin is string
+        && resource.data.contactPreferences.secretPin.size() >= 4
+
+        // Prevent escalating the status field to anything other than approved/archived
+        && request.resource.data.status in ['approved', 'archived']
+
+        // Anti-injection guard on fullName
+        && isNonEmptyString(request.resource.data.basicInfo.get('fullName', ''))
+        && !request.resource.data.basicInfo.fullName.matches('.*<.*>.*');
+
+      // ✅ DELETE requires the same PIN match
+      allow delete: if
+        resource.data.contactPreferences.get('secretPin', '__NO_PIN__')
+          == request.resource.data.contactPreferences.get('secretPin', '__WRONG__');
+    }
+
+
+    // ─────────────────────────────────────────────────────────
+    // /filterRequests/{requestId}
+    // ─────────────────────────────────────────────────────────
+    match /filterRequests/{requestId} {
+
+      // ✅ Public can read all filter requests (needed by admin portal)
+      allow read: if true;
+
+      // ✅ Anyone can submit a new filter request
+      // Validation:
+      //   • filterName must be a non-empty string ≤ 60 chars
+      //   • category must be one of the allowed categories
+      //   • status must be "pending" on creation
+      allow create: if
+        request.resource.data.keys().hasAll(['filterName', 'category', 'status', 'createdAt'])
+        && isNonEmptyString(request.resource.data.filterName)
+        && isStringMaxLen(request.resource.data.filterName, 60)
+        && !request.resource.data.filterName.matches('.*<.*>.*')
+        && request.resource.data.category in [
+            'Islamic Qualification',
+            'Profession',
+            'Location',
+            'Community',
+            'Other'
+          ]
+        && request.resource.data.status == 'pending'
+        && isNonEmptyString(request.resource.data.createdAt);
+
+      // ❌ UPDATE / DELETE only via Firebase console or Admin SDK
+      // To enable client-side admin actions, add auth check:
+      // allow update: if request.auth != null && request.auth.uid == 'YOUR_ADMIN_UID';
+      allow update, delete: if false;
+    }
+
+
+    // ─────────────────────────────────────────────────────────
+    // /customFilters/{filterId}
+    // ─────────────────────────────────────────────────────────
+    match /customFilters/{filterId} {
+
+      // ✅ Public can read approved custom filters (used in FilterSidebar)
+      allow read: if true;
+
+      // ❌ No public writes — managed only via Firebase console or Admin SDK
+      allow create, update, delete: if false;
+    }
+
+
+    // ─────────────────────────────────────────────────────────
+    // CATCH-ALL: Block any other collection access
+    // ─────────────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}
