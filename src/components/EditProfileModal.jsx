@@ -102,8 +102,8 @@ export default function EditProfileModal({
               <Key className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Edit Proposal #{profile.id.slice(-5)}</h2>
-              <p className="text-xs text-slate-400">Update details or remove listing</p>
+              <h2 className="text-xl font-bold text-white">Edit Proposal Details</h2>
+              <p className="text-xs text-slate-400">Update candidate details or remove listing</p>
             </div>
           </div>
           <button 

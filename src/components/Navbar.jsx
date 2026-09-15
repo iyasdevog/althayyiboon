@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, UserPlus, Filter, ShieldCheck, Lock, X, BadgeCheck, Gift } from 'lucide-react';
+import { Heart, UserPlus, Filter, ShieldCheck, X, Gift } from 'lucide-react';
 
 export default function Navbar({ 
   onOpenAddModal, 
@@ -68,67 +68,23 @@ export default function Navbar({
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Action Buttons: Only Filter & Add Profile */}
+            <div className="flex items-center gap-2">
 
-              {/* Mobile Filter Toggle */}
+              {/* Filter Toggle Button */}
               <button
                 id="mobile-filter-toggle"
                 onClick={onToggleMobileFilter}
-                className="lg:hidden relative inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 transition-colors touch-target"
+                className="relative inline-flex items-center gap-1.5 px-3 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target"
                 aria-label="Open filters"
               >
                 <Filter className="w-4 h-4 text-emerald-400" />
-                <span className="hidden xs:inline">Filter</span>
+                <span>Filter</span>
                 {activeFilterCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-bold flex items-center justify-center shadow-md">
                     {activeFilterCount}
                   </span>
                 )}
-              </button>
-
-              {/* Favorites / Bookmarked Toggle Button */}
-              <button
-                onClick={onToggleShowFavorites}
-                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all touch-target ${
-                  showFavoritesOnly
-                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-bold shadow-md shadow-rose-500/10'
-                    : 'bg-slate-800/90 hover:bg-slate-700 text-slate-300 border-slate-700'
-                }`}
-                title="View Saved Bookmarked Proposals"
-                aria-label="View Saved Bookmarked Proposals"
-              >
-                <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly || bookmarkCount > 0 ? 'text-rose-400 fill-rose-400' : 'text-slate-400'}`} />
-                <span className="hidden sm:inline">Saved</span>
-                {bookmarkCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold">
-                    {bookmarkCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Active Count Badge — Desktop Only */}
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-medium text-slate-300 whitespace-nowrap">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-                <span>{totalProfiles} Active</span>
-              </div>
-
-              {/* FREE Badge — Mobile visible */}
-              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-[10px] sm:text-xs font-bold whitespace-nowrap">
-                <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="hidden xs:inline">FREE</span>
-              </div>
-
-              {/* Admin Portal Button */}
-              <button
-                id="admin-portal-btn"
-                onClick={onOpenAdminPortal}
-                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-colors touch-target"
-                title="Admin Moderation Portal"
-                aria-label="Open admin portal"
-              >
-                <Lock className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Admin</span>
               </button>
 
               {/* Add Profile CTA Button */}
@@ -142,6 +98,7 @@ export default function Navbar({
                 <span className="hidden xs:inline">Add Profile</span>
                 <span className="xs:hidden">Add</span>
               </button>
+
             </div>
 
           </div>

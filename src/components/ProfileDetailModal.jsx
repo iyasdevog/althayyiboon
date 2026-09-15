@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { 
   X, 
+  ArrowLeft,
   Phone, 
   MessageSquare, 
   Share2, 
@@ -43,7 +44,7 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
       : "91" + rawNumber;
 
     const text = encodeURIComponent(
-      `Assalamu Alaikum. I am contacting regarding Profile #${id} (${basicInfo.fullName || 'Candidate'}) found on Al-ThayyiBoon Matrimony Directory.`
+      `Assalamu Alaikum. I am contacting regarding candidate ${basicInfo.fullName || 'Candidate'} (${basicInfo.gender || 'Candidate'}, ${basicInfo.age || ''} Yrs) found on Al-ThayyiBoon Matrimony Directory.`
     );
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
@@ -72,46 +73,22 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
       <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden z-10 my-8 animate-fade-in">
         
         {/* Modal Top Banner Header */}
-        <div className={`p-6 border-b border-slate-800 ${
+        <div className={`p-5 sm:p-6 border-b border-slate-800 ${
           isBride ? 'bg-gradient-to-r from-slate-900 via-rose-950/30 to-slate-900' : 'bg-gradient-to-r from-slate-900 via-emerald-950/30 to-slate-900'
         }`}>
-          <div className="flex items-start justify-between gap-4">
-            
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full border ${
-                  isBride 
-                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
-                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                }`}>
-                  <User className="w-3 h-3" />
-                  {basicInfo.gender} ({basicInfo.age} Yrs)
-                </span>
-
-                {islamicBackground.qualification && islamicBackground.qualification !== "None" && (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    <BookOpen className="w-3 h-3" />
-                    {islamicBackground.qualification}
-                  </span>
-                )}
-
-                <span className="text-xs text-slate-400 font-mono">ID: #{id}</span>
-              </div>
-
-              <h2 className="text-2xl font-bold text-white tracking-tight mt-1">
-                {basicInfo.fullName || "Community Member"}
-              </h2>
-
-              <p className="text-xs text-slate-400 flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{locationFamily.homeDistrict ? `${locationFamily.homeDistrict}, Kerala` : 'Kerala'}</span>
-                <span>•</span>
-                <span>{locationFamily.nativePlace || 'Native Place'}</span>
-              </p>
-            </div>
+          {/* Top Bar: Back Button & Actions */}
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <button
+              onClick={onClose}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs sm:text-sm font-semibold transition-all group touch-target shadow-sm"
+              aria-label="Back to profiles"
+            >
+              <ArrowLeft className="w-4 h-4 text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
+              <span>Back to Directory</span>
+            </button>
 
             {/* Action Icon Group */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => onToggleBookmark(id)}
                 className={`p-2 rounded-xl border transition-colors ${
@@ -143,11 +120,43 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
               <button
                 onClick={onClose}
                 className="p-2 rounded-xl bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
+          </div>
 
+          {/* Profile Name & Badges */}
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                isBride 
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
+                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+              }`}>
+                <User className="w-3 h-3" />
+                {basicInfo.gender} ({basicInfo.age} Yrs)
+              </span>
+
+              {islamicBackground.qualification && islamicBackground.qualification !== "None" && (
+                <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <BookOpen className="w-3 h-3" />
+                  {islamicBackground.qualification}
+                </span>
+              )}
+            </div>
+
+            <h2 className="text-2xl font-bold text-white tracking-tight mt-1">
+              {basicInfo.fullName || "Community Member"}
+            </h2>
+
+            <p className="text-xs text-slate-400 flex items-center gap-2">
+              <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{locationFamily.homeDistrict ? `${locationFamily.homeDistrict}, Kerala` : 'Kerala'}</span>
+              <span>•</span>
+              <span>{locationFamily.nativePlace || 'Native Place'}</span>
+            </p>
           </div>
         </div>
 
@@ -344,6 +353,15 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
         {/* Modal Bottom Action Footer */}
         <div className="p-4 sm:p-6 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center gap-3">
           
+          {/* Back Navigation Button */}
+          <button
+            onClick={onClose}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-xs sm:text-sm border border-slate-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 text-emerald-400" />
+            <span>Back</span>
+          </button>
+
           {/* Direct WhatsApp Action Button */}
           {(contactPreferences.whatsapp || contactPreferences.phone) && (
             <a

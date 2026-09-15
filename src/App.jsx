@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import HeroBanner from './components/HeroBanner';
 import StatsBar from './components/StatsBar';
@@ -55,6 +55,22 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [isRequestFilterOpen, setIsRequestFilterOpen] = useState(false);
+
+  // Auto-detect /admin page URL or #admin hash
+  useEffect(() => {
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    if (path === '/admin' || path.startsWith('/admin') || hash === '#admin') {
+      setIsAdminPortalOpen(true);
+    }
+  }, []);
+
+  const handleCloseAdminPortal = () => {
+    setIsAdminPortalOpen(false);
+    if (window.location.pathname.toLowerCase().startsWith('/admin') || window.location.hash.toLowerCase() === '#admin') {
+      window.history.pushState({}, '', '/');
+    }
+  };
 
   // Global Toast Notification State
   const [toastMessage, setToastMessage] = useState("");
@@ -189,7 +205,7 @@ export default function App() {
       {/* Admin Management Portal Modal */}
       {isAdminPortalOpen && (
         <AdminPortalModal
-          onClose={() => setIsAdminPortalOpen(false)}
+          onClose={handleCloseAdminPortal}
           profiles={rawProfiles}
           onDeleteProfile={deleteProfile}
           onUpdateProfile={updateProfile}

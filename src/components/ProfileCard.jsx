@@ -66,7 +66,7 @@ export default function ProfileCard({
       : "91" + rawNumber;
 
     const text = encodeURIComponent(
-      `Assalamu Alaikum. I am interested in profile #${id} (${basicInfo.fullName || 'Candidate'}) listed on Al-ThayyiBoon Matrimony Directory. Please share further details.`
+      `Assalamu Alaikum. I am interested in proposal for ${basicInfo.fullName || 'Candidate'} (${basicInfo.gender || 'Candidate'}, ${basicInfo.age || ''} Yrs) listed on Al-ThayyiBoon Matrimony Directory. Please share further details.`
     );
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
@@ -144,7 +144,6 @@ export default function ProfileCard({
             <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors truncate">
               {basicInfo.fullName || "Community Member"}
             </h3>
-            <span className="text-[10px] font-mono text-slate-500 shrink-0">#{id.slice(-5)}</span>
           </div>
           <p className="text-[11px] text-slate-400 flex flex-wrap items-center gap-1 mt-0.5">
             <span>{basicInfo.maritalStatus || 'Unmarried'}</span>

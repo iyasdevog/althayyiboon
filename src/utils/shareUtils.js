@@ -19,10 +19,10 @@ export async function shareProfile(profile, onShowToast) {
   const profStr = educationOccupation.profession ? `, ${educationOccupation.profession}` : '';
   const distStr = locationFamily.homeDistrict ? `, ${locationFamily.homeDistrict}` : '';
 
-  const shareTitle = `Al-ThayyiBoon Proposal #${id.slice(-5)}`;
+  const shareTitle = `Al-ThayyiBoon Matrimony Proposal - ${fullName}`;
   
   const textSummary = [
-    `💍 *Al-ThayyiBoon Matrimony Proposal #${id.slice(-5)}*`,
+    `💍 *Al-ThayyiBoon Matrimony Proposal*`,
     `• *Candidate:* ${fullName}`,
     `• *Gender/Age:* ${genderStr} (${ageStr})`,
     `• *Qualification:* ${islamicBackground.qualification || 'N/A'}`,
