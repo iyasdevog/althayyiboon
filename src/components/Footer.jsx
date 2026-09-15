@@ -1,12 +1,12 @@
 import React from 'react';
-import { Heart, Database, ShieldCheck, Code } from 'lucide-react';
+import { Heart, ShieldCheck, Code } from 'lucide-react';
 
 export default function Footer() {
   return (
     <footer className="mt-auto bg-slate-950 border-t border-slate-800/80 pt-10 pb-8 text-xs text-slate-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-slate-800/60">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-8 border-b border-slate-800/60">
           
           {/* Brand Info */}
           <div className="space-y-3">
@@ -17,18 +17,7 @@ export default function Footer() {
               <span className="text-base font-bold text-white">Al-ThayyiBoon Matrimony</span>
             </div>
             <p className="text-slate-400 leading-relaxed">
-              Open-source, community-focused matrimony directory platform inspired by NikahInKerala. Dedicated to transparent, media-free proposal listings.
-            </p>
-          </div>
-
-          {/* Database Architecture Feature */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-white font-semibold text-sm">
-              <Database className="w-4 h-4 text-emerald-400" />
-              <span>Zero Storage Cost Architecture</span>
-            </div>
-            <p className="text-slate-400 leading-relaxed">
-              Powered by Firebase Firestore NoSQL text-only collection structure. Eliminates media storage expense while guaranteeing ultra-fast search speed.
+              Open-source, community-focused matrimony directory platform.
             </p>
           </div>
 
@@ -63,3 +52,4 @@ export default function Footer() {
     </footer>
   );
 }
+

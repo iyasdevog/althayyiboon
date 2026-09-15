@@ -30,7 +30,7 @@ export default function ProfileCard({
   } = profile;
 
   const isBride = basicInfo.gender === "Bride";
-  const isWafiOrSpecial = ["Wafi", "Wafiyya", "Hudawi", "Zahravi", "Baqavi", "Faizy", "Sayyid / Thangal Family"].some(
+  const isWafiOrSpecial = ["Wafi", "Wafiyya", "Hudawi", "Zahravi", "Baqavi", "Faizy", "Sa-adi", "Hasani", "Adani", "Bathooliyya", "Falil", "Falila", "Sidheequi", "Anwari", "Latheefi", "Marjani", "Sayyid / Thangal Family"].some(
     tag => (islamicBackground.qualification || "").includes(tag) || (islamicBackground.subGroup || "").includes(tag)
   );
 
