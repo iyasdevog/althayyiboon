@@ -1,0 +1,32 @@
+{
+  "name": "Al-ThayyiBoon Matrimony",
+  "short_name": "Al-ThayyiBoon",
+  "description": "100% FREE Islamic matrimony directory for Kerala Muslims and Gulf diaspora. Browse Wafi, Hudawi, Sayyid bride & groom proposals.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "orientation": "portrait-primary",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "scope": "/",
+  "categories": ["lifestyle", "social", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-banner.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "label": "Al-ThayyiBoon Matrimony Directory Home"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

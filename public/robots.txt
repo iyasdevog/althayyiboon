@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Block admin and internal API paths from indexing
+Disallow: /admin
+Disallow: /api/
+Disallow: /*.json$
+
+# Allow key search query pages
+Allow: /?q=
+Allow: /?gender=
+
+# Sitemap location
+Sitemap: https://althayyiboon.com/sitemap.xml
+
+# Crawl delay (be polite to bots)
+Crawl-delay: 5
