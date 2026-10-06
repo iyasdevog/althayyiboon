@@ -11,9 +11,11 @@ export default function Footer() {
           {/* Brand Info */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                <Heart className="w-4 h-4 fill-emerald-400/30" />
-              </div>
+              <img 
+                src="/favicon.svg" 
+                alt="Al-ThayyiBoon Logo" 
+                className="w-7 h-7 rounded-lg shrink-0"
+              />
               <span className="text-base font-bold text-white">Al-ThayyiBoon Matrimony</span>
             </div>
             <p className="text-slate-400 leading-relaxed">

@@ -198,7 +198,7 @@ export default function EditProfileModal({
                   <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Basic Info</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Full Name</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">Name / Alias (Private)</label>
                       <input
                         type="text"
                         value={formData.basicInfo.fullName}

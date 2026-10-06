@@ -272,13 +272,13 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                     <SectionTitle>A. Basic Personal Information</SectionTitle>
 
                     <div>
-                      <label className={labelCls}>Full Name / Alias *</label>
+                      <label className={labelCls}>Name / Alias (Private - Not shown publicly) *</label>
                       <input
                         type="text"
                         required
                         value={formData.basicInfo.fullName}
                         onChange={e => updateSection('basicInfo', 'fullName', e.target.value)}
-                        placeholder="e.g. Aysha Fathima"
+                        placeholder="e.g. Bride or Groom (Private Reference)"
                         className={inputCls}
                       />
                     </div>

@@ -67,7 +67,7 @@ export default function AdminPortalModal({
     const rows = profiles.map(p => [
       p.id,
       p.status || 'approved',
-      `"${p.basicInfo?.fullName || ''}"`,
+      `"${p.basicInfo?.gender === 'Bride' ? 'Bride' : 'Groom'}"`,
       p.basicInfo?.gender || '',
       p.basicInfo?.age || '',
       `"${p.basicInfo?.color || ''}"`,
@@ -437,7 +437,7 @@ export default function AdminPortalModal({
                             <div className="space-y-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-bold text-white text-sm">
-                                  {profile.basicInfo?.fullName || 'Candidate'}
+                                  {profile.basicInfo?.gender === "Bride" ? "Bride" : "Groom"}
                                 </span>
                                 
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${

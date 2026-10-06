@@ -192,7 +192,8 @@ export default function App() {
           onClose={() => setIsAddModalOpen(false)}
           onSubmitProfile={async (formData) => {
             const newDoc = await addNewProfile(formData);
-            showToast(`Proposal for "${newDoc.basicInfo?.fullName || 'Candidate'}" added successfully!`);
+            const propType = newDoc.basicInfo?.gender === 'Bride' ? 'Bride' : 'Groom';
+            showToast(`Proposal for ${propType} added successfully!`);
           }}
           defaultGender={selectedGender !== 'All' ? selectedGender : 'Bride'}
         />

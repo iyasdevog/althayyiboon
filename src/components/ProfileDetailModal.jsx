@@ -44,7 +44,7 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
       : "91" + rawNumber;
 
     const text = encodeURIComponent(
-      `Assalamu Alaikum. I am contacting regarding candidate ${basicInfo.fullName || 'Candidate'} (${basicInfo.gender || 'Candidate'}, ${basicInfo.age || ''} Yrs) found on Al-ThayyiBoon Matrimony Directory.`
+      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${basicInfo.gender || 'Candidate'}, ${basicInfo.age || ''} Yrs) found on Al-ThayyiBoon Matrimony Directory.`
     );
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
@@ -148,7 +148,7 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
             </div>
 
             <h2 className="text-2xl font-bold text-white tracking-tight mt-1">
-              {basicInfo.fullName || "Community Member"}
+              {isBride ? 'Bride' : 'Groom'}
             </h2>
 
             <p className="text-xs text-slate-400 flex items-center gap-2">

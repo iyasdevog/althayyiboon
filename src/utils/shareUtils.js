@@ -12,18 +12,19 @@ export async function shareProfile(profile, onShowToast) {
     educationOccupation = {}
   } = profile;
 
-  const fullName = basicInfo.fullName || 'Candidate';
+  const isBride = basicInfo.gender === "Bride";
+  const displayTitle = isBride ? 'Bride' : 'Groom';
   const ageStr = basicInfo.age ? `${basicInfo.age} Yrs` : '';
-  const genderStr = basicInfo.gender || '';
+  const genderStr = basicInfo.gender || displayTitle;
   const qualStr = islamicBackground.qualification ? `, ${islamicBackground.qualification}` : '';
   const profStr = educationOccupation.profession ? `, ${educationOccupation.profession}` : '';
   const distStr = locationFamily.homeDistrict ? `, ${locationFamily.homeDistrict}` : '';
 
-  const shareTitle = `Al-ThayyiBoon Matrimony Proposal - ${fullName}`;
+  const shareTitle = `Al-ThayyiBoon Matrimony Proposal - ${displayTitle}`;
   
   const textSummary = [
     `💍 *Al-ThayyiBoon Matrimony Proposal*`,
-    `• *Candidate:* ${fullName}`,
+    `• *Proposal:* ${displayTitle}`,
     `• *Gender/Age:* ${genderStr} (${ageStr})`,
     `• *Qualification:* ${islamicBackground.qualification || 'N/A'}`,
     `• *Profession:* ${educationOccupation.profession || 'N/A'}`,

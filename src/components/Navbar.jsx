@@ -48,11 +48,11 @@ export default function Navbar({
             
             {/* Logo & Branding */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-amber-400 p-0.5 shadow-lg shadow-emerald-900/30 flex items-center justify-center shrink-0">
-                <div className="w-full h-full bg-slate-950 rounded-[12px] sm:rounded-[14px] flex items-center justify-center">
-                  <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 fill-emerald-400/20" />
-                </div>
-              </div>
+              <img 
+                src="/favicon.svg" 
+                alt="Al-ThayyiBoon Logo" 
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl shadow-lg shadow-emerald-900/40 shrink-0 hover:scale-105 transition-transform"
+              />
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent truncate">
