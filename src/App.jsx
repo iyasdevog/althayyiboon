@@ -9,6 +9,7 @@ import AddProfileModal from './components/AddProfileModal';
 import EditProfileModal from './components/EditProfileModal';
 import AdminPortalModal from './components/AdminPortalModal';
 import RequestFilterModal from './components/RequestFilterModal';
+import SharePosterModal from './components/SharePosterModal';
 import Footer from './components/Footer';
 import AdUnit from './components/AdUnit';
 import { useProfiles } from './hooks/useProfiles';
@@ -55,6 +56,8 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [isRequestFilterOpen, setIsRequestFilterOpen] = useState(false);
+  const [posterProfile, setPosterProfile] = useState(null);
+  const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
 
   // Auto-detect /admin page URL or #admin hash
   useEffect(() => {
@@ -103,6 +106,10 @@ export default function App() {
         bookmarkCount={bookmarks.length}
         showFavoritesOnly={showFavoritesOnly}
         onToggleShowFavorites={() => setShowFavoritesOnly(prev => !prev)}
+        onOpenPosterGenerator={() => {
+          setPosterProfile(null);
+          setIsPosterModalOpen(true);
+        }}
       />
 
       {/* Hero Banner with Search Bar & Quick Tags */}
@@ -117,13 +124,6 @@ export default function App() {
 
       {/* Aggregate Statistics Overview */}
       <StatsBar profiles={profiles} />
-
-      {/* ── AD SLOT: Horizontal banner (below stats bar) ──────────────────────
-          When ready: uncomment the block below, set your slot ID
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3">
-            <AdUnit slot="YOUR_SLOT_ID" format="horizontal" className="w-full" />
-          </div>
-      ──────────────────────────────────────────────────────────────────── */}
 
       {/* Main Directory Layout Container */}
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex-1 w-full">
@@ -156,6 +156,10 @@ export default function App() {
               setEditingProfile(p);
             }}
             onShowToast={showToast}
+            onOpenPosterModal={(p) => {
+              setPosterProfile(p);
+              setIsPosterModalOpen(true);
+            }}
           />
 
         </div>
@@ -169,6 +173,10 @@ export default function App() {
           isBookmarked={bookmarks.includes(selectedProfile.id)}
           onToggleBookmark={toggleBookmark}
           onShowToast={showToast}
+          onOpenPosterModal={(p) => {
+            setPosterProfile(p);
+            setIsPosterModalOpen(true);
+          }}
         />
       )}
 
@@ -223,6 +231,18 @@ export default function App() {
           filterRequests={filterRequests}
           onApproveFilterRequest={handleApproveFilterRequest}
           onRejectFilterRequest={handleRejectFilterRequest}
+        />
+      )}
+
+      {/* Social Media Poster Generator Modal */}
+      {isPosterModalOpen && (
+        <SharePosterModal
+          profile={posterProfile}
+          onClose={() => {
+            setIsPosterModalOpen(false);
+            setPosterProfile(null);
+          }}
+          onShowToast={showToast}
         />
       )}
 

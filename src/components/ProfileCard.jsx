@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Edit,
   Clock,
-  Share2
+  Share2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { shareProfile } from '../utils/shareUtils';
 
@@ -43,7 +44,8 @@ export default function ProfileCard({
   isBookmarked, 
   onToggleBookmark,
   onOpenEditModal,
-  onShowToast
+  onShowToast,
+  onOpenPosterModal
 }) {
   const {
     id,
@@ -207,6 +209,17 @@ export default function ProfileCard({
         >
           <span>View Profile</span>
           <ChevronRight className="w-3.5 h-3.5 text-emerald-400" />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onOpenPosterModal) onOpenPosterModal(profile);
+          }}
+          className="inline-flex items-center justify-center p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors"
+          title="Generate FB & Instagram Poster Photo"
+        >
+          <ImageIcon className="w-4 h-4 text-amber-400" />
         </button>
 
         <button

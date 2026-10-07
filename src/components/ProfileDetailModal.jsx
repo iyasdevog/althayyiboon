@@ -17,11 +17,12 @@ import {
   Heart, 
   ShieldCheck, 
   Sparkles,
-  FileText
+  FileText,
+  Image as ImageIcon
 } from 'lucide-react';
 import { shareProfile } from '../utils/shareUtils';
 
-export default function ProfileDetailModal({ profile, onClose, isBookmarked, onToggleBookmark, onShowToast }) {
+export default function ProfileDetailModal({ profile, onClose, isBookmarked, onToggleBookmark, onShowToast, onOpenPosterModal }) {
   const [copied, setCopied] = useState(false);
 
   if (!profile) return null;
@@ -99,6 +100,16 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
                 title={isBookmarked ? "Remove from Favorites" : "Save Profile"}
               >
                 <Heart className={`w-4 h-4 ${isBookmarked ? 'fill-rose-400' : ''}`} />
+              </button>
+
+              <button
+                onClick={() => {
+                  if (onOpenPosterModal) onOpenPosterModal(profile);
+                }}
+                className="p-2 rounded-xl bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"
+                title="Generate Social Media Poster (FB & Instagram)"
+              >
+                <ImageIcon className="w-4 h-4 text-amber-400" />
               </button>
 
               <button
@@ -385,6 +396,17 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
               <span>Call Guardian</span>
             </a>
           )}
+
+          {/* Poster Generator Button */}
+          <button
+            onClick={() => {
+              if (onOpenPosterModal) onOpenPosterModal(profile);
+            }}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all"
+          >
+            <ImageIcon className="w-4 h-4" />
+            <span>FB / Insta Poster</span>
+          </button>
 
           {/* Share Button */}
           <button

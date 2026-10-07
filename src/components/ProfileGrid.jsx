@@ -14,7 +14,8 @@ export default function ProfileGrid({
   onOpenEditModal,
   showFavoritesOnly,
   onToggleShowFavorites,
-  onShowToast
+  onShowToast,
+  onOpenPosterModal
 }) {
   return (
     <div className="flex-1 space-y-3 sm:space-y-5 min-w-0">
@@ -75,6 +76,7 @@ export default function ProfileGrid({
                 onToggleBookmark={onToggleBookmark}
                 onOpenEditModal={onOpenEditModal}
                 onShowToast={onShowToast}
+                onOpenPosterModal={onOpenPosterModal}
               />
               {/* ── AD SLOT: Mid-feed after every 6 cards ───────────────────────
                   When ready: uncomment below and set your slot ID
