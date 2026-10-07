@@ -110,7 +110,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCaption, setCopiedCaption] = useState(false);
 
-  // Profile data extraction with defaults
+  // Profile data extraction (NO FAKE FALLBACKS)
   const basicInfo = profile?.basicInfo || {};
   const islamicBackground = profile?.islamicBackground || {};
   const locationFamily = profile?.locationFamily || {};
@@ -121,7 +121,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
 
   // Proposal ID
   const proposalId = profile?.id ? profile.id.slice(0, 7).toUpperCase() : (isBride ? "B12512" : "G12512");
-  const phoneNo = contactPreferences.phone || contactPreferences.whatsapp || "9037429908";
+  const phoneNo = contactPreferences.phone || contactPreferences.whatsapp || "";
 
   // Photo to display (User uploaded > SVG Fallback)
   const displayPhoto = customPhoto || (isBride ? BRIDE_BACKSIDE_SVG : GROOM_KERALA_SCHOLAR_SVG);
@@ -145,7 +145,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
     try {
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
-        pixelRatio: 2, // High resolution
+        pixelRatio: 2,
         quality: 0.98,
         style: {
           transform: 'scale(1)',
@@ -198,43 +198,48 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
     }
   };
 
-  // Caption text formatted for Instagram & Facebook
+  // Caption text formatted for Instagram & Facebook - STRICTLY ONLY PRESENT DETAILS
   const getSocialCaption = () => {
     const shareUrl = `${window.location.origin}/?profile=${profile?.id || ''}`;
-    return lang === 'ml' ? 
-`💍 *Al-ThayyiBoon Matrimony Proposal (${proposalId})*
-📍 *${isBride ? 'വധുവിന്റെ വിവരങ്ങൾ' : 'വരന്റെ വിവരങ്ങൾ (Young Kerala Scholar)'}:*
-• പ്രായം: ${basicInfo.age || '28'} വയസ്സ് | ഉയരം: ${basicInfo.height || '168 cm'}
-• സ്ഥലം: ${locationFamily.homeDistrict || 'Kozhikode'}, ${locationFamily.nativePlace || 'Kerala'}
-• വിദ്യാഭ്യാസം: ${educationOccupation.education || 'Degree'}
-• മത പഠനം: ${islamicBackground.qualification || 'Hadiya / Sunni'}
-• തൊഴിൽ: ${educationOccupation.profession || 'Not Specified'}
+    const lines = [];
 
-✨ *പ്രതീക്ഷിക്കുന്നത്:*
-• പ്രായം: ${isBride ? '30 - 35' : '20 - 27'} | സ്ഥലം: ${locationFamily.homeDistrict || 'Kerala'}
-• ആദർശം: ${islamicBackground.sect || 'Sunni'}
+    lines.push(`💍 *Al-ThayyiBoon Matrimony Proposal (${proposalId})*`);
+    lines.push(`📍 *${isBride ? 'വധുവിന്റെ വിവരങ്ങൾ' : 'വരന്റെ വിവരങ്ങൾ'}:*`);
 
-📞 *ബന്ധപ്പെടാൻ:* ${phoneNo}
-🔗 *പൂർണ്ണ വിവരങ്ങൾക്ക്:* ${shareUrl}
+    if (basicInfo.age) lines.push(`• ${lang === 'ml' ? 'പ്രായം' : 'Age'}: ${basicInfo.age} ${lang === 'ml' ? 'വയസ്സ്' : 'Yrs'}`);
+    if (basicInfo.height) lines.push(`• ${lang === 'ml' ? 'ഉയരം' : 'Height'}: ${basicInfo.height}`);
+    
+    const placeArr = [locationFamily.homeDistrict, locationFamily.nativePlace].filter(Boolean);
+    if (placeArr.length > 0) {
+      lines.push(`• ${lang === 'ml' ? 'സ്ഥലം' : 'Location'}: ${placeArr.join(', ')}`);
+    }
 
-#niqabi #proposals #kerala #sunni #matrimony #althayyiboon #nikah #keralamatrimony` 
-: 
-`💍 *Al-ThayyiBoon Matrimony Proposal (${proposalId})*
-📍 *${isBride ? 'Bride Details (Pure Black Abaya)' : 'Groom Details (Young Kerala Scholar)'}:*
-• Age: ${basicInfo.age || '28'} Yrs | Height: ${basicInfo.height || '168 cm'}
-• Location: ${locationFamily.homeDistrict || 'Kerala'}, ${locationFamily.nativePlace || 'Native'}
-• Education: ${educationOccupation.education || 'Degree'}
-• Islamic Qualification: ${islamicBackground.qualification || 'Sunni'}
-• Profession: ${educationOccupation.profession || 'Not Specified'}
+    if (educationOccupation.education) lines.push(`• ${lang === 'ml' ? 'വിദ്യാഭ്യാസം' : 'Education'}: ${educationOccupation.education}`);
+    if (islamicBackground.qualification && islamicBackground.qualification !== "None") {
+      lines.push(`• ${lang === 'ml' ? 'മത പഠനം' : 'Islamic Ed.'}: ${islamicBackground.qualification}`);
+    }
+    if (educationOccupation.profession) lines.push(`• ${lang === 'ml' ? 'തൊഴിൽ' : 'Job'}: ${educationOccupation.profession}`);
 
-✨ *Expectations:*
-• Preferred Age: ${isBride ? '30 - 35' : '20 - 27'} | District: ${locationFamily.homeDistrict || 'Kerala'}
-• Ideology: ${islamicBackground.sect || 'Sunni'}
+    // Expectations - Only if present
+    if (contactPreferences.expectations || contactPreferences.expectedAge || contactPreferences.expectedLocation || contactPreferences.expectedIdeology) {
+      lines.push(``);
+      lines.push(`✨ *${isBride ? (lang === 'ml' ? 'വരനിൽ പ്രതീക്ഷിക്കുന്നത്' : 'Expectations in Groom') : (lang === 'ml' ? 'വധുവിൽ പ്രതീക്ഷിക്കുന്നത്' : 'Expectations in Bride')}:*`);
+      if (contactPreferences.expectedAge) lines.push(`• ${lang === 'ml' ? 'വയസ്സ്' : 'Age'}: ${contactPreferences.expectedAge}`);
+      if (contactPreferences.expectedLocation) lines.push(`• ${lang === 'ml' ? 'സ്ഥലം' : 'Location'}: ${contactPreferences.expectedLocation}`);
+      if (contactPreferences.expectedIdeology) lines.push(`• ${lang === 'ml' ? 'ആദർശം' : 'Ideology'}: ${contactPreferences.expectedIdeology}`);
+      if (contactPreferences.expectations) lines.push(`• ${contactPreferences.expectations}`);
+    }
 
-📞 *Contact:* ${phoneNo}
-🔗 *Full Profile:* ${shareUrl}
+    if (phoneNo) {
+      lines.push(``);
+      lines.push(`📞 *${lang === 'ml' ? 'ബന്ധപ്പെടാൻ' : 'Contact'}:* ${phoneNo}`);
+    }
 
-#niqabi #proposals #kerala #sunni #matrimony #althayyiboon #nikah`;
+    lines.push(`🔗 *${lang === 'ml' ? 'പൂർണ്ണ വിവരങ്ങൾക്ക്' : 'Full details'}:* ${shareUrl}`);
+    lines.push(``);
+    lines.push(`#niqabi #proposals #kerala #sunni #matrimony #althayyiboon #nikah`);
+
+    return lines.join('\n');
   };
 
   // Share to Facebook Action
@@ -250,7 +255,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
     window.open(fbUrl, '_blank', 'width=600,height=500');
   };
 
-  // Share to Instagram / Download & Copy Caption
+  // Share to Instagram Action
   const handleInstagramShare = async () => {
     setIsGenerating(true);
     try {
@@ -269,6 +274,16 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
       setIsGenerating(false);
     }
   };
+
+  // Check if profile has any candidate details
+  const hasLocation = Boolean(locationFamily.homeDistrict || locationFamily.nativePlace);
+  const hasExpectations = Boolean(
+    contactPreferences.expectations || 
+    contactPreferences.expectedAge || 
+    contactPreferences.expectedLocation || 
+    contactPreferences.expectedIdeology ||
+    contactPreferences.scholarPriority
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -296,7 +311,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
                 </span>
               </h2>
               <p className="text-[11px] text-slate-400">
-                Bride: Pure Black Abaya (Backside 2x Zoom) • Groom: Young Kerala Scholar (2x Zoom)
+                Displays strictly the details added for this candidate (No extra fields)
               </p>
             </div>
           </div>
@@ -398,7 +413,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
               className={`relative overflow-hidden shadow-2xl transition-all duration-300 ${
                 aspectRatio === "9:16" 
                   ? 'w-[360px] sm:w-[420px] min-h-[740px] sm:min-h-[820px]' 
-                  : 'w-[360px] sm:w-[440px] min-h-[600px] sm:min-h-[660px]'
+                  : 'w-[360px] sm:w-[440px] min-h-[580px] sm:min-h-[640px]'
               }`}
               style={{
                 background: 'linear-gradient(135deg, #051610 0%, #0c2b20 40%, #03150d 100%)',
@@ -453,7 +468,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
               <div className="flex p-3 sm:p-4 gap-3 items-stretch">
                 
                 {/* LEFT SIDE PHOTO CONTAINER (2X ZOOMED, LEFT-ALIGNED) */}
-                <div className="w-[40%] shrink-0 flex flex-col justify-between items-center rounded-2xl overflow-hidden border border-amber-500/30 bg-slate-950 relative shadow-lg">
+                <div className="w-[38%] shrink-0 flex flex-col justify-between items-center rounded-2xl overflow-hidden border border-amber-500/30 bg-slate-950 relative shadow-lg">
                   
                   {/* Image Display with 2x Zoom and Left Positioning */}
                   <div className="w-full h-full overflow-hidden relative" style={{ minHeight: aspectRatio === "9:16" ? '440px' : '360px' }}>
@@ -471,12 +486,12 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
                   {/* Modest Overlay Label */}
                   <div className="absolute bottom-2 left-2 right-2 bg-slate-950/90 backdrop-blur-md px-2 py-1 rounded-xl border border-amber-400/40 text-center z-10">
                     <p className="text-[10px] font-bold text-amber-300">
-                      {isBride ? (lang === 'ml' ? 'സുന്നി വധു (Black Abaya)' : 'Pure Black Abaya Bride') : (lang === 'ml' ? 'യുവാവായ സുന്നി പണ്ഡിതൻ' : 'Young Kerala Usthad')}
+                      {isBride ? (lang === 'ml' ? 'സുന്നി വധു' : 'Sunni Bride') : (lang === 'ml' ? 'യുവാവായ സുന്നി പണ്ഡിതൻ' : 'Young Kerala Usthad')}
                     </p>
                   </div>
                 </div>
 
-                {/* RIGHT SIDE: DETAILS PANELS (MALAYALAM & ENGLISH) */}
+                {/* RIGHT SIDE: DETAILS PANELS (STRICTLY EXPLICIT DATA ONLY) */}
                 <div className="flex-1 flex flex-col justify-between gap-2.5">
                   
                   {/* BOX 1: CANDIDATE INFORMATION */}
@@ -487,115 +502,175 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
                     </div>
 
                     <div className="space-y-1.5 text-[11px] sm:text-xs text-slate-200">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-emerald-400 font-bold">☪</span>
-                        <span>{islamicBackground.sect || 'സുന്നി'} {islamicBackground.subGroup ? `(${islamicBackground.subGroup})` : ''}</span>
-                      </div>
+                      
+                      {/* Sect / Maslak */}
+                      {islamicBackground.sect && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-emerald-400 font-bold">☪</span>
+                          <span>{islamicBackground.sect} {islamicBackground.subGroup ? `(${islamicBackground.subGroup})` : ''}</span>
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-rose-400 font-bold">💍</span>
-                        <span>{basicInfo.maritalStatus || 'പുനർവിവാഹം / Unmarried'}</span>
-                      </div>
+                      {/* Marital Status */}
+                      {basicInfo.maritalStatus && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-rose-400 font-bold">💍</span>
+                          <span>{basicInfo.maritalStatus}</span>
+                        </div>
+                      )}
 
-                      <div className="flex items-start gap-1.5">
-                        <span className="text-amber-400 font-bold">📍</span>
-                        <span>{lang === 'ml' ? 'സ്ഥലം' : 'Place'} - {locationFamily.homeDistrict || 'Kozhikode'}, {locationFamily.nativePlace || 'Kerala'}</span>
-                      </div>
+                      {/* Place / District */}
+                      {hasLocation && (
+                        <div className="flex items-start gap-1.5">
+                          <span className="text-amber-400 font-bold">📍</span>
+                          <span>{lang === 'ml' ? 'സ്ഥലം' : 'Place'} - {[locationFamily.homeDistrict, locationFamily.nativePlace].filter(Boolean).join(', ')}</span>
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-amber-300 font-bold">🎂</span>
-                        <span>{lang === 'ml' ? 'വയസ്സ്' : 'Age'} - {basicInfo.age || '28'}</span>
-                      </div>
+                      {/* Age */}
+                      {basicInfo.age && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-amber-300 font-bold">🎂</span>
+                          <span>{lang === 'ml' ? 'വയസ്സ്' : 'Age'} - {basicInfo.age}</span>
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-emerald-300 font-bold">📏</span>
-                        <span>{lang === 'ml' ? 'ഉയരം' : 'Height'} - {basicInfo.height || '168 cm'}</span>
-                      </div>
+                      {/* Height */}
+                      {basicInfo.height && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-emerald-300 font-bold">📏</span>
+                          <span>{lang === 'ml' ? 'ഉയരം' : 'Height'} - {basicInfo.height}</span>
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-teal-300 font-bold">💰</span>
-                        <span>{lang === 'ml' ? 'സാമ്പത്തികം' : 'Financial'} - {locationFamily.financialStatus || 'Upper Middle class'}</span>
-                      </div>
+                      {/* Color (Groom Only) */}
+                      {!isBride && basicInfo.color && basicInfo.color !== "Not Specified" && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-amber-200 font-bold">✨</span>
+                          <span>{lang === 'ml' ? 'നിറം' : 'Color'} - {basicInfo.color}</span>
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-indigo-300 font-bold">👤</span>
-                        <span>{lang === 'ml' ? 'ശരീരരൂപം' : 'Physique'} - {basicInfo.physicalStatus || 'Normal'}</span>
-                      </div>
+                      {/* Financial Status */}
+                      {locationFamily.financialStatus && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-teal-300 font-bold">💰</span>
+                          <span>{lang === 'ml' ? 'സാമ്പത്തികം' : 'Financial'} - {locationFamily.financialStatus}</span>
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-rose-300 font-bold">🎓</span>
-                        <span>{lang === 'ml' ? 'വിദ്യാഭ്യാസം' : 'Education'} - {educationOccupation.education || 'Degree'}</span>
-                      </div>
+                      {/* Physique */}
+                      {basicInfo.physicalStatus && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-indigo-300 font-bold">👤</span>
+                          <span>{lang === 'ml' ? 'ശരീരരൂപം' : 'Physique'} - {basicInfo.physicalStatus}</span>
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-1.5 text-amber-300 font-medium">
-                        <BookOpen className="w-3 h-3 text-amber-400 shrink-0" />
-                        <span>{lang === 'ml' ? 'മത പഠനം' : 'Islamic Ed.'} - {islamicBackground.qualification || 'Hadiya / Diploma'}</span>
-                      </div>
+                      {/* General Education */}
+                      {educationOccupation.education && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-rose-300 font-bold">🎓</span>
+                          <span>{lang === 'ml' ? 'വിദ്യാഭ്യാസം' : 'Education'} - {educationOccupation.education}</span>
+                        </div>
+                      )}
+
+                      {/* Islamic Education */}
+                      {islamicBackground.qualification && islamicBackground.qualification !== "None" && (
+                        <div className="flex items-center gap-1.5 text-amber-300 font-medium">
+                          <BookOpen className="w-3 h-3 text-amber-400 shrink-0" />
+                          <span>{lang === 'ml' ? 'മത പഠനം' : 'Islamic Ed.'} - {islamicBackground.qualification}</span>
+                        </div>
+                      )}
+
+                      {/* Profession */}
+                      {educationOccupation.profession && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-amber-400 font-bold">💼</span>
+                          <span>{lang === 'ml' ? 'തൊഴിൽ' : 'Job'} - {educationOccupation.profession}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* BOX 2: EXPECTATIONS */}
-                  <div className="bg-slate-900/90 p-3 rounded-2xl border border-amber-500/30 shadow-md">
-                    <div className="flex items-center gap-1.5 pb-1 mb-2 border-b border-amber-500/20 text-emerald-300 font-bold text-xs sm:text-sm">
-                      <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/30" />
-                      <span>{isBride ? (lang === 'ml' ? 'വരനിൽ പ്രതീക്ഷിക്കുന്നത്' : 'Expected in Groom') : (lang === 'ml' ? 'വധുവിൽ പ്രതീക്ഷിക്കുന്നത്' : 'Expected in Bride')}</span>
-                    </div>
+                  {/* BOX 2: EXPECTATIONS (ONLY RENDERED IF EXPLICITLY PROVIDED IN PROFILE) */}
+                  {hasExpectations && (
+                    <div className="bg-slate-900/90 p-3 rounded-2xl border border-amber-500/30 shadow-md">
+                      <div className="flex items-center gap-1.5 pb-1 mb-2 border-b border-amber-500/20 text-emerald-300 font-bold text-xs sm:text-sm">
+                        <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/30" />
+                        <span>{isBride ? (lang === 'ml' ? 'വരനിൽ പ്രതീക്ഷിക്കുന്നത്' : 'Expected in Groom') : (lang === 'ml' ? 'വധുവിൽ പ്രതീക്ഷിക്കുന്നത്' : 'Expected in Bride')}</span>
+                      </div>
 
-                    <div className="space-y-1 text-[11px] sm:text-xs text-slate-200">
-                      <div>
-                        <span className="text-amber-300 font-semibold">{lang === 'ml' ? 'വയസ്സ്' : 'Age'}:</span> {isBride ? '30 - 35' : '20 - 27'}
-                      </div>
-                      <div>
-                        <span className="text-amber-300 font-semibold">{lang === 'ml' ? 'ദൂരം / സ്ഥലം' : 'Location'}:</span> {locationFamily.homeDistrict || 'Kozhikode / Open'}
-                      </div>
-                      <div>
-                        <span className="text-amber-300 font-semibold">{lang === 'ml' ? 'ആദർശം' : 'Ideology'}:</span> {islamicBackground.sect || 'AP Sunni'}
-                      </div>
-                      <div className="line-clamp-2">
-                        <span className="text-amber-300 font-semibold">{lang === 'ml' ? 'മറ്റു ഡിമാൻഡ്‌സ്' : 'Demands'}:</span> {contactPreferences.expectations || (lang === 'ml' ? 'ദീനി ആയ അനുയോജ്യമായ കുടുംബത്തിൽ നിന്നുള്ളവർ.' : 'Religious suitable family.')}
-                      </div>
-                      <div className="text-[10px] text-emerald-300 font-bold mt-0.5">
-                        ⭐ {lang === 'ml' ? 'ഉസ്താദുമാർക്ക് / ദീനീ യോഗ്യതക്ക് മുൻഗണന.' : 'Priority for Young Kerala Islamic Scholars / Usthad candidates.'}
+                      <div className="space-y-1 text-[11px] sm:text-xs text-slate-200">
+                        {contactPreferences.expectedAge && (
+                          <div>
+                            <span className="text-amber-300 font-semibold">{lang === 'ml' ? 'വയസ്സ്' : 'Age'}:</span> {contactPreferences.expectedAge}
+                          </div>
+                        )}
+                        {contactPreferences.expectedLocation && (
+                          <div>
+                            <span className="text-amber-300 font-semibold">{lang === 'ml' ? 'ദൂരം / സ്ഥലം' : 'Location'}:</span> {contactPreferences.expectedLocation}
+                          </div>
+                        )}
+                        {contactPreferences.expectedIdeology && (
+                          <div>
+                            <span className="text-amber-300 font-semibold">{lang === 'ml' ? 'ആദർശം' : 'Ideology'}:</span> {contactPreferences.expectedIdeology}
+                          </div>
+                        )}
+                        {contactPreferences.expectations && (
+                          <div className="line-clamp-3">
+                            <span className="text-amber-300 font-semibold">{lang === 'ml' ? 'പ്രതീക്ഷകൾ' : 'Demands'}:</span> {contactPreferences.expectations}
+                          </div>
+                        )}
+                        {contactPreferences.scholarPriority && (
+                          <div className="text-[10px] text-emerald-300 font-bold mt-0.5">
+                            ⭐ {lang === 'ml' ? 'ഉസ്താദുമാർക്ക് / ദീനീ യോഗ്യതക്ക് മുൻഗണന.' : 'Priority for Islamic Scholars / Usthad candidates.'}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  )}
 
                 </div>
 
               </div>
 
-              {/* WARNING BADGE */}
-              <div className="mx-3 my-1">
-                <div className="bg-rose-950/80 border border-rose-500/40 rounded-xl py-1.5 px-3 text-center">
-                  <p className="text-rose-200 font-extrabold text-[11px] sm:text-xs flex items-center justify-center gap-1.5">
-                    <span>⚠️</span>
-                    <span>{lang === 'ml' ? 'സുന്നികൾ മാത്രം കോൺടാക്ട് ചെയ്യുക' : 'Only Sunni Candidates Contact'}</span>
-                  </p>
-                </div>
-              </div>
-
-              {/* BOTTOM CONTACT BAR */}
-              <div className="p-3 bg-gradient-to-r from-amber-500/20 via-emerald-950/80 to-amber-500/20 border-t border-amber-500/40 mt-1">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-emerald-500 text-slate-950 font-bold flex items-center justify-center shadow-md">
-                      <Phone className="w-4 h-4 fill-slate-950" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-amber-200 block font-semibold">CONTACT / WHATSAPP:</span>
-                      <span className="text-base sm:text-lg font-mono font-black text-amber-300 tracking-wider">
-                        {phoneNo}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-[9px] text-emerald-300 font-semibold leading-tight max-w-[130px]">
-                      {lang === 'ml' ? 'ബയോയിലെ ലിങ്കിലൂടെ നിങ്ങൾക്കും കൂട്ടായ്മയിൽ അംഗമാകാം' : 'Join via link in bio / website'}
+              {/* WARNING BADGE - ONLY IF SUNNI SECT */}
+              {(!islamicBackground.sect || islamicBackground.sect.includes("Sunni")) && (
+                <div className="mx-3 my-1">
+                  <div className="bg-rose-950/80 border border-rose-500/40 rounded-xl py-1.5 px-3 text-center">
+                    <p className="text-rose-200 font-extrabold text-[11px] sm:text-xs flex items-center justify-center gap-1.5">
+                      <span>⚠️</span>
+                      <span>{lang === 'ml' ? 'സുന്നികൾ മാത്രം കോൺടാക്ട് ചെയ്യുക' : 'Only Sunni Candidates Contact'}</span>
                     </p>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* BOTTOM CONTACT BAR */}
+              {phoneNo && (
+                <div className="p-3 bg-gradient-to-r from-amber-500/20 via-emerald-950/80 to-amber-500/20 border-t border-amber-500/40 mt-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500 text-slate-950 font-bold flex items-center justify-center shadow-md">
+                        <Phone className="w-4 h-4 fill-slate-950" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-amber-200 block font-semibold">CONTACT / WHATSAPP:</span>
+                        <span className="text-base sm:text-lg font-mono font-black text-amber-300 tracking-wider">
+                          {phoneNo}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-[9px] text-emerald-300 font-semibold leading-tight max-w-[130px]">
+                        {lang === 'ml' ? 'ബയോയിലെ ലിങ്കിലൂടെ നിങ്ങൾക്കും കൂട്ടായ്മയിൽ അംഗമാകാം' : 'Join via link in bio / website'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
             </div>
 
@@ -663,10 +738,9 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
             </button>
 
             <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
-              <p className="font-bold text-amber-300">💡 Customization Applied:</p>
-              <p>• <strong>Bride:</strong> Pure black abaya (backside view, 2x zoom on left).</p>
-              <p>• <strong>Groom:</strong> Young handsome Kerala Usthad (2x zoom on left).</p>
-              <p>• <strong>Facebook Share:</strong> Opens FB share dialog & copies formatted Malayalam text.</p>
+              <p className="font-bold text-amber-300">💡 Strict Details Mode:</p>
+              <p>• Only explicit profile data entered for this candidate is displayed.</p>
+              <p>• All empty or missing fields and expectations boxes are automatically omitted.</p>
             </div>
 
           </div>
