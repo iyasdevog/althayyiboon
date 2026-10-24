@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Plus, Filter, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
 
 export default function RequestFilterModal({ onClose, onSubmitFilterRequest }) {
   const [category, setCategory] = useState("Islamic Qualification");
@@ -8,6 +8,17 @@ export default function RequestFilterModal({ onClose, onSubmitFilterRequest }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Keyboard accessibility: Close on Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,11 +48,17 @@ export default function RequestFilterModal({ onClose, onSubmitFilterRequest }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="request-filter-title"
+    >
       {/* Backdrop */}
       <div 
         onClick={onClose}
         className="fixed inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity"
+        aria-hidden="true"
       ></div>
 
       {/* Modal Dialog */}
@@ -50,17 +67,18 @@ export default function RequestFilterModal({ onClose, onSubmitFilterRequest }) {
         {/* Header */}
         <div className="p-6 bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold" aria-hidden="true">
               <Plus className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Request Custom Filter</h2>
+              <h2 id="request-filter-title" className="text-lg font-bold text-white">Request Custom Filter</h2>
               <p className="text-xs text-slate-400">Suggest new tags or qualifications</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors touch-target"
+            aria-label="Close request filter dialog"
           >
             <X className="w-5 h-5" />
           </button>

@@ -12,10 +12,9 @@ import RequestFilterModal from './components/RequestFilterModal';
 import SharePosterModal from './components/SharePosterModal';
 import WalletRechargeModal from './components/WalletRechargeModal';
 import Footer from './components/Footer';
-import AdUnit from './components/AdUnit';
 import { useProfiles } from './hooks/useProfiles';
 import { useAuth } from './context/AuthContext';
-import { Check, Sparkles } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 export default function App() {
   const {

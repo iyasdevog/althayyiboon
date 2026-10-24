@@ -118,7 +118,11 @@ export default function ProfileCard({
   };
 
   return (
-    <div className="group relative glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 active:scale-[0.98] sm:hover:-translate-y-1 sm:hover:shadow-xl sm:hover:shadow-emerald-950/40 card-pressable border border-slate-800">
+    <article 
+      id={`profile-card-${id}`}
+      aria-labelledby={`profile-heading-${id}`}
+      className="group relative glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 active:scale-[0.98] sm:hover:-translate-y-1 sm:hover:shadow-xl sm:hover:shadow-emerald-950/40 card-pressable border border-slate-800"
+    >
       
       {/* Top Row: Gender Badge + Badges + Actions */}
       <div>
@@ -172,8 +176,9 @@ export default function ProfileCard({
                 e.stopPropagation();
                 onOpenEditModal(profile);
               }}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-300 hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-300 hover:bg-slate-800 transition-colors touch-target"
               title="Edit / Remove Proposal"
+              aria-label={`Edit or remove proposal ${id}`}
             >
               <Edit className="w-3.5 h-3.5" />
             </button>
@@ -182,12 +187,13 @@ export default function ProfileCard({
                 e.stopPropagation();
                 onToggleBookmark(id);
               }}
-              className={`p-1.5 rounded-lg transition-colors ${
+              className={`p-1.5 rounded-lg transition-colors touch-target ${
                 isBookmarked
                   ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/80'
               }`}
               title={isBookmarked ? "Remove from Favorites" : "Save to Favorites"}
+              aria-label={isBookmarked ? `Remove proposal ${id} from favorites` : `Save proposal ${id} to favorites`}
             >
               <Heart className={`w-4 h-4 ${isBookmarked ? 'fill-rose-400' : ''}`} />
             </button>
@@ -198,7 +204,10 @@ export default function ProfileCard({
         {/* Name, ID & Basic Details */}
         <div className="mb-2.5">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors truncate">
+            <h3 
+              id={`profile-heading-${id}`}
+              className="text-base sm:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors truncate"
+            >
               {basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal')}
             </h3>
             <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 shrink-0">
@@ -306,7 +315,8 @@ export default function ProfileCard({
       <div className="flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={() => onSelectProfile(profile)}
-          className="flex-1 inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 active:bg-slate-600/90 text-white font-semibold text-xs border border-slate-700/70 transition-colors"
+          className="flex-1 inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 active:bg-slate-600/90 text-white font-semibold text-xs border border-slate-700/70 transition-colors touch-target"
+          aria-label={`View full details of proposal ${id}`}
         >
           <span>View Profile</span>
           <ChevronRight className="w-3.5 h-3.5 text-emerald-400" />
@@ -317,8 +327,9 @@ export default function ProfileCard({
             e.stopPropagation();
             if (onOpenPosterModal) onOpenPosterModal(profile);
           }}
-          className="inline-flex items-center justify-center p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors"
+          className="inline-flex items-center justify-center p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors touch-target"
           title="Generate Social Poster Photo"
+          aria-label={`Generate social poster card for proposal ${id}`}
         >
           <ImageIcon className="w-4 h-4 text-amber-400" />
         </button>
@@ -328,8 +339,9 @@ export default function ProfileCard({
             e.stopPropagation();
             shareProfile(profile, onShowToast);
           }}
-          className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+          className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors touch-target"
           title="Share Proposal Link"
+          aria-label={`Share link for proposal ${id}`}
         >
           <Share2 className="w-4 h-4 text-emerald-400" />
         </button>
@@ -341,22 +353,24 @@ export default function ProfileCard({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 active:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 transition-colors"
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 active:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 transition-colors touch-target"
             title="Direct WhatsApp Chat"
+            aria-label={`Chat directly on WhatsApp with guardian of proposal ${id}`}
           >
             <MessageSquare className="w-4 h-4" />
           </a>
         ) : (
           <button
             onClick={handleUnlockClick}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors"
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors touch-target"
             title="Unlock Contact to Chat on WhatsApp"
+            aria-label={`Unlock contact to chat on WhatsApp with guardian of proposal ${id}`}
           >
             <Lock className="w-4 h-4 text-amber-400" />
           </button>
         )}
       </div>
 
-    </div>
+    </article>
   );
 }

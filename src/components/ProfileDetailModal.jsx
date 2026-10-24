@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   ArrowLeft,
@@ -9,11 +9,9 @@ import {
   User, 
   BookOpen, 
   GraduationCap, 
-  Briefcase, 
   MapPin, 
   Home, 
   Heart, 
-  ShieldCheck, 
   Sparkles, 
   FileText,
   Image as ImageIcon,
@@ -37,6 +35,16 @@ function maskPhoneNumber(phone) {
 export default function ProfileDetailModal({ profile, onClose, isBookmarked, onToggleBookmark, onShowToast, onOpenPosterModal }) {
   const [copied, setCopied] = useState(false);
   const { isContactUnlocked, unlockContact, pricing } = useAuth();
+
+  // MUST be called before any early returns to comply with Rules of Hooks
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!profile) return;
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, profile]);
 
   if (!profile) return null;
 
@@ -100,7 +108,12 @@ export default function ProfileDetailModal({ profile, onClose, isBookmarked, onT
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div 
+      role="dialog" 
+      aria-modal="true" 
+      aria-labelledby="profile-detail-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+    >
       {/* Backdrop */}
       <div 
         onClick={onClose}

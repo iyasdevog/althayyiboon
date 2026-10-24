@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   X, 
   Share2, 
@@ -8,9 +8,9 @@ import {
   Upload, 
   Sparkles, 
   Phone, 
-  User,
-  Heart,
-  BookOpen
+  User, 
+  Heart, 
+  BookOpen 
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 
@@ -109,6 +109,17 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCaption, setCopiedCaption] = useState(false);
+
+  // Keyboard accessibility: Close on Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // Profile data extraction (NO FAKE FALLBACKS)
   const basicInfo = profile?.basicInfo || {};
@@ -288,25 +299,31 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="share-poster-title"
+    >
       {/* Backdrop */}
       <div 
         onClick={onClose}
         className="fixed inset-0 bg-slate-950/90 backdrop-blur-md transition-opacity"
+        aria-hidden="true"
       ></div>
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-700/80 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 my-4 max-h-[96vh] flex flex-col">
+      <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-700/80 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 my-4 max-h-[96vh] flex flex-col animate-fade-in">
         
         {/* Modal Controls Header */}
         <div className="p-4 border-b border-slate-800 bg-slate-950/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
           
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-emerald-500/20 text-amber-300 border border-amber-500/30">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-emerald-500/20 text-amber-300 border border-amber-500/30" aria-hidden="true">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <h2 id="share-poster-title" className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 Social Media Poster Generator
                 <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   FB & Instagram Ready
@@ -320,7 +337,8 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-xl bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors touch-target"
+            aria-label="Close social poster dialog"
           >
             <X className="w-5 h-5" />
           </button>

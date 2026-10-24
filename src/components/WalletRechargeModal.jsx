@@ -3,8 +3,6 @@ import {
   X, 
   Coins, 
   Check, 
-  CreditCard, 
-  Sparkles, 
   ShieldCheck, 
   User, 
   Lock, 
@@ -31,6 +29,16 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast }) {
   const [selectedPack, setSelectedPack] = useState(5);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('recharge'); // 'recharge' | 'account'
+
+  // Close on Escape key press
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -68,7 +76,12 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div 
+      role="dialog" 
+      aria-modal="true" 
+      aria-label="Recharge Wallet & Manage Credits"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+    >
       {/* Backdrop */}
       <div 
         onClick={onClose}

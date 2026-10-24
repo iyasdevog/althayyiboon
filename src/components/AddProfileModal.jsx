@@ -237,8 +237,22 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
     }
   };
 
+  // Close modal on Escape key press
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div 
+      role="dialog" 
+      aria-modal="true" 
+      aria-labelledby="add-proposal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+    >
       {/* Backdrop */}
       <div 
         onClick={onClose}

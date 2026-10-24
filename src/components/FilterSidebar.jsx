@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Filter, 
   RotateCcw, 
@@ -15,13 +15,10 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
-  Lock,
-  Layers
+  Lock
 } from 'lucide-react';
 import { 
   KERALA_DISTRICTS, 
-  ISLAMIC_QUALIFICATIONS, 
-  EDUCATION_LEVELS,
   SUBJECT_CATEGORIES,
   SECTS, 
   MARITAL_STATUSES, 
@@ -44,6 +41,18 @@ export default function FilterSidebar({
   // Accordion open states
   const [openIslamicAccordion, setOpenIslamicAccordion] = useState(true);
   const [openAcademicAccordion, setOpenAcademicAccordion] = useState(true);
+
+  // Close mobile filter drawer on Escape
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onCloseMobile();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileOpen, onCloseMobile]);
 
   const handleGenderChange = (gender) => {
     // If not admin, gender view lock is enforced
@@ -540,19 +549,26 @@ export default function FilterSidebar({
 
       {/* Mobile Filter Drawer */}
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div 
+          className="fixed inset-0 z-50 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mobile-filter-heading"
+        >
           <div 
             onClick={onCloseMobile}
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            aria-hidden="true"
           ></div>
           <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-slate-950 border-l border-slate-800 p-6 overflow-y-auto shadow-2xl animate-slide-left">
             <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 id="mobile-filter-heading" className="text-lg font-bold text-white flex items-center gap-2">
                 <Filter className="w-5 h-5 text-emerald-400" /> Filters
               </h3>
               <button 
                 onClick={onCloseMobile}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 touch-target"
+                aria-label="Close filter drawer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -561,7 +577,8 @@ export default function FilterSidebar({
             <div className="mt-8 pt-4 border-t border-slate-800 sticky bottom-0 bg-slate-950">
               <button
                 onClick={onCloseMobile}
-                className="w-full py-3.5 px-4 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20"
+                className="w-full py-3.5 px-4 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 touch-target"
+                aria-label="Apply chosen filters"
               >
                 Apply Filters
               </button>

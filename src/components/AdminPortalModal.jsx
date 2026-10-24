@@ -233,8 +233,22 @@ export default function AdminPortalModal({
     updatePricingConfig(newConfig);
   };
 
+  // Close modal on Escape key press
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div 
+      role="dialog" 
+      aria-modal="true" 
+      aria-label="Admin Management Console"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+    >
       {/* Backdrop */}
       <div 
         onClick={onClose}
