@@ -12,9 +12,14 @@ import {
   Edit,
   Clock,
   Share2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Lock,
+  Unlock,
+  Coins,
+  Phone
 } from 'lucide-react';
 import { shareProfile } from '../utils/shareUtils';
+import { useAuth } from '../context/AuthContext';
 
 // Format createdAt ISO string into a friendly relative label
 function formatPostedDate(dateStr) {
@@ -37,6 +42,16 @@ function formatPostedDate(dateStr) {
   }
 }
 
+// Phone number masking utility: e.g. +91 98******12
+function maskPhoneNumber(phone) {
+  if (!phone) return "+91 98******12";
+  const clean = phone.trim();
+  if (clean.length < 8) return "+91 98******12";
+  // keep first 6 chars, mask middle, keep last 2
+  const prefix = clean.slice(0, Math.min(6, clean.length - 4));
+  const suffix = clean.slice(-2);
+  return `${prefix}******${suffix}`;
+}
 
 export default function ProfileCard({ 
   profile, 
@@ -47,60 +62,98 @@ export default function ProfileCard({
   onShowToast,
   onOpenPosterModal
 }) {
+  const { isContactUnlocked, unlockContact, pricing } = useAuth();
+
   const {
     id,
     basicInfo = {},
     islamicBackground = {},
+    islamicQualification = [],
+    generalEducation = {},
     educationOccupation = {},
     locationFamily = {},
+    contactDetails = {},
     contactPreferences = {}
   } = profile;
 
-  const isBride = basicInfo.gender === "Bride";
-  const isWafiOrSpecial = ["Wafi", "Wafiyya", "Hudawi", "Zahravi", "Baqavi", "Faizy", "Saqafi", "Sa-adi", "Hasani", "Adani", "Bathooliyya", "Falil", "Falila", "Sidheequi", "Anwari", "Latheefi", "Marjani", "Sayyid / Thangal Family"].some(
-    tag => (islamicBackground.qualification || "").includes(tag) || (islamicBackground.subGroup || "").includes(tag)
-  );
+  const isBride = basicInfo.gender === "Bride" || profile.gender === "female";
+  const isUnlocked = isContactUnlocked(id);
+
+  // Raw phone & whatsapp
+  const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
+  const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
+
+  // Islamic qualifications array
+  const islamicList = Array.isArray(islamicQualification) && islamicQualification.length > 0
+    ? islamicQualification.filter(q => q && q !== 'None')
+    : (islamicBackground.qualification && islamicBackground.qualification !== 'None' ? [islamicBackground.qualification] : []);
+
+  // General academic degree display
+  const academicDegree = generalEducation.degreeName || educationOccupation.degree || educationOccupation.education || "";
+  const subjectCategory = generalEducation.subjectCategory || "";
+  const specialization = generalEducation.specialization || "";
+
+  const fee = pricing.contactUnlockFee || 15;
+
+  const handleUnlockClick = (e) => {
+    e.stopPropagation();
+    const result = unlockContact(profile);
+    if (result.success) {
+      if (onShowToast) {
+        onShowToast(`Guardian contact unlocked successfully! (-1 Credit)`);
+      }
+    }
+  };
 
   const getWhatsAppLink = () => {
-    const rawNumber = (contactPreferences.whatsapp || contactPreferences.phone || "").replace(/[^0-9]/g, "");
+    const rawNumber = (rawWhatsApp || "").replace(/[^0-9]/g, "");
     const formattedNum = rawNumber.startsWith("91") || rawNumber.startsWith("966") || rawNumber.startsWith("971") || rawNumber.startsWith("974") 
       ? rawNumber 
       : "91" + rawNumber;
 
     const text = encodeURIComponent(
-      `Assalamu Alaikum. I am interested in proposal for ${isBride ? 'Bride' : 'Groom'} (${basicInfo.gender || 'Candidate'}, ${basicInfo.age || ''} Yrs) listed on Al-ThayyiBoon Matrimony Directory. Please share further details.`
+      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${basicInfo.gender || 'Candidate'}, ${basicInfo.age || ''} Yrs, ID: ${id}) listed on Al-ThayyiBoon Matrimony.`
     );
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
 
   return (
-    <div className="group relative glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 active:scale-[0.98] sm:hover:-translate-y-1 sm:hover:shadow-xl sm:hover:shadow-emerald-950/40 card-pressable">
+    <div className="group relative glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 active:scale-[0.98] sm:hover:-translate-y-1 sm:hover:shadow-xl sm:hover:shadow-emerald-950/40 card-pressable border border-slate-800">
       
-      {/* Top Row: Badges + Actions */}
+      {/* Top Row: Gender Badge + Badges + Actions */}
       <div>
         <div className="flex items-start justify-between gap-2 mb-3">
-          {/* Left: Gender badge + qual badge */}
+          
+          {/* Left: Gender + Badges */}
           <div className="flex flex-wrap items-center gap-1.5 min-w-0">
             
-            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-lg border ${
+            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
               isBride
                 ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
                 : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
             }`}>
               <User className="w-3 h-3" />
-              <span>{basicInfo.gender}</span>
+              <span>{isBride ? 'Bride' : 'Groom'}</span>
               <span className="opacity-40">•</span>
               <span>{basicInfo.age} Yrs</span>
             </span>
 
-            {islamicBackground.qualification && islamicBackground.qualification !== "None" && (
-              <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-lg border ${
-                isWafiOrSpecial
-                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 font-bold'
-                  : 'bg-slate-800 text-slate-300 border-slate-700'
-              }`}>
-                <BookOpen className="w-3 h-3 text-amber-400 shrink-0" />
-                <span className="truncate max-w-[100px]">{islamicBackground.qualification}</span>
+            {/* ISLAMIC QUALIFICATION BADGE (Emerald/Green) */}
+            {islamicList.length > 0 && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm">
+                <BookOpen className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span className="truncate max-w-[120px]">{islamicList.join(', ')}</span>
+              </span>
+            )}
+
+            {/* GENERAL ACADEMIC BADGE (Sky / Blue / Slate) */}
+            {academicDegree && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-sm">
+                <GraduationCap className="w-3 h-3 text-sky-400 shrink-0" />
+                <span className="truncate max-w-[140px]">
+                  {academicDegree}
+                  {specialization && !academicDegree.includes(specialization) ? ` (${specialization})` : ''}
+                </span>
               </span>
             )}
 
@@ -109,6 +162,7 @@ export default function ProfileCard({
                 <Sparkles className="w-2.5 h-2.5" /> Sayyid
               </span>
             )}
+
           </div>
 
           {/* Right: Edit + Bookmark */}
@@ -138,17 +192,21 @@ export default function ProfileCard({
               <Heart className={`w-4 h-4 ${isBookmarked ? 'fill-rose-400' : ''}`} />
             </button>
           </div>
+
         </div>
 
-        {/* Name & meta */}
-        <div className="mb-3">
+        {/* Name, ID & Basic Details */}
+        <div className="mb-2.5">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors truncate">
-              {isBride ? 'Bride' : 'Groom'}
+              {basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal')}
             </h3>
+            <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 shrink-0">
+              {id}
+            </span>
           </div>
           <p className="text-[11px] text-slate-400 flex flex-wrap items-center gap-1 mt-0.5">
-            <span>{basicInfo.maritalStatus || 'Unmarried'}</span>
+            <span>{basicInfo.maritalStatus || 'Never Married'}</span>
             <span>•</span>
             <span>{basicInfo.height || 'Height N/A'}</span>
             {basicInfo.color && basicInfo.color !== "Not Specified" && (
@@ -157,16 +215,23 @@ export default function ProfileCard({
                 <span className="text-amber-300/90">{basicInfo.color}</span>
               </>
             )}
+            {subjectCategory && (
+              <>
+                <span>•</span>
+                <span className="text-sky-300/80">{subjectCategory}</span>
+              </>
+            )}
           </p>
         </div>
 
         {/* Key Detail List */}
-        <div className="space-y-1.5 text-xs text-slate-300 mb-3.5 border-t border-b border-slate-800/80 py-2.5">
+        <div className="space-y-1.5 text-xs text-slate-300 mb-3 border-t border-b border-slate-800/80 py-2.5">
           
           <div className="flex items-start gap-2">
-            <GraduationCap className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+            <GraduationCap className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
             <span className="line-clamp-1 font-medium text-slate-200">
-              {educationOccupation.education || 'Education not specified'}
+              {academicDegree ? academicDegree : (educationOccupation.education || 'Education not specified')}
+              {generalEducation.level ? ` • ${generalEducation.level}` : ''}
             </span>
           </div>
 
@@ -188,6 +253,42 @@ export default function ProfileCard({
           </div>
 
         </div>
+
+        {/* Guardian Contact Info / Masked State */}
+        <div className="mb-3 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+              <Phone className="w-3 h-3 text-slate-400" />
+              <span>Guardian Phone</span>
+              {isUnlocked ? (
+                <span className="text-[9px] text-emerald-400 font-extrabold uppercase bg-emerald-500/10 px-1 rounded">Unlocked</span>
+              ) : (
+                <span className="text-[9px] text-amber-400 font-extrabold uppercase bg-amber-500/10 px-1 rounded">Protected</span>
+              )}
+            </div>
+            <div className="text-xs font-mono font-bold text-slate-200 mt-0.5">
+              {isUnlocked ? rawPhone || "Contact provided" : maskPhoneNumber(rawPhone)}
+            </div>
+          </div>
+
+          {/* Pay-Per-View Unlock CTA Button if not unlocked */}
+          {!isUnlocked ? (
+            <button
+              onClick={handleUnlockClick}
+              className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-[11px] shadow-sm flex items-center gap-1 transition-all active:scale-95 shrink-0"
+              title="Unlock Guardian Phone and WhatsApp"
+            >
+              <Coins className="w-3.5 h-3.5" />
+              <span>Unlock (₹{fee} / 1 Credit)</span>
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
+              <Unlock className="w-3.5 h-3.5" />
+              <span>Verified</span>
+            </span>
+          )}
+        </div>
+
       </div>
 
       {/* Posted Date */}
@@ -205,7 +306,7 @@ export default function ProfileCard({
       <div className="flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={() => onSelectProfile(profile)}
-          className="flex-1 inline-flex items-center justify-center gap-1 py-2.5 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 active:bg-slate-600/90 text-white font-semibold text-xs border border-slate-700/70 transition-colors"
+          className="flex-1 inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 active:bg-slate-600/90 text-white font-semibold text-xs border border-slate-700/70 transition-colors"
         >
           <span>View Profile</span>
           <ChevronRight className="w-3.5 h-3.5 text-emerald-400" />
@@ -216,8 +317,8 @@ export default function ProfileCard({
             e.stopPropagation();
             if (onOpenPosterModal) onOpenPosterModal(profile);
           }}
-          className="inline-flex items-center justify-center p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors"
-          title="Generate FB & Instagram Poster Photo"
+          className="inline-flex items-center justify-center p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors"
+          title="Generate Social Poster Photo"
         >
           <ImageIcon className="w-4 h-4 text-amber-400" />
         </button>
@@ -227,22 +328,33 @@ export default function ProfileCard({
             e.stopPropagation();
             shareProfile(profile, onShowToast);
           }}
-          className="inline-flex items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+          className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
           title="Share Proposal Link"
         >
           <Share2 className="w-4 h-4 text-emerald-400" />
         </button>
 
-        <a
-          href={getWhatsAppLink()}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center justify-center p-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 active:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 transition-colors"
-          title="Direct WhatsApp Contact"
-        >
-          <MessageSquare className="w-4 h-4" />
-        </a>
+        {/* WhatsApp Button: Direct if unlocked, or prompt unlock */}
+        {isUnlocked ? (
+          <a
+            href={getWhatsAppLink()}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 active:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 transition-colors"
+            title="Direct WhatsApp Chat"
+          >
+            <MessageSquare className="w-4 h-4" />
+          </a>
+        ) : (
+          <button
+            onClick={handleUnlockClick}
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors"
+            title="Unlock Contact to Chat on WhatsApp"
+          >
+            <Lock className="w-4 h-4 text-amber-400" />
+          </button>
+        )}
       </div>
 
     </div>

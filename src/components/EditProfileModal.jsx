@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { X, Lock, Key, Trash2, Save, AlertCircle, CheckCircle, ShieldCheck, Phone, MessageSquare, FileText } from 'lucide-react';
+import { X, Lock, Key, Trash2, Save, AlertCircle, BookOpen, GraduationCap } from 'lucide-react';
 import { 
   KERALA_DISTRICTS, 
   ISLAMIC_QUALIFICATIONS, 
+  EDUCATION_LEVELS,
+  SUBJECT_CATEGORIES,
   SECTS, 
-  COMMUNITY_GROUPS, 
-  MARITAL_STATUSES,
-  COMMON_PROFESSIONS,
   COMPLEXIONS
 } from '../data/mockProfiles';
-
 
 export default function EditProfileModal({ 
   profile, 
@@ -24,24 +22,38 @@ export default function EditProfileModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Initialize form state supporting both old & new schemas
   const [formData, setFormData] = useState({
     basicInfo: { color: "", ...profile.basicInfo },
+    islamicQualification: Array.isArray(profile.islamicQualification)
+      ? profile.islamicQualification
+      : (profile.islamicBackground?.qualification ? [profile.islamicBackground.qualification] : ['Wafi']),
     islamicBackground: { ...profile.islamicBackground },
+    generalEducation: {
+      level: profile.generalEducation?.level || profile.educationOccupation?.level || "Bachelor's Degree (BA, BSc, BCom, BTech, MBBS, etc.)",
+      degreeName: profile.generalEducation?.degreeName || profile.educationOccupation?.degree || profile.educationOccupation?.education || "",
+      subjectCategory: profile.generalEducation?.subjectCategory || "Arts & Humanities",
+      specialization: profile.generalEducation?.specialization || ""
+    },
     educationOccupation: { ...profile.educationOccupation },
     locationFamily: { ...profile.locationFamily },
+    contactDetails: {
+      guardianPhone: profile.contactDetails?.guardianPhone || profile.contactPreferences?.phone || "",
+      whatsappNumber: profile.contactDetails?.whatsappNumber || profile.contactPreferences?.whatsapp || ""
+    },
     contactPreferences: { 
       contactMethod: "both",
       alternateContact: "",
       ...profile.contactPreferences 
     },
-    security: { editPin: profile.security?.editPin || "1234" }
+    security: { editPin: profile.security?.editPin || profile.contactPreferences?.secretPin || "1234" }
   });
 
   const handlePinVerify = (e) => {
     e.preventDefault();
     setPinError("");
 
-    const correctPin = profile.security?.editPin || "1234";
+    const correctPin = profile.security?.editPin || profile.contactPreferences?.secretPin || "1234";
     if (pinEntered.trim() === correctPin || pinEntered.trim() === "admin2014") {
       setIsAuthenticated(true);
     } else {
@@ -63,7 +75,25 @@ export default function EditProfileModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSaveUpdate(profile.id, formData);
+      const payload = {
+        ...formData,
+        islamicBackground: {
+          ...formData.islamicBackground,
+          qualification: formData.islamicQualification[0] || 'None'
+        },
+        educationOccupation: {
+          ...formData.educationOccupation,
+          education: `${formData.generalEducation.degreeName} ${formData.generalEducation.specialization ? `(${formData.generalEducation.specialization})` : ''}`.trim(),
+          degree: formData.generalEducation.degreeName.trim()
+        },
+        contactPreferences: {
+          ...formData.contactPreferences,
+          phone: formData.contactDetails.guardianPhone,
+          whatsapp: formData.contactDetails.whatsappNumber
+        }
+      };
+
+      await onSaveUpdate(profile.id, payload);
       onClose();
     } catch (err) {
       alert("Error updating profile: " + err.message);
@@ -102,76 +132,67 @@ export default function EditProfileModal({
               <Key className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Edit Proposal Details</h2>
-              <p className="text-xs text-slate-400">Update candidate details or remove listing</p>
+              <h2 className="text-lg font-bold text-white">Edit Proposal Listing</h2>
+              <p className="text-xs text-slate-400">Proposal ID: <span className="font-mono text-amber-300 font-bold">{profile.id}</span></p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* PIN VERIFICATION STEP */}
+        {/* Modal Body */}
         {!isAuthenticated ? (
-          <form onSubmit={handlePinVerify} className="p-8 space-y-6 max-w-md mx-auto text-center">
-            <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-400 mx-auto flex items-center justify-center border border-amber-500/20">
+          /* PIN Verification Gate */
+          <div className="p-8 text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-slate-800 text-amber-400 mx-auto flex items-center justify-center border border-slate-700">
               <Lock className="w-8 h-8" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Security Verification Required</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Enter the secret 4-digit PIN you created when listing this proposal.
+              <h3 className="text-xl font-bold text-white">Enter Secret Edit PIN</h3>
+              <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                Only proposal creators with the secret PIN (or administrators) can modify or delete this profile.
               </p>
             </div>
 
-            {pinError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center justify-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                <span>{pinError}</span>
-              </div>
-            )}
-
-            <div>
+            <form onSubmit={handlePinVerify} className="max-w-xs mx-auto space-y-4">
               <input
                 type="password"
-                maxLength="6"
-                required
+                maxLength="8"
+                autoFocus
+                placeholder="4-digit PIN"
                 value={pinEntered}
                 onChange={(e) => setPinEntered(e.target.value)}
-                placeholder="Enter 4-digit Secret PIN"
-                className="w-full text-center tracking-widest text-lg font-bold py-3 px-4 rounded-xl bg-slate-950 text-white border border-slate-800 focus:outline-none focus:border-amber-500"
+                className="w-full text-center tracking-widest text-xl font-mono py-3 rounded-2xl bg-slate-950 text-amber-400 border border-slate-700 focus:outline-none focus:border-amber-500 font-bold"
               />
-            </div>
+              
+              {pinError && (
+                <div className="text-rose-400 text-xs flex items-center justify-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{pinError}</span>
+                </div>
+              )}
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-1/2 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs"
-              >
-                Cancel
-              </button>
               <button
                 type="submit"
-                className="w-1/2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20"
+                className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition-all"
               >
-                Verify & Unlock
+                Unlock &amp; Edit Proposal
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         ) : (
-          /* AUTHENTICATED EDIT FORM */
-          <form onSubmit={handleSave} className="p-6 space-y-5 max-h-[calc(85vh-10rem)] overflow-y-auto custom-scrollbar">
+          /* Editable Form */
+          <form onSubmit={handleSave} className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
             
-            {/* Delete Confirmation Warning */}
             {confirmDelete ? (
               <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-center space-y-3">
                 <h4 className="text-base font-bold text-rose-300">Are you sure you want to delete this proposal?</h4>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  This action will permanently delete this proposal listing from the directory and Firestore.
+                  This action will permanently delete this proposal listing from the directory.
                 </p>
                 <div className="flex justify-center gap-3 pt-2">
                   <button
@@ -198,7 +219,7 @@ export default function EditProfileModal({
                   <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Basic Info</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Name / Alias (Private)</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">Name / Identifier</label>
                       <input
                         type="text"
                         value={formData.basicInfo.fullName}
@@ -216,67 +237,37 @@ export default function EditProfileModal({
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Color / Complexion (Optional)</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">Color / Complexion</label>
                       <select
                         value={formData.basicInfo.color || ''}
                         onChange={(e) => updateSection('basicInfo', 'color', e.target.value)}
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
                       >
-                        <option value="">Select Complexion (Optional)</option>
+                        <option value="">Select (Optional)</option>
                         {COMPLEXIONS.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">
-                        Height
-                        <span className="ml-1 text-emerald-400/70">(cm auto-converts to ft)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.basicInfo.height || ''}
-                        onChange={(e) => {
-                          const raw = e.target.value;
-                          const numMatch = raw.match(/^\s*(\d{2,3})\s*(?:cm)?\s*$/i);
-                          if (numMatch) {
-                            const cm = parseInt(numMatch[1], 10);
-                            if (cm >= 100 && cm <= 250) {
-                              const totalInches = cm / 2.54;
-                              const ft = Math.floor(totalInches / 12);
-                              const inch = Math.round(totalInches % 12);
-                              updateSection('basicInfo', 'height', `${ft} ft ${inch} in (${cm} cm)`);
-                              return;
-                            }
-                          }
-                          updateSection('basicInfo', 'height', raw);
-                        }}
-                        placeholder="e.g. 163 cm  or  5 ft 4 in"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Physical Status</label>
-                      <input
-                        type="text"
-                        value={formData.basicInfo.physicalStatus || ''}
-                        onChange={(e) => updateSection('basicInfo', 'physicalStatus', e.target.value)}
-                        placeholder="Normal / Differently Abled"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
-                      />
-                    </div>
-                  </div>
                 </div>
 
-                {/* Islamic Background */}
+                {/* Islamic Qualifications Section */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Islamic Background</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5" /> Islamic Qualification
+                  </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Qualification</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">Islamic Scholar Degree</label>
                       <select
-                        value={formData.islamicBackground.qualification}
-                        onChange={(e) => updateSection('islamicBackground', 'qualification', e.target.value)}
+                        value={formData.islamicQualification[0] || 'None'}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            islamicQualification: [val],
+                            islamicBackground: { ...prev.islamicBackground, qualification: val }
+                          }));
+                        }}
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
                       >
                         {ISLAMIC_QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
@@ -295,175 +286,137 @@ export default function EditProfileModal({
                   </div>
                 </div>
 
-                {/* Education & Occupation */}
+                {/* General Academic Education (Level, Degree, Subject Category, Specialization) */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Education & Profession</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5" /> General Academic Education &amp; Subjects
+                  </h3>
+                  
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Education</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">Education Level</label>
+                      <select
+                        value={formData.generalEducation.level}
+                        onChange={(e) => updateSection('generalEducation', 'level', e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      >
+                        {EDUCATION_LEVELS.map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Degree Title</label>
                       <input
                         type="text"
-                        value={formData.educationOccupation.education}
-                        onChange={(e) => updateSection('educationOccupation', 'education', e.target.value)}
+                        value={formData.generalEducation.degreeName}
+                        onChange={(e) => updateSection('generalEducation', 'degreeName', e.target.value)}
+                        placeholder="e.g. B.A., M.Sc., Ph.D., B.Tech, MBBS"
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
                       />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Specialized Subject Category</label>
+                      <select
+                        value={formData.generalEducation.subjectCategory}
+                        onChange={(e) => updateSection('generalEducation', 'subjectCategory', e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      >
+                        {SUBJECT_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Specific Field of Study</label>
+                      <input
+                        type="text"
+                        value={formData.generalEducation.specialization}
+                        onChange={(e) => updateSection('generalEducation', 'specialization', e.target.value)}
+                        placeholder="e.g. Economics, Biotechnology"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Profession & Location */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400">Profession &amp; District</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] text-slate-400 mb-1">Profession</label>
                       <input
                         type="text"
-                        list="common-professions-list-edit"
                         value={formData.educationOccupation.profession}
                         onChange={(e) => updateSection('educationOccupation', 'profession', e.target.value)}
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
                       />
-                      <datalist id="common-professions-list-edit">
-                        {COMMON_PROFESSIONS.map(p => (
-                          <option key={p} value={p} />
-                        ))}
-                      </datalist>
                     </div>
-
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Home District</label>
+                      <select
+                        value={formData.locationFamily.homeDistrict}
+                        onChange={(e) => updateSection('locationFamily', 'homeDistrict', e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      >
+                        {KERALA_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </div>
                   </div>
                 </div>
 
-                {/* Contact Preferences */}
+                {/* Protected Contact Numbers */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Contact & Expectations</h3>
-                  
-                  <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">Preferred Contact Mode</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => updateSection('contactPreferences', 'contactMethod', 'whatsapp_only')}
-                        className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1 ${
-                          formData.contactPreferences.contactMethod === 'whatsapp_only'
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                            : 'bg-slate-950 text-slate-400 border-slate-800'
-                        }`}
-                      >
-                        <MessageSquare className="w-3 h-3 text-emerald-400" /> WhatsApp
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateSection('contactPreferences', 'contactMethod', 'both')}
-                        className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center ${
-                          formData.contactPreferences.contactMethod === 'both'
-                            ? 'bg-teal-500/20 text-teal-300 border-teal-500/40'
-                            : 'bg-slate-950 text-slate-400 border-slate-800'
-                        }`}
-                      >
-                        Call & WhatsApp
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateSection('contactPreferences', 'contactMethod', 'call_only')}
-                        className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1 ${
-                          formData.contactPreferences.contactMethod === 'call_only'
-                            ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
-                            : 'bg-slate-950 text-slate-400 border-slate-800'
-                        }`}
-                      >
-                        <Phone className="w-3 h-3 text-blue-400" /> Call Only
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateSection('contactPreferences', 'contactMethod', 'any')}
-                        className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1 ${
-                          formData.contactPreferences.contactMethod === 'any'
-                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
-                            : 'bg-slate-950 text-slate-400 border-slate-800'
-                        }`}
-                      >
-                        Any Method
-                      </button>
-                    </div>
-                  </div>
-
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-rose-400">Guardian Contact (Pay-Per-View Guarded)</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">WhatsApp Number</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">Guardian Phone Call</label>
                       <input
-                        type="text"
-                        value={formData.contactPreferences.whatsapp || ''}
-                        onChange={(e) => updateSection('contactPreferences', 'whatsapp', e.target.value)}
+                        type="tel"
+                        value={formData.contactDetails.guardianPhone}
+                        onChange={(e) => updateSection('contactDetails', 'guardianPhone', e.target.value)}
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
                       />
                     </div>
-
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Direct Phone Number</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">Guardian WhatsApp</label>
                       <input
-                        type="text"
-                        value={formData.contactPreferences.phone || ''}
-                        onChange={(e) => updateSection('contactPreferences', 'phone', e.target.value)}
+                        type="tel"
+                        value={formData.contactDetails.whatsappNumber}
+                        onChange={(e) => updateSection('contactDetails', 'whatsappNumber', e.target.value)}
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="block text-[11px] text-slate-400 mb-1">Alternate Contact (Phone / Landline / Email)</label>
-                      <input
-                        type="text"
-                        value={formData.contactPreferences.alternateContact || ''}
-                        onChange={(e) => updateSection('contactPreferences', 'alternateContact', e.target.value)}
-                        placeholder="e.g. +91 9123456789 (Uncle) or email@example.com"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2 space-y-1">
-                      <label className="block text-[11px] text-slate-400 mb-1 flex items-center gap-1">
-                        <FileText className="w-3.5 h-3.5 text-emerald-400" /> Special Demands & Expectations on Bride/Groom (Optional)
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={formData.contactPreferences.expectations || ''}
-                        onChange={(e) => updateSection('contactPreferences', 'expectations', e.target.value)}
-                        placeholder="Type any expectations or special demands regarding bride or groom..."
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 custom-scrollbar resize-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Secret Edit PIN</label>
-                      <input
-                        type="text"
-                        maxLength="6"
-                        value={formData.security?.editPin || '1234'}
-                        onChange={(e) => updateSection('security', 'editPin', e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 font-mono font-bold"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Modal Actions */}
-                <div className="pt-4 flex items-center justify-between border-t border-slate-800">
+                {/* Actions */}
+                <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-semibold text-xs border border-rose-500/30"
+                    className="px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-colors"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                     <span>Delete Proposal</span>
                   </button>
 
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs"
+                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20"
+                      className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-1.5"
                     >
-                      <Save className="w-4 h-4" />
+                      <Save className="w-3.5 h-3.5" />
                       <span>{isSubmitting ? "Saving..." : "Save Changes"}</span>
                     </button>
                   </div>

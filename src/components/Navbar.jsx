@@ -1,5 +1,17 @@
-import React, { useState } from 'react';
-import { Heart, UserPlus, Filter, ShieldCheck, X, Gift, Image as ImageIcon } from 'lucide-react';
+import React from 'react';
+import { 
+  Heart, 
+  UserPlus, 
+  Filter, 
+  ShieldCheck, 
+  Image as ImageIcon,
+  Coins,
+  User,
+  Plus,
+  Lock,
+  Sparkles
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar({ 
   onOpenAddModal, 
@@ -10,37 +22,46 @@ export default function Navbar({
   bookmarkCount = 0,
   showFavoritesOnly = false,
   onToggleShowFavorites,
-  onOpenPosterGenerator
+  onOpenPosterGenerator,
+  onOpenWalletModal
 }) {
-  const [bannerVisible, setBannerVisible] = useState(true);
+  const { credits, currentUser, userGender, isAdmin } = useAuth();
 
   return (
     <header className="sticky top-0 z-40">
       
-      {/* ===== FREE SERVICES ANNOUNCEMENT BANNER ===== */}
-      {bannerVisible && (
-        <div className="free-banner animate-slide-down border-b border-emerald-700/50">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <Gift className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-              <p className="text-[11px] sm:text-xs font-semibold text-emerald-100 truncate leading-relaxed">
-                <span className="font-extrabold text-white">🎉 100% FREE</span>
-                <span className="hidden xs:inline"> — All services on Al-ThayyiBoon are completely free. We do </span>
-                <span className="xs:hidden"> — We do </span>
-                <span className="font-bold text-amber-300">NOT</span>
-                {' '}request payment for any service. No subscriptions. No hidden fees. Ever.
-              </p>
-            </div>
-            <button
-              onClick={() => setBannerVisible(false)}
-              className="shrink-0 p-1.5 rounded-full text-emerald-300 hover:text-white hover:bg-emerald-800/60 transition-colors touch-target"
-              aria-label="Dismiss banner"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+      {/* Campaign / Verification Banner (Replacing 100% Free banner) */}
+      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-amber-950/70 border-b border-emerald-800/40 py-1.5 px-3 sm:px-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] sm:text-xs">
+          <div className="flex items-center gap-2 text-slate-300 truncate">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="font-semibold text-emerald-300">Verified Matrimonial Network</span>
+            <span className="hidden sm:inline text-slate-500">•</span>
+            <span className="hidden sm:inline text-slate-400">
+              Direct guardian contact access with protected pay-per-view credits
+            </span>
+          </div>
+
+          {/* Gender View Lock Indicator */}
+          <div className="flex items-center gap-2 shrink-0">
+            {!isAdmin && userGender && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 text-[10px] sm:text-[11px] font-semibold text-amber-300 border border-amber-500/30">
+                <Lock className="w-2.5 h-2.5" />
+                <span>Viewing {userGender === 'male' ? 'Brides' : 'Grooms'}</span>
+              </span>
+            )}
+            {isAdmin && (
+              <button 
+                onClick={onOpenAdminPortal}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-[10px] sm:text-[11px] font-bold text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-colors"
+              >
+                <ShieldCheck className="w-3 h-3 text-amber-400" />
+                <span>Admin Mode</span>
+              </button>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* ===== MAIN NAVBAR ===== */}
       <div className="glass-panel border-b border-slate-800/80">
@@ -60,33 +81,61 @@ export default function Navbar({
                     Al-ThayyiBoon
                   </h1>
                   <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
-                    <ShieldCheck className="w-3 h-3" /> Community Directory
+                    <ShieldCheck className="w-3 h-3" /> Islamic &amp; Academic
                   </span>
                 </div>
                 <p className="text-[10px] sm:text-xs text-slate-400 font-medium hidden sm:block">
-                  Open-Source Matrimony Directory • <span className="text-emerald-400 font-bold">Zero Cost</span>
+                  Kerala &amp; Gulf Matrimony • <span className="text-emerald-400 font-bold">Verified Direct Contacts</span>
                 </p>
               </div>
             </div>
 
-            {/* Action Buttons: Only Filter & Add Profile */}
-            <div className="flex items-center gap-2">
+            {/* Action Buttons: Wallet, Account, Filter, Poster, Add Profile */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+
+              {/* In-App Wallet / Credits Counter */}
+              <button
+                onClick={onOpenWalletModal}
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-300 border border-amber-500/30 transition-all touch-target shadow-sm"
+                title="Your Credit Wallet - Click to recharge or view details"
+              >
+                <Coins className="w-4 h-4 text-amber-400" />
+                <span className="text-xs sm:text-sm font-extrabold">{credits}</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-amber-200/80 hidden xs:inline">Credits</span>
+                <span className="w-4 h-4 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px] text-amber-300 font-bold ml-0.5">
+                  <Plus className="w-2.5 h-2.5" />
+                </span>
+              </button>
+
+              {/* Sign In / Profile Persona Switcher Button */}
+              <button
+                onClick={onOpenWalletModal}
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target"
+                title="Account & Persona"
+              >
+                <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-[10px] font-bold text-emerald-300">
+                  {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
+                </div>
+                <span className="text-xs sm:text-sm font-medium hidden md:inline truncate max-w-[100px]">
+                  {currentUser?.name?.split(' ')[0] || 'Sign In'}
+                </span>
+              </button>
 
               {/* Social Media Poster Generator Button */}
               <button
                 onClick={onOpenPosterGenerator}
-                className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/20 to-amber-500/20 hover:from-amber-500/30 hover:to-amber-400/30 text-amber-300 border border-amber-500/40 transition-all touch-target"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-bold rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all touch-target"
                 title="Create Social Media Card for Facebook & Instagram"
               >
                 <ImageIcon className="w-4 h-4 text-amber-400" />
-                <span className="hidden sm:inline">Poster Maker</span>
+                <span className="hidden lg:inline">Poster Maker</span>
               </button>
 
               {/* Filter Toggle Button */}
               <button
                 id="mobile-filter-toggle"
                 onClick={onToggleMobileFilter}
-                className="relative inline-flex items-center gap-1.5 px-3 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target"
+                className="relative inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target"
                 aria-label="Open filters"
               >
                 <Filter className="w-4 h-4 text-emerald-400" />
@@ -102,11 +151,11 @@ export default function Navbar({
               <button
                 id="add-profile-btn"
                 onClick={onOpenAddModal}
-                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap"
                 aria-label="Add matrimony profile"
               >
                 <UserPlus className="w-4 h-4" />
-                <span className="hidden xs:inline">Add Profile</span>
+                <span className="hidden xs:inline">Add Proposal</span>
                 <span className="xs:hidden">Add</span>
               </button>
 

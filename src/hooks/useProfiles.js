@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { 
   fetchProfilesFromStore, 
   saveProfileToStore, 
-  updateProfileInStore,
+  updateProfileInStore, 
   deleteProfileFromStore,
   subscribeToProfiles,
   fetchApprovedCustomFilters,
@@ -11,6 +11,7 @@ import {
   approveFilterRequest,
   rejectFilterRequest
 } from '../firebase/profileService';
+import { useAuth } from '../context/AuthContext';
 
 const BOOKMARKS_KEY = "althayyiboon_bookmarks_v1";
 
@@ -34,10 +35,20 @@ const PROFESSION_KEYWORDS = {
 };
 
 export function useProfiles() {
+  const { userGender, isAdmin } = useAuth();
+
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedGender, setSelectedGender] = useState("All");
+  
+  // Calculate initial locked gender based on authenticated persona
+  const initialGender = useMemo(() => {
+    if (!isAdmin && userGender === 'male') return 'Bride';
+    if (!isAdmin && userGender === 'female') return 'Groom';
+    return 'All';
+  }, [userGender, isAdmin]);
+
+  const [selectedGender, setSelectedGender] = useState(initialGender);
   const [activeQuickTag, setActiveQuickTag] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -57,26 +68,37 @@ export function useProfiles() {
     }
   });
 
-  // Filter state
-  const defaultFilters = {
-    gender: "All",
+  // Comprehensive Filter State
+  const defaultFilters = useMemo(() => ({
+    gender: (!isAdmin && userGender === 'male') ? 'Bride' : (!isAdmin && userGender === 'female') ? 'Groom' : 'All',
     minAge: 18,
     maxAge: 70,
-    qualifications: [],
+    islamicQualifications: [],
+    educationLevels: [],
+    subjectCategories: [],
     professions: [],
     profession: "",
     district: "",
     workLocation: "",
     maritalStatus: "",
     sect: "",
-    postedWithin: ""  // "" = all, "1" = today, "7" = last 7d, "30" = last 30d, "90" = last 90d
-  };
+    postedWithin: "" // "" = all, "1" = today, "7" = last 7d, "30" = last 30d, "90" = last 90d
+  }), [userGender, isAdmin]);
 
   const [filters, setFilters] = useState(defaultFilters);
 
+  // Sync selectedGender and enforce gender lock whenever userGender or selectedGender updates
   useEffect(() => {
-    setFilters(prev => ({ ...prev, gender: selectedGender }));
-  }, [selectedGender]);
+    if (!isAdmin && userGender === 'male') {
+      setSelectedGender('Bride');
+      setFilters(prev => ({ ...prev, gender: 'Bride' }));
+    } else if (!isAdmin && userGender === 'female') {
+      setSelectedGender('Groom');
+      setFilters(prev => ({ ...prev, gender: 'Groom' }));
+    } else {
+      setFilters(prev => ({ ...prev, gender: selectedGender }));
+    }
+  }, [userGender, isAdmin, selectedGender]);
 
   useEffect(() => {
     localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
@@ -88,7 +110,7 @@ export function useProfiles() {
 
     async function loadData() {
       setLoading(true);
-      const data = await fetchProfilesFromStore();
+      const data = await fetchProfilesFromStore(userGender, isAdmin);
       setProfiles(data);
 
       const customF = await fetchApprovedCustomFilters();
@@ -106,25 +128,21 @@ export function useProfiles() {
 
     loadData();
     return () => unsubscribe();
-  }, []);
+  }, [userGender, isAdmin]);
 
   // CRUD Handlers
   const addNewProfile = async (formData) => {
     const newDoc = await saveProfileToStore(formData);
     
-    // Completely clear search query, quick tags, and active filters so candidate appears at the top
+    // Clear search query & quick tags so new candidate is visible
     setSearchQuery("");
     setActiveQuickTag("");
     setShowFavoritesOnly(false);
     
-    const candidateGender = formData.basicInfo?.gender;
-    const genderToSet = (candidateGender === "Bride" || candidateGender === "Groom") ? candidateGender : "All";
-    
-    setSelectedGender(genderToSet);
-    setFilters({
-      ...defaultFilters,
-      gender: genderToSet
-    });
+    const candidateGender = formData.basicInfo?.gender || (formData.gender === 'female' ? 'Bride' : 'Groom');
+    if (isAdmin || !userGender) {
+      setSelectedGender(candidateGender);
+    }
 
     setProfiles(prev => [newDoc, ...prev.filter(p => p.id !== newDoc.id)]);
     return newDoc;
@@ -182,7 +200,7 @@ export function useProfiles() {
 
   const resetFilters = () => {
     setFilters(defaultFilters);
-    setSelectedGender("All");
+    setSelectedGender((!isAdmin && userGender === 'male') ? 'Bride' : (!isAdmin && userGender === 'female') ? 'Groom' : 'All');
     setActiveQuickTag("");
     setSearchQuery("");
     setShowFavoritesOnly(false);
@@ -193,7 +211,9 @@ export function useProfiles() {
     if (showFavoritesOnly) count++;
     if (filters.gender !== "All") count++;
     if (filters.minAge > 18 || filters.maxAge < 70) count++;
-    if (filters.qualifications?.length > 0) count += filters.qualifications.length;
+    if (filters.islamicQualifications?.length > 0) count += filters.islamicQualifications.length;
+    if (filters.educationLevels?.length > 0) count += filters.educationLevels.length;
+    if (filters.subjectCategories?.length > 0) count += filters.subjectCategories.length;
     if (filters.professions?.length > 0) count += filters.professions.length;
     if (filters.profession) count++;
     if (filters.district) count++;
@@ -216,16 +236,29 @@ export function useProfiles() {
       const islamic = profile.islamicBackground || {};
       const edu = profile.educationOccupation || {};
       const loc = profile.locationFamily || {};
+      const genEdu = profile.generalEducation || {};
 
-      if (filters.gender !== "All" && basic.gender !== filters.gender) {
+      // 1. Gender check & Gender-based View Lock
+      const isCandidateBride = basic.gender === "Bride" || profile.gender === "female";
+      const candidateGenderType = isCandidateBride ? "Bride" : "Groom";
+
+      if (!isAdmin && userGender === "male" && candidateGenderType !== "Bride") {
+        return false;
+      }
+      if (!isAdmin && userGender === "female" && candidateGenderType !== "Groom") {
+        return false;
+      }
+      if (filters.gender !== "All" && candidateGenderType !== filters.gender) {
         return false;
       }
 
+      // 2. Age Range
       const age = Number(basic.age) || 0;
       if (age < filters.minAge || age > filters.maxAge) {
         return false;
       }
 
+      // 3. District & Location
       if (filters.district && loc.homeDistrict !== filters.district) {
         return false;
       }
@@ -234,6 +267,7 @@ export function useProfiles() {
         return false;
       }
 
+      // 4. Marital Status & Sect
       if (filters.maritalStatus && basic.maritalStatus !== filters.maritalStatus) {
         return false;
       }
@@ -242,12 +276,68 @@ export function useProfiles() {
         return false;
       }
 
-      if (filters.qualifications?.length > 0) {
-        const pQual = islamic.qualification || "";
-        const matchesQual = filters.qualifications.some(q => pQual.toLowerCase().includes(q.toLowerCase()));
-        if (!matchesQual) return false;
+      // 5. Islamic Qualifications (Multi-Select)
+      if (filters.islamicQualifications?.length > 0) {
+        const pIslamicList = Array.isArray(profile.islamicQualification)
+          ? profile.islamicQualification
+          : (islamic.qualification ? [islamic.qualification] : []);
+
+        const matchesIslamic = filters.islamicQualifications.some(fq => {
+          const fqLower = fq.toLowerCase();
+          return pIslamicList.some(iq => {
+            const iqLower = (iq || "").toLowerCase();
+            return iqLower.includes(fqLower) || fqLower.includes(iqLower);
+          });
+        });
+
+        if (!matchesIslamic) return false;
       }
 
+      // 6. General Academic Education Level (Multi-Select)
+      if (filters.educationLevels?.length > 0) {
+        const pLevel = genEdu.level || edu.level || "";
+        const pEduText = (edu.education || "") + " " + (genEdu.degreeName || "");
+
+        const matchesLevel = filters.educationLevels.some(fl => {
+          const flLower = fl.toLowerCase();
+          if (pLevel && pLevel.toLowerCase() === flLower) return true;
+          if (flLower.includes("phd") && /ph\.?d|doctorate/i.test(pLevel + " " + pEduText)) return true;
+          if (flLower.includes("master") && /master|m\.sc|m\.a|m\.tech|m\.com|mba|post\s*grad/i.test(pLevel + " " + pEduText)) return true;
+          if (flLower.includes("bachelor") && /bachelor|b\.tech|b\.sc|b\.a|b\.com|bba|mbbs|degree|under\s*grad/i.test(pLevel + " " + pEduText)) return true;
+          if (flLower.includes("diploma") && /diploma|polytechnic|vocational/i.test(pLevel + " " + pEduText)) return true;
+          if (flLower.includes("high school") && /high\s*school|higher\s*secondary|\+2|plus\s*two|sslc/i.test(pLevel + " " + pEduText)) return true;
+          return false;
+        });
+
+        if (!matchesLevel) return false;
+      }
+
+      // 7. Specialized Academic Subject Categories (Multi-Select)
+      if (filters.subjectCategories?.length > 0) {
+        const pCat = genEdu.subjectCategory || "";
+        const pSpec = genEdu.specialization || "";
+        const pDeg = genEdu.degreeName || edu.education || "";
+        const combinedSubjectText = (pCat + " " + pSpec + " " + pDeg).toLowerCase();
+
+        const matchesSubject = filters.subjectCategories.some(cat => {
+          const catLower = cat.toLowerCase();
+          if (pCat && pCat.toLowerCase() === catLower) return true;
+
+          if (catLower.includes("arts") && (pCat.includes("Arts") || /economics|history|sociology|literature|english|arabic|political|psychology/i.test(combinedSubjectText))) return true;
+          if (catLower.includes("science") && (pCat.includes("Science") || /physics|chemistry|biotech|math|microbiology|botany|zoology/i.test(combinedSubjectText))) return true;
+          if (catLower.includes("commerce") && (pCat.includes("Commerce") || /finance|accounting|commerce|b\.?com|m\.?com|ca\b|chartered|mba/i.test(combinedSubjectText))) return true;
+          if (catLower.includes("engineering") && (pCat.includes("Engineering") || /engineer|computer|b\.?tech|m\.?tech|software|it\b|mechanical|civil|electronics/i.test(combinedSubjectText))) return true;
+          if (catLower.includes("medical") && (pCat.includes("Medical") || /mbbs|bds|doctor|nursing|pharmacy|health|dental|allied|paramedical/i.test(combinedSubjectText))) return true;
+          if (catLower.includes("islamic") && (pCat.includes("Islamic") || /sharia|usul|hadith|quran|theology|islamic studies/i.test(combinedSubjectText))) return true;
+          if (catLower.includes("law") && (pCat.includes("Law") || /llb|llm|advocate|legal|lawyer|jurisprudence/i.test(combinedSubjectText))) return true;
+
+          return false;
+        });
+
+        if (!matchesSubject) return false;
+      }
+
+      // 8. Professions
       const selectedProfs = [
         ...(filters.professions || []),
         ...(filters.profession ? [filters.profession] : [])
@@ -271,16 +361,27 @@ export function useProfiles() {
         if (!matchesProf) return false;
       }
 
+      // 9. Free-text Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
+        const pIslamicList = Array.isArray(profile.islamicQualification)
+          ? profile.islamicQualification.join(" ")
+          : (islamic.qualification || "");
+
         const searchableText = [
           basic.fullName,
           basic.gender,
+          profile.gender,
           basic.maritalStatus,
-          islamic.qualification,
+          pIslamicList,
           islamic.sect,
           islamic.subGroup,
+          genEdu.level,
+          genEdu.degreeName,
+          genEdu.subjectCategory,
+          genEdu.specialization,
           edu.education,
+          edu.degree,
           edu.profession,
           edu.workLocation,
           edu.workCountry,
@@ -294,7 +395,7 @@ export function useProfiles() {
         }
       }
 
-      // Posted within filter
+      // 10. Posted Within Recency
       if (filters.postedWithin) {
         const days = parseInt(filters.postedWithin, 10);
         const cutoff = new Date();
@@ -313,7 +414,7 @@ export function useProfiles() {
       }
       return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
     });
-  }, [profiles, filters, searchQuery, sortBy, showFavoritesOnly, bookmarks]);
+  }, [profiles, filters, searchQuery, sortBy, showFavoritesOnly, bookmarks, isAdmin, userGender]);
 
   return {
     profiles: filteredProfiles,

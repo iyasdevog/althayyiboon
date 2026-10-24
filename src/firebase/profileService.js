@@ -8,13 +8,15 @@ import {
   deleteDoc, 
   query, 
   orderBy, 
+  where,
   onSnapshot,
   serverTimestamp 
 } from "firebase/firestore";
+import { MOCK_PROFILES } from "../data/mockProfiles";
 
-const LOCAL_STORAGE_KEY = "althayyiboon_profiles_v1";
-const CUSTOM_FILTERS_KEY = "althayyiboon_custom_filters_v1";
-const FILTER_REQUESTS_KEY = "althayyiboon_filter_requests_v1";
+const LOCAL_STORAGE_KEY = "althayyiboon_profiles_v2";
+const CUSTOM_FILTERS_KEY = "althayyiboon_custom_filters_v2";
+const FILTER_REQUESTS_KEY = "althayyiboon_filter_requests_v2";
 
 // Helper to generate search keywords array for Firestore keyword searching
 export function generateSearchKeywords(profile) {
@@ -23,14 +25,22 @@ export function generateSearchKeywords(profile) {
   const fieldsToTokenize = [
     profile.basicInfo?.fullName,
     profile.basicInfo?.gender,
+    profile.gender,
     profile.basicInfo?.maritalStatus,
     profile.basicInfo?.color,
     profile.islamicBackground?.qualification,
+    ...(Array.isArray(profile.islamicQualification) ? profile.islamicQualification : [profile.islamicQualification]),
     profile.islamicBackground?.sect,
     profile.islamicBackground?.subGroup,
+    profile.generalEducation?.level,
+    profile.generalEducation?.degreeName,
+    profile.generalEducation?.subjectCategory,
+    profile.generalEducation?.specialization,
     profile.educationOccupation?.education,
+    profile.educationOccupation?.degree,
     profile.educationOccupation?.profession,
     profile.educationOccupation?.workLocation,
+    profile.educationOccupation?.workCountry,
     profile.locationFamily?.homeDistrict,
     profile.locationFamily?.nativePlace,
     profile.contactPreferences?.expectations
@@ -46,15 +56,22 @@ export function generateSearchKeywords(profile) {
   return Array.from(tokens);
 }
 
-// Get local storage profiles
+// Get local storage profiles with fallback to seed mock profiles
 function getLocalStorageProfiles() {
   try {
     const existing = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!existing) return [];
-    return JSON.parse(existing) || [];
+    if (existing) {
+      const parsed = JSON.parse(existing);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
   } catch (e) {
-    return [];
+    // fallback
   }
+  // Initialize with seed MOCK_PROFILES if empty
+  saveLocalStorageProfiles(MOCK_PROFILES);
+  return MOCK_PROFILES;
 }
 
 function saveLocalStorageProfiles(list) {
@@ -79,10 +96,22 @@ function mergeProfiles(fsProfiles = []) {
 
 // ---------------- PROFILES CRUD ---------------- //
 
-export async function fetchProfilesFromStore() {
+export async function fetchProfilesFromStore(authGender = null, isAdmin = false) {
   try {
     const colRef = collection(db, "profiles");
-    const q = query(colRef, orderBy("createdAt", "desc"));
+    let q;
+
+    // Enforce Gender-Based View Lock at query level for authenticated non-admin users
+    if (!isAdmin && authGender === 'male') {
+      // Male users only see female / Bride profiles
+      q = query(colRef, where("gender", "==", "female"), orderBy("createdAt", "desc"));
+    } else if (!isAdmin && authGender === 'female') {
+      // Female users only see male / Groom profiles
+      q = query(colRef, where("gender", "==", "male"), orderBy("createdAt", "desc"));
+    } else {
+      q = query(colRef, orderBy("createdAt", "desc"));
+    }
+
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
@@ -98,9 +127,43 @@ export async function fetchProfilesFromStore() {
 export async function saveProfileToStore(newProfileData) {
   const searchKeywords = generateSearchKeywords(newProfileData);
   const secretPin = newProfileData.security?.editPin || newProfileData.contactPreferences?.secretPin || "1234";
+
+  // Normalize gender to 'male' | 'female'
+  const isBride = newProfileData.basicInfo?.gender === 'Bride' || newProfileData.gender === 'female';
+  const normalizedGender = isBride ? 'female' : 'male';
+
+  // Normalize Islamic qualifications to string[]
+  let normalizedIslamicQual = [];
+  if (Array.isArray(newProfileData.islamicQualification)) {
+    normalizedIslamicQual = newProfileData.islamicQualification;
+  } else if (newProfileData.islamicQualification) {
+    normalizedIslamicQual = [newProfileData.islamicQualification];
+  } else if (newProfileData.islamicBackground?.qualification) {
+    normalizedIslamicQual = [newProfileData.islamicBackground.qualification];
+  } else {
+    normalizedIslamicQual = ["None"];
+  }
+
+  // Normalize general education
+  const generalEdu = newProfileData.generalEducation || {
+    level: newProfileData.educationOccupation?.level || "Bachelor's Degree (BA, BSc, BCom, BTech, MBBS, etc.)",
+    degreeName: newProfileData.educationOccupation?.degree || newProfileData.educationOccupation?.education || "",
+    subjectCategory: newProfileData.educationOccupation?.subjectCategory || "Arts & Humanities",
+    specialization: newProfileData.educationOccupation?.specialization || ""
+  };
+
+  // Normalize contact details (guarded & masked by default)
+  const contactDetails = newProfileData.contactDetails || {
+    guardianPhone: newProfileData.contactPreferences?.phone || "",
+    whatsappNumber: newProfileData.contactPreferences?.whatsapp || ""
+  };
   
   const docPayload = {
     ...newProfileData,
+    gender: normalizedGender,
+    islamicQualification: normalizedIslamicQual,
+    generalEducation: generalEdu,
+    contactDetails: contactDetails,
     contactPreferences: {
       ...newProfileData.contactPreferences,
       secretPin

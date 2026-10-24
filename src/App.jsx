@@ -10,9 +10,11 @@ import EditProfileModal from './components/EditProfileModal';
 import AdminPortalModal from './components/AdminPortalModal';
 import RequestFilterModal from './components/RequestFilterModal';
 import SharePosterModal from './components/SharePosterModal';
+import WalletRechargeModal from './components/WalletRechargeModal';
 import Footer from './components/Footer';
 import AdUnit from './components/AdUnit';
 import { useProfiles } from './hooks/useProfiles';
+import { useAuth } from './context/AuthContext';
 import { Check, Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -49,6 +51,8 @@ export default function App() {
     handleApproveFilterRequest,
     handleRejectFilterRequest
   } = useProfiles();
+
+  const { isCheckoutOpen, setIsCheckoutOpen } = useAuth();
 
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [editingProfile, setEditingProfile] = useState(null);
@@ -110,6 +114,7 @@ export default function App() {
           setPosterProfile(null);
           setIsPosterModalOpen(true);
         }}
+        onOpenWalletModal={() => setIsCheckoutOpen(true)}
       />
 
       {/* Hero Banner with Search Bar & Quick Tags */}
@@ -200,7 +205,7 @@ export default function App() {
           onClose={() => setIsAddModalOpen(false)}
           onSubmitProfile={async (formData) => {
             const newDoc = await addNewProfile(formData);
-            const propType = newDoc.basicInfo?.gender === 'Bride' ? 'Bride' : 'Groom';
+            const propType = newDoc.basicInfo?.gender === 'Bride' || newDoc.gender === 'female' ? 'Bride' : 'Groom';
             showToast(`Proposal for ${propType} added successfully!`);
           }}
           defaultGender={selectedGender !== 'All' ? selectedGender : 'Bride'}
@@ -245,6 +250,13 @@ export default function App() {
           onShowToast={showToast}
         />
       )}
+
+      {/* In-App Wallet & Recharge Checkout Modal */}
+      <WalletRechargeModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        onShowToast={showToast}
+      />
 
       {/* Footer */}
       <Footer />

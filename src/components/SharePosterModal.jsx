@@ -113,6 +113,8 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
   // Profile data extraction (NO FAKE FALLBACKS)
   const basicInfo = profile?.basicInfo || {};
   const islamicBackground = profile?.islamicBackground || {};
+  const islamicQualification = profile?.islamicQualification || [];
+  const generalEducation = profile?.generalEducation || {};
   const locationFamily = profile?.locationFamily || {};
   const educationOccupation = profile?.educationOccupation || {};
   const contactPreferences = profile?.contactPreferences || {};
@@ -568,18 +570,23 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
                       )}
 
                       {/* General Education */}
-                      {educationOccupation.education && (
+                      {(generalEducation?.degreeName || educationOccupation.education) && (
                         <div className="flex items-center gap-1.5">
                           <span className="text-rose-300 font-bold">🎓</span>
-                          <span>{lang === 'ml' ? 'വിദ്യാഭ്യാസം' : 'Education'} - {educationOccupation.education}</span>
+                          <span>
+                            {lang === 'ml' ? 'വിദ്യാഭ്യാസം' : 'Education'} - {generalEducation?.degreeName || educationOccupation.education}
+                            {generalEducation?.specialization ? ` (${generalEducation.specialization})` : ''}
+                          </span>
                         </div>
                       )}
 
                       {/* Islamic Education */}
-                      {islamicBackground.qualification && islamicBackground.qualification !== "None" && (
+                      {((Array.isArray(islamicQualification) && islamicQualification.length > 0 && islamicQualification[0] !== 'None') || (islamicBackground.qualification && islamicBackground.qualification !== "None")) && (
                         <div className="flex items-center gap-1.5 text-amber-300 font-medium">
                           <BookOpen className="w-3 h-3 text-amber-400 shrink-0" />
-                          <span>{lang === 'ml' ? 'മത പഠനം' : 'Islamic Ed.'} - {islamicBackground.qualification}</span>
+                          <span>
+                            {lang === 'ml' ? 'മത പഠനം' : 'Islamic Ed.'} - {Array.isArray(islamicQualification) ? islamicQualification.filter(q => q && q !== 'None').join(', ') : islamicBackground.qualification}
+                          </span>
                         </div>
                       )}
 
