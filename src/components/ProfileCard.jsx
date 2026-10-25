@@ -288,7 +288,7 @@ export default function ProfileCard({
               title="Unlock Guardian Phone and WhatsApp"
             >
               <Coins className="w-3.5 h-3.5" />
-              <span>Unlock (₹{fee} / 1 Credit)</span>
+              <span>Unlock (₹{fee}<span className="hidden xs:inline"> / 1 Credit</span>)</span>
             </button>
           ) : (
             <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">

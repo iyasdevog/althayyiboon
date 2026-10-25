@@ -39,29 +39,32 @@ export default function ProfileGrid({
       )}
 
       {/* Grid Top Bar: Counter & Sorting */}
-      <div className="flex items-center justify-between gap-2 bg-slate-900/70 backdrop-blur-md px-3.5 py-3 sm:p-4 rounded-2xl border border-slate-800">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-          <span className="text-xs sm:text-sm font-semibold text-slate-200">
+      <div className="flex items-center justify-between gap-2 bg-slate-900/70 backdrop-blur-md px-3 py-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></div>
+          <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
             <span className="text-emerald-400 font-extrabold text-sm sm:text-base">{profiles.length}</span>
-            <span className="ml-1.5 text-slate-400">{showFavoritesOnly ? 'Saved Proposals' : 'Matching Proposals Found'}</span>
+            <span className="ml-1 text-slate-400">
+              <span className="sm:hidden">{showFavoritesOnly ? 'Saved' : 'Proposals'}</span>
+              <span className="hidden sm:inline">{showFavoritesOnly ? 'Saved Proposals' : 'Matching Proposals Found'}</span>
+            </span>
           </span>
         </div>
 
         {/* Sort Selector */}
-        <div className="flex items-center gap-1.5">
-          <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <label htmlFor="sort-proposals" className="text-xs text-slate-400 hidden sm:inline">Sort by:</label>
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 shrink-0 hidden xs:inline" />
+          <label htmlFor="sort-proposals" className="text-xs text-slate-400 hidden sm:inline">Sort:</label>
           <select
             id="sort-proposals"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-slate-950 text-white text-xs font-medium py-1.5 px-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-sm"
+            className="bg-slate-950 text-white text-[11px] sm:text-xs font-medium py-1.5 px-2 sm:px-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-sm"
             aria-label="Sort proposals"
           >
             <option value="newest">Newest First</option>
-            <option value="ageAsc">Age: Youngest First</option>
-            <option value="ageDesc">Age: Eldest First</option>
+            <option value="ageAsc">Youngest</option>
+            <option value="ageDesc">Eldest</option>
           </select>
         </div>
       </div>

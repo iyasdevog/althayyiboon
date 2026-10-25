@@ -68,21 +68,21 @@ export default function HeroBanner({
         {/* Enhanced Search Input */}
         <div className="max-w-2xl mx-auto mb-4 sm:mb-6">
           <div className="relative flex items-center group">
-            <Search className="absolute left-4 w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 pointer-events-none group-focus-within:text-emerald-300 transition-colors" />
+            <Search className="absolute left-3.5 sm:left-4 w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 pointer-events-none group-focus-within:text-emerald-300 transition-colors" />
             <input
               ref={searchInputRef}
               type="text"
               id="directory-search-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, district, Islamic degree, or academic qualification... (Press '/' to focus)"
-              className="w-full pl-11 sm:pl-12 pr-12 py-3.5 sm:py-4 rounded-2xl bg-slate-900/95 text-white placeholder-slate-500 border border-slate-700/80 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-xs sm:text-sm shadow-xl transition-all"
+              placeholder="Search name, district, degree, profession..."
+              className="w-full pl-9 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-slate-900/95 text-white placeholder-slate-500 border border-slate-700/80 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-xs sm:text-sm shadow-xl transition-all"
               aria-label="Search matrimony directory"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3.5 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="absolute right-3 p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors touch-target"
                 aria-label="Clear search text"
               >
                 <X className="w-4 h-4" />
@@ -92,7 +92,7 @@ export default function HeroBanner({
         </div>
 
         {/* Quick Filter Pill Buttons */}
-        <nav aria-label="Quick filters" className="flex items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:justify-center sm:max-w-4xl sm:mx-auto no-scrollbar">
+        <nav aria-label="Quick filters" className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:justify-center sm:max-w-4xl sm:mx-auto no-scrollbar">
           {quickTags.map((item, idx) => {
             const IconComponent = item.icon;
             
@@ -116,9 +116,9 @@ export default function HeroBanner({
                     setSearchQuery(item.tag);
                   }
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 border ${
+                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 border ${
                   isActive
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20 font-bold scale-105'
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20 font-bold'
                     : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 hover:text-white border-slate-800 hover:border-slate-700'
                 }`}
               >

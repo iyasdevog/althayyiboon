@@ -64,23 +64,23 @@ export default function Navbar({
 
       {/* ===== MAIN NAVBAR ===== */}
       <div className="glass-panel border-b border-slate-800/80">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20 gap-2">
+        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-20 gap-1.5 sm:gap-4">
             
             {/* Logo & Branding */}
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <a href="/" aria-label="Al-ThayyiBoon Matrimony Home" className="flex items-center gap-2 sm:gap-3 group">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
+              <a href="/" aria-label="Al-ThayyiBoon Matrimony Home" className="flex items-center gap-1.5 sm:gap-3 group">
                 <img 
                   src="/favicon.svg" 
                   alt="Al-ThayyiBoon Logo" 
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl shadow-lg shadow-emerald-900/40 shrink-0 group-hover:scale-105 transition-transform"
+                  className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-emerald-950/50 shrink-0 group-hover:scale-105 transition-transform"
                 />
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent truncate tracking-tight">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="text-sm xs:text-base sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight whitespace-nowrap">
                       Al-ThayyiBoon
                     </span>
-                    <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                    <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                       <ShieldCheck className="w-3 h-3" /> Islamic &amp; Academic
                     </span>
                   </div>
@@ -91,44 +91,44 @@ export default function Navbar({
               </a>
             </div>
 
-            {/* Action Buttons: Wallet, Account, Favorites, Filter, Poster, Add Profile */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Action Buttons: Responsive & prioritized for mobile */}
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
 
               {/* In-App Wallet / Credits Counter */}
               <button
                 onClick={onOpenWalletModal}
-                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-300 border border-amber-500/30 transition-all touch-target shadow-sm"
-                title={`Your Credit Wallet (${credits} Credits) - Click to recharge`}
-                aria-label={`Credit wallet balance: ${credits} credits. Click to recharge.`}
+                className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-300 border border-amber-500/30 transition-all touch-target shadow-sm shrink-0"
+                title={`Credit Wallet: ${credits} Credits available. Tap to manage or recharge.`}
+                aria-label={`Credit wallet balance: ${credits} credits. Tap to manage.`}
               >
-                <Coins className="w-4 h-4 text-amber-400" />
+                <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
                 <span className="text-xs sm:text-sm font-extrabold">{credits}</span>
-                <span className="text-[10px] sm:text-xs font-semibold text-amber-200/80 hidden xs:inline">Credits</span>
-                <span className="w-4 h-4 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px] text-amber-300 font-bold ml-0.5" aria-hidden="true">
+                <span className="text-[11px] sm:text-xs font-semibold text-amber-200/80 hidden sm:inline">Credits</span>
+                <span className="w-4 h-4 rounded-full bg-amber-400/20 hidden sm:inline-flex items-center justify-center text-[10px] text-amber-300 font-bold ml-0.5" aria-hidden="true">
                   <Plus className="w-2.5 h-2.5" />
                 </span>
               </button>
 
-              {/* Sign In / Profile Persona Switcher Button */}
+              {/* Sign In / Profile Persona Switcher Button (Desktop & Tablet only - Mobile uses Wallet button) */}
               <button
                 onClick={onOpenWalletModal}
-                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target"
+                className="hidden md:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target shrink-0"
                 title="Account & Persona Settings"
                 aria-label={`User account: ${currentUser?.name || 'Sign In'}`}
               >
                 <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-[10px] font-bold text-emerald-300" aria-hidden="true">
                   {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
                 </div>
-                <span className="text-xs sm:text-sm font-medium hidden md:inline truncate max-w-[100px]">
+                <span className="text-xs sm:text-sm font-medium truncate max-w-[100px]">
                   {currentUser?.name?.split(' ')[0] || 'Sign In'}
                 </span>
               </button>
 
-              {/* Favorites / Saved Filter Button */}
+              {/* Favorites / Saved Filter Button (Tablet & Desktop) */}
               {onToggleShowFavorites && (
                 <button
                   onClick={onToggleShowFavorites}
-                  className={`relative inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border transition-all touch-target ${
+                  className={`hidden sm:inline-flex relative items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border transition-all touch-target shrink-0 ${
                     showFavoritesOnly 
                       ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm' 
                       : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700'
@@ -146,28 +146,28 @@ export default function Navbar({
                 </button>
               )}
 
-              {/* Social Media Poster Generator Button */}
+              {/* Social Media Poster Generator Button (Desktop only) */}
               <button
                 onClick={onOpenPosterGenerator}
-                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-bold rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all touch-target"
+                className="hidden lg:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-bold rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all touch-target shrink-0"
                 title="Create Social Media Card for Facebook & Instagram"
                 aria-label="Create Social Media Card for Facebook and Instagram"
               >
                 <ImageIcon className="w-4 h-4 text-amber-400" />
-                <span className="hidden lg:inline">Poster Maker</span>
+                <span>Poster Maker</span>
               </button>
 
               {/* Filter Toggle Button */}
               <button
                 id="mobile-filter-toggle"
                 onClick={onToggleMobileFilter}
-                className="relative inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target"
+                className="relative inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target shrink-0"
                 aria-label={`Toggle filters. ${activeFilterCount} active filters`}
               >
-                <Filter className="w-4 h-4 text-emerald-400" />
-                <span>Filter</span>
+                <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                <span className="hidden xs:inline">Filter</span>
                 {activeFilterCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-bold flex items-center justify-center shadow-md">
+                  <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-bold inline-flex items-center justify-center shadow-md ml-0.5">
                     {activeFilterCount}
                   </span>
                 )}
@@ -177,12 +177,13 @@ export default function Navbar({
               <button
                 id="add-profile-btn"
                 onClick={onOpenAddModal}
-                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap"
+                className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap shrink-0"
                 aria-label="Add a new matrimonial proposal"
               >
-                <UserPlus className="w-4 h-4" />
-                <span className="hidden xs:inline">Add Proposal</span>
-                <span className="xs:hidden">Add</span>
+                <Plus className="w-3.5 h-3.5 sm:hidden" />
+                <UserPlus className="hidden sm:inline w-4 h-4" />
+                <span>Add</span>
+                <span className="hidden sm:inline">&nbsp;Proposal</span>
               </button>
 
             </div>
