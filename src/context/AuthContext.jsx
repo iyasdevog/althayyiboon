@@ -27,23 +27,23 @@ export function AuthProvider({ children }) {
   const [fbUser, setFbUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Active User Persona (Allows easy gender lock testing: 'male' | 'female' | 'admin' | null)
+  // Active User Account / Persona (Null by default for guest visitors)
   const [userProfile, setUserProfile] = useState(() => {
     try {
       const saved = localStorage.getItem(DEMO_USER_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Clear out legacy default demo persona so visitors start unauthenticated
+        if (parsed?.uid === 'demo_user_male_01') {
+          localStorage.removeItem(DEMO_USER_KEY);
+          return null;
+        }
+        return parsed;
+      }
     } catch (e) {
       // fallback
     }
-    // Default demo persona: Male user looking for Bride (gives initial 3 trial credits)
-    return {
-      uid: 'demo_user_male_01',
-      name: 'Ahmed K.',
-      email: 'ahmed.demo@althayyiboon.com',
-      gender: 'male', // 'male' or 'female'
-      role: 'user', // 'user' or 'admin'
-      isDemo: true
-    };
+    return null; // Guest visitor by default
   });
 
   // In-app Wallet Credits

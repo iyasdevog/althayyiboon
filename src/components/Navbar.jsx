@@ -22,7 +22,8 @@ export default function Navbar({
   showFavoritesOnly = false,
   onToggleShowFavorites,
   onOpenPosterGenerator,
-  onOpenWalletModal
+  onOpenWalletModal,
+  onOpenSignIn
 }) {
   const { credits, currentUser, userGender, isAdmin } = useAuth();
 
@@ -173,18 +174,30 @@ export default function Navbar({
                 )}
               </button>
 
-              {/* Add Profile CTA Button */}
-              <button
-                id="add-profile-btn"
-                onClick={onOpenAddModal}
-                className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap shrink-0"
-                aria-label="Add a new matrimonial proposal"
-              >
-                <Plus className="w-3.5 h-3.5 sm:hidden" />
-                <UserPlus className="hidden sm:inline w-4 h-4" />
-                <span>Add</span>
-                <span className="hidden sm:inline">&nbsp;Proposal</span>
-              </button>
+              {/* If Signed In: Show Add Proposal Button. If Guest: Show Sign In Button */}
+              {currentUser ? (
+                <button
+                  id="add-profile-btn"
+                  onClick={onOpenAddModal}
+                  className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap shrink-0"
+                  aria-label="Add a new matrimonial proposal"
+                >
+                  <Plus className="w-3.5 h-3.5 sm:hidden" />
+                  <UserPlus className="hidden sm:inline w-4 h-4" />
+                  <span>Add</span>
+                  <span className="hidden sm:inline">&nbsp;Proposal</span>
+                </button>
+              ) : (
+                <button
+                  id="sign-in-btn"
+                  onClick={onOpenSignIn || onOpenWalletModal}
+                  className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap shrink-0"
+                  aria-label="Sign In with Google to Add Profiles"
+                >
+                  <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Sign In</span>
+                </button>
+              )}
 
             </div>
 

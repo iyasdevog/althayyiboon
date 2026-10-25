@@ -51,7 +51,7 @@ export default function App() {
     handleRejectFilterRequest
   } = useProfiles();
 
-  const { isCheckoutOpen, setIsCheckoutOpen, isStatsNumbersVisible } = useAuth();
+  const { isCheckoutOpen, setIsCheckoutOpen, isStatsNumbersVisible, loginWithGoogle } = useAuth();
   const showStatsNumbers = isStatsNumbersVisible ? isStatsNumbersVisible(rawProfiles.length) : true;
 
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -115,6 +115,14 @@ export default function App() {
           setIsPosterModalOpen(true);
         }}
         onOpenWalletModal={() => setIsCheckoutOpen(true)}
+        onOpenSignIn={async () => {
+          const res = await loginWithGoogle();
+          if (res.success) {
+            showToast(`Welcome, ${res.user.displayName || 'Member'}!`);
+          } else {
+            setIsCheckoutOpen(true);
+          }
+        }}
       />
 
       {/* Hero Banner with Search Bar & Quick Tags */}

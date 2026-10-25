@@ -26,6 +26,7 @@ import {
   COMPLEXIONS,
   WORK_LOCATIONS
 } from '../data/mockProfiles';
+import { useAuth } from '../context/AuthContext';
 
 const inputCls =
   'w-full px-4 py-3 rounded-xl bg-slate-950 text-white border border-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-colors text-xs sm:text-sm';
@@ -55,6 +56,8 @@ const STEPS = [
 ];
 
 export default function AddProfileModal({ onClose, onSubmitProfile, defaultGender = 'Bride' }) {
+  const { currentUser, loginWithGoogle } = useAuth();
+  const [authError, setAuthError] = useState('');
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -224,6 +227,9 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
           whatsapp: whatsapp,
           secretPin: pin
         },
+        creatorUid: currentUser?.uid || null,
+        creatorEmail: currentUser?.email || null,
+        creatorName: currentUser?.name || null,
         security: { editPin: pin }
       };
 
@@ -245,6 +251,58 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
+
+  // Auth gate: User must be signed in to add profiles
+  if (!currentUser) {
+    return (
+      <div 
+        role="dialog" 
+        aria-modal="true" 
+        aria-label="Sign In Required to Post Proposal"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      >
+        <div onClick={onClose} className="fixed inset-0 bg-slate-950/85 backdrop-blur-md" />
+        <div className="relative w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-8 text-center z-10 shadow-2xl animate-fade-in">
+          <button 
+            onClick={onClose} 
+            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto mb-4 flex items-center justify-center shadow-lg">
+            <Shield className="w-7 h-7" />
+          </div>
+
+          <h3 className="text-lg font-bold text-white mb-2">Sign In Required</h3>
+          <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+            To maintain directory authenticity and protect candidate privacy, all members must sign in with their Google account before adding a new matrimonial proposal.
+          </p>
+
+          {authError && (
+            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-medium">
+              {authError}
+            </div>
+          )}
+
+          <button
+            onClick={async () => {
+              setAuthError('');
+              const res = await loginWithGoogle();
+              if (!res.success) {
+                setAuthError(res.error || 'Failed to sign in. Please try again.');
+              }
+            }}
+            className="w-full py-3.5 px-4 rounded-xl bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-900 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
+          >
+            <User className="w-4 h-4 text-emerald-600" />
+            <span>Continue with Google</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
