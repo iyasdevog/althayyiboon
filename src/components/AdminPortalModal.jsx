@@ -54,11 +54,13 @@ export default function AdminPortalModal({
   // Bulk Selection State
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Local Pricing Form State
+  // Local Pricing & Platform Settings State
   const [localPricing, setLocalPricing] = useState({
     contactUnlockFee: pricing.contactUnlockFee || 15,
     profileSubmissionFee: pricing.profileSubmissionFee || 0,
-    campaignMode: pricing.campaignMode !== undefined ? pricing.campaignMode : true
+    campaignMode: pricing.campaignMode !== undefined ? pricing.campaignMode : true,
+    statsVisibility: pricing.statsVisibility || 'auto',
+    statsThreshold: pricing.statsThreshold || 200
   });
   const [pricingSavedToast, setPricingSavedToast] = useState(false);
 
@@ -687,13 +689,111 @@ export default function AdminPortalModal({
                       </div>
                     </div>
 
+                    {/* Public Profile Statistics Visibility Controls */}
+                    <div className="pt-4 border-t border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                            <Users className="w-4 h-4 text-emerald-400" />
+                            <span>Public Statistics &amp; Profile Numbers Visibility</span>
+                          </h4>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            Control when community statistics numbers (Total, Brides, Grooms, Scholars) appear on the homepage.
+                          </p>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          (localPricing.statsVisibility === 'always_show' || (localPricing.statsVisibility === 'auto' && profiles.length >= (Number(localPricing.statsThreshold) || 200)))
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        }`}>
+                          {(localPricing.statsVisibility === 'always_show' || (localPricing.statsVisibility === 'auto' && profiles.length >= (Number(localPricing.statsThreshold) || 200)))
+                            ? 'Currently Visible' 
+                            : 'Currently Hidden'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setLocalPricing(prev => ({ ...prev, statsVisibility: 'auto' }))}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            localPricing.statsVisibility === 'auto'
+                              ? 'bg-emerald-500/20 border-emerald-500 text-white shadow-sm'
+                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                          }`}
+                        >
+                          <div className="text-xs font-bold flex items-center justify-between">
+                            <span>Auto (200+ profiles)</span>
+                            {localPricing.statsVisibility === 'auto' && <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-1 leading-snug">
+                            Auto-hides numbers until 200 profiles, then automatically reveals.
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setLocalPricing(prev => ({ ...prev, statsVisibility: 'always_hide' }))}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            localPricing.statsVisibility === 'always_hide'
+                              ? 'bg-amber-500/20 border-amber-500 text-white shadow-sm'
+                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                          }`}
+                        >
+                          <div className="text-xs font-bold flex items-center justify-between">
+                            <span>Always Hide</span>
+                            {localPricing.statsVisibility === 'always_hide' && <CheckCircle className="w-3.5 h-3.5 text-amber-400" />}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-1 leading-snug">
+                            Never display raw total statistics numbers publicly.
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setLocalPricing(prev => ({ ...prev, statsVisibility: 'always_show' }))}
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            localPricing.statsVisibility === 'always_show'
+                              ? 'bg-teal-500/20 border-teal-500 text-white shadow-sm'
+                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                          }`}
+                        >
+                          <div className="text-xs font-bold flex items-center justify-between">
+                            <span>Always Show</span>
+                            {localPricing.statsVisibility === 'always_show' && <CheckCircle className="w-3.5 h-3.5 text-teal-400" />}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-1 leading-snug">
+                            Always display exact counts regardless of total number.
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* Threshold count input if auto */}
+                      {localPricing.statsVisibility === 'auto' && (
+                        <div className="pt-1 flex items-center gap-3">
+                          <label className="text-xs font-medium text-slate-300 whitespace-nowrap">
+                            Auto-show threshold count:
+                          </label>
+                          <input
+                            type="number"
+                            min="10"
+                            max="10000"
+                            value={localPricing.statsThreshold || 200}
+                            onChange={(e) => setLocalPricing(prev => ({ ...prev, statsThreshold: Number(e.target.value) || 200 }))}
+                            className="w-24 px-3 py-1.5 rounded-lg bg-slate-900 text-white font-bold text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                          />
+                          <span className="text-[11px] text-slate-500">profiles (Default: 200)</span>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="pt-2">
                       <button
                         type="submit"
                         className="py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all"
                       >
                         <Save className="w-4 h-4" />
-                        <span>Save Pricing Configuration</span>
+                        <span>Save Pricing &amp; Visibility Configuration</span>
                       </button>
                     </div>
                   </form>

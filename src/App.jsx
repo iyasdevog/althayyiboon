@@ -51,7 +51,8 @@ export default function App() {
     handleRejectFilterRequest
   } = useProfiles();
 
-  const { isCheckoutOpen, setIsCheckoutOpen } = useAuth();
+  const { isCheckoutOpen, setIsCheckoutOpen, isStatsNumbersVisible } = useAuth();
+  const showStatsNumbers = isStatsNumbersVisible ? isStatsNumbersVisible(rawProfiles.length) : true;
 
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [editingProfile, setEditingProfile] = useState(null);
@@ -126,8 +127,10 @@ export default function App() {
         setActiveQuickTag={setActiveQuickTag}
       />
 
-      {/* Aggregate Statistics Overview */}
-      <StatsBar profiles={profiles} />
+      {/* Aggregate Statistics Overview (Conditionally shown if 200+ profiles or enabled by admin) */}
+      {showStatsNumbers && (
+        <StatsBar profiles={profiles} />
+      )}
 
       {/* Main Directory Layout Container */}
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex-1 w-full">
@@ -147,6 +150,7 @@ export default function App() {
           {/* Proposals Grid Display */}
           <ProfileGrid
             profiles={profiles}
+            showCountNumber={showStatsNumbers}
             onSelectProfile={(p) => setSelectedProfile(p)}
             bookmarks={bookmarks}
             onToggleBookmark={toggleBookmark}
@@ -255,10 +259,14 @@ export default function App() {
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         onShowToast={showToast}
+        onOpenAdminPortal={() => {
+          setIsCheckoutOpen(false);
+          setIsAdminPortalOpen(true);
+        }}
       />
 
       {/* Footer */}
-      <Footer />
+      <Footer onOpenAdminPortal={() => setIsAdminPortalOpen(true)} />
 
     </div>
   );

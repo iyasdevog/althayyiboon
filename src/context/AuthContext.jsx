@@ -17,7 +17,9 @@ const TAXONOMY_STORAGE_KEY = 'althayyiboon_custom_taxonomies_v2';
 export const DEFAULT_PRICING = {
   contactUnlockFee: 15, // in INR (1 Credit)
   profileSubmissionFee: 0, // ₹0 during campaign
-  campaignMode: true // When true, submissions are free and campaign banner is displayed
+  campaignMode: true, // When true, submissions are free and campaign banner is displayed
+  statsVisibility: 'auto', // 'auto' | 'always_show' | 'always_hide'
+  statsThreshold: 200 // Threshold for auto-showing profile numbers
 };
 
 export function AuthProvider({ children }) {
@@ -245,6 +247,16 @@ export function AuthProvider({ children }) {
 
   const isAdmin = currentUser?.role === 'admin';
 
+  // Helper to determine if statistics numbers should be shown publicly
+  const isStatsNumbersVisible = (totalCount = 0) => {
+    const mode = pricing.statsVisibility || 'auto';
+    if (mode === 'always_show') return true;
+    if (mode === 'always_hide') return false;
+    // 'auto' mode: only show if total count >= threshold (default: 200)
+    const threshold = Number(pricing.statsThreshold) || 200;
+    return (totalCount || 0) >= threshold;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -261,6 +273,7 @@ export function AuthProvider({ children }) {
         logout,
         pricing,
         updatePricingConfig,
+        isStatsNumbersVisible,
         customTaxonomies,
         addCustomTaxonomy,
         isCheckoutOpen,

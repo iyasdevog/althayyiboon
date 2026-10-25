@@ -14,7 +14,8 @@ export default function ProfileGrid({
   showFavoritesOnly,
   onToggleShowFavorites,
   onShowToast,
-  onOpenPosterModal
+  onOpenPosterModal,
+  showCountNumber = true
 }) {
   return (
     <section aria-label="Proposals directory" className="flex-1 space-y-3 sm:space-y-4 min-w-0">
@@ -43,11 +44,19 @@ export default function ProfileGrid({
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></div>
           <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
-            <span className="text-emerald-400 font-extrabold text-sm sm:text-base">{profiles.length}</span>
-            <span className="ml-1 text-slate-400">
-              <span className="sm:hidden">{showFavoritesOnly ? 'Saved' : 'Proposals'}</span>
-              <span className="hidden sm:inline">{showFavoritesOnly ? 'Saved Proposals' : 'Matching Proposals Found'}</span>
-            </span>
+            {showCountNumber ? (
+              <>
+                <span className="text-emerald-400 font-extrabold text-sm sm:text-base">{profiles.length}</span>
+                <span className="ml-1 text-slate-400">
+                  <span className="sm:hidden">{showFavoritesOnly ? 'Saved' : 'Proposals'}</span>
+                  <span className="hidden sm:inline">{showFavoritesOnly ? 'Saved Proposals' : 'Matching Proposals Found'}</span>
+                </span>
+              </>
+            ) : (
+              <span className="text-emerald-300 font-bold">
+                {showFavoritesOnly ? 'Saved Proposals' : 'Verified Proposals Directory'}
+              </span>
+            )}
           </span>
         </div>
 

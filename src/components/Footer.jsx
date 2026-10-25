@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldCheck, Code, BookOpen } from 'lucide-react';
 
-export default function Footer() {
+export default function Footer({ onOpenAdminPortal }) {
   return (
     <footer className="mt-auto bg-slate-950 border-t border-slate-800/80 pt-10 sm:pt-12 pb-8 text-xs text-slate-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -72,9 +72,22 @@ export default function Footer() {
             <span>Built with React, Tailwind CSS, Vite &amp; Firebase</span>
           </div>
 
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex items-center gap-3 sm:gap-4 text-slate-400 flex-wrap justify-center">
             <span>Community Directory</span>
             <span>•</span>
+            {onOpenAdminPortal && (
+              <>
+                <button
+                  onClick={onOpenAdminPortal}
+                  className="inline-flex items-center gap-1 text-slate-400 hover:text-amber-400 transition-colors font-medium cursor-pointer"
+                  aria-label="Open Admin Portal"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Admin Portal</span>
+                </button>
+                <span>•</span>
+              </>
+            )}
             <span>© {new Date().getFullYear()} Al-ThayyiBoon. All rights reserved.</span>
           </div>
         </div>

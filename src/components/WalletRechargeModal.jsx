@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function WalletRechargeModal({ isOpen, onClose, onShowToast }) {
+export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOpenAdminPortal }) {
   const { 
     credits, 
     addCredits, 
@@ -321,6 +321,20 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast }) {
                   </button>
                 </div>
               </div>
+
+              {onOpenAdminPortal && (
+                <div className="pt-2 border-t border-slate-800">
+                  <button
+                    onClick={() => {
+                      onOpenAdminPortal();
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                    <span>Open Master Admin Portal</span>
+                  </button>
+                </div>
+              )}
 
               <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
                 <button
