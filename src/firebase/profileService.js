@@ -12,7 +12,6 @@ import {
   onSnapshot,
   serverTimestamp 
 } from "firebase/firestore";
-import { MOCK_PROFILES } from "../data/mockProfiles";
 
 const LOCAL_STORAGE_KEY = "althayyiboon_profiles_v2";
 const CUSTOM_FILTERS_KEY = "althayyiboon_custom_filters_v2";
@@ -56,29 +55,37 @@ export function generateSearchKeywords(profile) {
   return Array.from(tokens);
 }
 
-// Get local storage profiles with fallback to seed mock profiles
+// Get local storage profiles (offline cache / locally created)
 function getLocalStorageProfiles() {
   try {
+    // Purge legacy storage keys if present
+    ["althayyiboon_profiles_v1"].forEach(k => {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
+
     const existing = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (existing) {
       const parsed = JSON.parse(existing);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        // Purge any legacy fake seed profiles (e.g. IDs starting with ALTB-10)
+        const validProfiles = parsed.filter(p => !p.id || !p.id.startsWith("ALTB-10"));
+        if (validProfiles.length !== parsed.length) {
+          saveLocalStorageProfiles(validProfiles);
+        }
+        return validProfiles;
       }
     }
   } catch (e) {
     // fallback
   }
-  // Initialize with seed MOCK_PROFILES if empty
-  saveLocalStorageProfiles(MOCK_PROFILES);
-  return MOCK_PROFILES;
+  return [];
 }
 
 function saveLocalStorageProfiles(list) {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
 }
 
-// Helper to merge Firestore profiles with LocalStorage profiles (preserves fallback & offline profiles)
+// Helper to merge Firestore profiles with LocalStorage profiles (preserves real offline user profiles)
 function mergeProfiles(fsProfiles = []) {
   const localList = getLocalStorageProfiles();
   if (!localList || localList.length === 0) return fsProfiles;
@@ -87,7 +94,7 @@ function mergeProfiles(fsProfiles = []) {
   const merged = [...fsProfiles];
   
   for (const lp of localList) {
-    if (!fsIds.has(lp.id)) {
+    if (!fsIds.has(lp.id) && !lp.id?.startsWith("ALTB-10")) {
       merged.push(lp);
     }
   }
