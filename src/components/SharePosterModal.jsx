@@ -185,6 +185,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
         if (onShowToast) onShowToast("Poster image downloaded successfully!");
       }
     } catch (e) {
+      console.error("Poster download error:", e);
       alert("Download failed. Please try again or take a screenshot.");
     } finally {
       setIsGenerating(false);
@@ -205,6 +206,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
         if (onShowToast) onShowToast("Poster image copied to clipboard!");
       }
     } catch (err) {
+      console.warn("Clipboard copy not supported, falling back to download:", err);
       handleDownload();
     } finally {
       setIsGenerating(false);

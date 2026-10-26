@@ -24,6 +24,7 @@ export default function EditProfileModal({
 
   // Initialize form state supporting both old & new schemas
   const [formData, setFormData] = useState({
+    status: profile.status || "approved",
     basicInfo: { color: "", ...profile.basicInfo },
     islamicQualification: Array.isArray(profile.islamicQualification)
       ? profile.islamicQualification
@@ -228,6 +229,37 @@ export default function EditProfileModal({
               </div>
             ) : (
               <>
+                {/* Proposal Listing Status */}
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-white uppercase tracking-wider">
+                      Listing Visibility Status
+                    </label>
+                    <span className="text-[10px] text-slate-400">Controls directory display</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { key: 'approved', label: 'Active Listing', desc: 'Visible in Directory' },
+                      { key: 'hidden', label: 'Paused / In Talks', desc: 'Temporarily Hidden' },
+                      { key: 'married', label: 'Nikah Settled', desc: 'Archived / Settled' }
+                    ].map(st => (
+                      <button
+                        key={st.key}
+                        type="button"
+                        onClick={() => setFormData(p => ({ ...p, status: st.key }))}
+                        className={`p-2 rounded-xl text-left border transition-all cursor-pointer ${
+                          formData.status === st.key
+                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-bold shadow-sm'
+                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="text-xs font-semibold">{st.label}</div>
+                        <div className="text-[9px] opacity-75">{st.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Basic Details */}
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">Basic Info</h3>

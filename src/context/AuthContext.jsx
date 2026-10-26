@@ -125,22 +125,31 @@ export function AuthProvider({ children }) {
 
   // Methods
   const switchUserPersona = (personaType) => {
-    if (personaType === 'male') {
+    if (personaType === 'groom' || personaType === 'male') {
       setUserProfile({
-        uid: 'user_male_1',
-        name: 'Mohammed Shafi',
+        uid: 'user_groom_1',
+        name: 'Muhammed Shafi (Groom)',
         email: 'shafi@example.com',
         gender: 'male',
-        role: 'user',
+        role: 'groom',
         isDemo: true
       });
-    } else if (personaType === 'female') {
+    } else if (personaType === 'bride' || personaType === 'female') {
       setUserProfile({
-        uid: 'user_female_1',
-        name: 'Fathima Zahra',
+        uid: 'user_bride_1',
+        name: 'Fathima Zahra (Bride)',
         email: 'fathima@example.com',
         gender: 'female',
-        role: 'user',
+        role: 'bride',
+        isDemo: true
+      });
+    } else if (personaType === 'parent') {
+      setUserProfile({
+        uid: 'user_parent_1',
+        name: 'Haji Abdul Kareem (Parent)',
+        email: 'parent.kareem@example.com',
+        gender: null,
+        role: 'parent',
         isDemo: true
       });
     } else if (personaType === 'admin') {
@@ -157,20 +166,37 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (intendedRole = 'groom') => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      setUserProfile({
+
+      let gender = 'male';
+      let role = intendedRole || 'groom';
+
+      if (intendedRole === 'bride') {
+        gender = 'female';
+        role = 'bride';
+      } else if (intendedRole === 'parent') {
+        gender = null;
+        role = 'parent';
+      } else {
+        gender = 'male';
+        role = 'groom';
+      }
+
+      const profile = {
         uid: user.uid,
-        name: user.displayName || 'Community Member',
+        name: user.displayName || (role === 'parent' ? 'Parent / Guardian' : role === 'bride' ? 'Bride Member' : 'Groom Member'),
         email: user.email,
         photoURL: user.photoURL,
-        gender: userProfile?.gender || 'male', // default or persist
-        role: 'user',
+        gender: gender,
+        role: role,
         isDemo: false
-      });
-      return { success: true, user };
+      };
+
+      setUserProfile(profile);
+      return { success: true, user, profile };
     } catch (err) {
       console.warn("Google Sign-In notice:", err.message);
       return { success: false, error: err.message };
@@ -246,6 +272,10 @@ export function AuthProvider({ children }) {
   } : null);
 
   const isAdmin = currentUser?.role === 'admin';
+  const isParent = currentUser?.role === 'parent';
+  const isGroom = currentUser?.role === 'groom' || (!isParent && !isAdmin && currentUser?.gender === 'male');
+  const isBride = currentUser?.role === 'bride' || (!isParent && !isAdmin && currentUser?.gender === 'female');
+  const userGender = isParent ? null : (isAdmin ? 'all' : (currentUser?.gender || (isBride ? 'female' : 'male')));
 
   // Helper to determine if statistics numbers should be shown publicly
   const isStatsNumbersVisible = (totalCount = 0) => {
@@ -262,7 +292,10 @@ export function AuthProvider({ children }) {
       value={{
         currentUser,
         isAdmin,
-        userGender: currentUser?.gender || null, // 'male' | 'female' | 'all'
+        isParent,
+        isGroom,
+        isBride,
+        userGender, // 'male' | 'female' | 'all' | null (for parent)
         credits,
         unlockedProfileIds,
         isContactUnlocked,

@@ -11,6 +11,7 @@ import AdminPortalModal from './components/AdminPortalModal';
 import RequestFilterModal from './components/RequestFilterModal';
 import SharePosterModal from './components/SharePosterModal';
 import WalletRechargeModal from './components/WalletRechargeModal';
+import LandingPage from './components/LandingPage';
 import Footer from './components/Footer';
 import { useProfiles } from './hooks/useProfiles';
 import { useAuth } from './context/AuthContext';
@@ -51,25 +52,45 @@ export default function App() {
     handleRejectFilterRequest
   } = useProfiles();
 
-  const { isCheckoutOpen, setIsCheckoutOpen, isStatsNumbersVisible, loginWithGoogle } = useAuth();
+  const { 
+    currentUser, 
+    switchUserPersona, 
+    isCheckoutOpen, 
+    setIsCheckoutOpen, 
+    isStatsNumbersVisible, 
+    loginWithGoogle 
+  } = useAuth();
   const showStatsNumbers = isStatsNumbersVisible ? isStatsNumbersVisible(rawProfiles.length) : true;
 
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [editingProfile, setEditingProfile] = useState(null);
   const [isAdminOverrideEdit, setIsAdminOverrideEdit] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
+  const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    return path === '/admin' || path.startsWith('/admin') || hash === '#admin';
+  });
   const [isRequestFilterOpen, setIsRequestFilterOpen] = useState(false);
   const [posterProfile, setPosterProfile] = useState(null);
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
 
-  // Auto-detect /admin page URL or #admin hash
+  // Synchronize on hash change or popstate
   useEffect(() => {
-    const path = window.location.pathname.toLowerCase();
-    const hash = window.location.hash.toLowerCase();
-    if (path === '/admin' || path.startsWith('/admin') || hash === '#admin') {
-      setIsAdminPortalOpen(true);
-    }
+    const handleLocationChange = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path === '/admin' || path.startsWith('/admin') || hash === '#admin') {
+        setIsAdminPortalOpen(true);
+      }
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
 
   const handleCloseAdminPortal = () => {
@@ -100,86 +121,110 @@ export default function App() {
         </div>
       )}
 
-      {/* Sticky Header Navbar */}
-      <Navbar
-        onOpenAddModal={() => setIsAddModalOpen(true)}
-        totalProfiles={totalCount}
-        onToggleMobileFilter={() => setIsMobileFilterOpen(true)}
-        activeFilterCount={activeFilterCount}
-        onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
-        bookmarkCount={bookmarks.length}
-        showFavoritesOnly={showFavoritesOnly}
-        onToggleShowFavorites={() => setShowFavoritesOnly(prev => !prev)}
-        onOpenPosterGenerator={() => {
-          setPosterProfile(null);
-          setIsPosterModalOpen(true);
-        }}
-        onOpenWalletModal={() => setIsCheckoutOpen(true)}
-        onOpenSignIn={async () => {
-          const res = await loginWithGoogle();
-          if (res.success) {
-            showToast(`Welcome, ${res.user.displayName || 'Member'}!`);
-          } else {
-            setIsCheckoutOpen(true);
-          }
-        }}
-      />
-
-      {/* Hero Banner with Search Bar & Quick Tags */}
-      <HeroBanner
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedGender={selectedGender}
-        setSelectedGender={setSelectedGender}
-        activeQuickTag={activeQuickTag}
-        setActiveQuickTag={setActiveQuickTag}
-      />
-
-      {/* Aggregate Statistics Overview (Conditionally shown if 200+ profiles or enabled by admin) */}
-      {showStatsNumbers && (
-        <StatsBar profiles={profiles} />
-      )}
-
-      {/* Main Directory Layout Container */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex-1 w-full">
-        <div className="flex gap-8 items-start">
-          
-          {/* Desktop & Mobile Filter Drawer */}
-          <FilterSidebar
-            filters={filters}
-            setFilters={setFilters}
-            onResetFilters={resetFilters}
-            isMobileOpen={isMobileFilterOpen}
-            onCloseMobile={() => setIsMobileFilterOpen(false)}
-            approvedCustomFilters={approvedCustomFilters}
-            onRequestCustomFilter={() => setIsRequestFilterOpen(true)}
-          />
-
-          {/* Proposals Grid Display */}
-          <ProfileGrid
-            profiles={profiles}
-            showCountNumber={showStatsNumbers}
-            onSelectProfile={(p) => setSelectedProfile(p)}
-            bookmarks={bookmarks}
-            onToggleBookmark={toggleBookmark}
+      {/* If Guest (Not Authenticated): Show Dedicated Matrimonial Landing Page */}
+      {!currentUser ? (
+        <LandingPage
+          onSignIn={async (role) => {
+            const res = await loginWithGoogle(role);
+            if (res.success) {
+              showToast(`Welcome, ${res.profile?.name || 'Member'}!`);
+            } else {
+              setIsCheckoutOpen(true);
+            }
+          }}
+          onSwitchPersona={(role) => {
+            switchUserPersona(role);
+            showToast(`Switched to ${role} demo mode!`);
+          }}
+          onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
+        />
+      ) : (
+        <>
+          {/* Sticky Header Navbar */}
+          <Navbar
+            onOpenAddModal={() => setIsAddModalOpen(true)}
+            totalProfiles={totalCount}
+            onToggleMobileFilter={() => setIsMobileFilterOpen(true)}
+            activeFilterCount={activeFilterCount}
+            onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
+            bookmarkCount={bookmarks.length}
             showFavoritesOnly={showFavoritesOnly}
             onToggleShowFavorites={() => setShowFavoritesOnly(prev => !prev)}
-            onResetFilters={resetFilters}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            onOpenEditModal={(p) => {
-              setIsAdminOverrideEdit(false);
-              setEditingProfile(p);
-            }}
-            onShowToast={showToast}
-            onOpenPosterModal={(p) => {
-              setPosterProfile(p);
+            onOpenPosterGenerator={() => {
+              setPosterProfile(null);
               setIsPosterModalOpen(true);
+            }}
+            onOpenWalletModal={() => setIsCheckoutOpen(true)}
+            onOpenSignIn={async () => {
+              const res = await loginWithGoogle();
+              if (res.success) {
+                showToast(`Welcome, ${res.user.displayName || 'Member'}!`);
+              } else {
+                setIsCheckoutOpen(true);
+              }
             }}
           />
 
-        </div>
-      </main>
+          {/* Hero Banner with Search Bar & Quick Tags */}
+          <HeroBanner
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedGender={selectedGender}
+            setSelectedGender={setSelectedGender}
+            activeQuickTag={activeQuickTag}
+            setActiveQuickTag={setActiveQuickTag}
+          />
+
+          {/* Aggregate Statistics Overview (Conditionally shown if 200+ profiles or enabled by admin) */}
+          {showStatsNumbers && (
+            <StatsBar profiles={profiles} />
+          )}
+
+          {/* Main Directory Layout Container */}
+          <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex-1 w-full">
+            <div className="flex gap-8 items-start">
+              
+              {/* Desktop & Mobile Filter Drawer */}
+              <FilterSidebar
+                filters={filters}
+                setFilters={setFilters}
+                onResetFilters={resetFilters}
+                isMobileOpen={isMobileFilterOpen}
+                onCloseMobile={() => setIsMobileFilterOpen(false)}
+                approvedCustomFilters={approvedCustomFilters}
+                onRequestCustomFilter={() => setIsRequestFilterOpen(true)}
+              />
+
+              {/* Proposals Grid Display */}
+              <ProfileGrid
+                profiles={profiles}
+                showCountNumber={showStatsNumbers}
+                onSelectProfile={(p) => setSelectedProfile(p)}
+                bookmarks={bookmarks}
+                onToggleBookmark={toggleBookmark}
+                showFavoritesOnly={showFavoritesOnly}
+                onToggleShowFavorites={() => setShowFavoritesOnly(prev => !prev)}
+                onResetFilters={resetFilters}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                onOpenEditModal={(p) => {
+                  setIsAdminOverrideEdit(false);
+                  setEditingProfile(p);
+                }}
+                onShowToast={showToast}
+                onOpenPosterModal={(p) => {
+                  setPosterProfile(p);
+                  setIsPosterModalOpen(true);
+                }}
+              />
+
+            </div>
+          </main>
+
+          {/* Footer */}
+          <Footer onOpenAdminPortal={() => setIsAdminPortalOpen(true)} />
+        </>
+      )}
 
       {/* Profile Detail View Modal */}
       {selectedProfile && (
@@ -193,6 +238,8 @@ export default function App() {
             setPosterProfile(p);
             setIsPosterModalOpen(true);
           }}
+          allProfiles={profiles}
+          onSelectProfile={setSelectedProfile}
         />
       )}
 
@@ -272,9 +319,6 @@ export default function App() {
           setIsAdminPortalOpen(true);
         }}
       />
-
-      {/* Footer */}
-      <Footer onOpenAdminPortal={() => setIsAdminPortalOpen(true)} />
 
     </div>
   );

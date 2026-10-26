@@ -16,38 +16,35 @@ import {
   Lock,
   Unlock,
   Coins,
-  Phone
+  Phone,
+  Scale
 } from 'lucide-react';
 import { shareProfile } from '../utils/shareUtils';
 import { useAuth } from '../context/AuthContext';
 
-// Format createdAt ISO string into a friendly relative label
 function formatPostedDate(dateStr) {
   if (!dateStr) return null;
   try {
     const posted = new Date(dateStr);
     const now = new Date();
     const diffMs = now - posted;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Posted today';
-    if (diffDays === 1) return 'Posted yesterday';
-    if (diffDays < 30) return `Posted ${diffDays}d ago`;
-    if (diffDays < 365) {
-      const months = Math.floor(diffDays / 30);
-      return `Posted ${months}mo ago`;
-    }
-    return posted.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    
+    if (diffHours < 24) return { text: 'Posted today', isNew: true };
+    if (diffDays === 1) return { text: 'Posted yesterday', isNew: true };
+    if (diffDays < 7) return { text: `Posted ${diffDays}d ago`, isNew: diffDays <= 2 };
+    if (diffDays < 30) return { text: `Posted ${diffDays}d ago`, isNew: false };
+    return { text: posted.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }), isNew: false };
   } catch {
     return null;
   }
 }
 
-// Phone number masking utility: e.g. +91 98******12
 function maskPhoneNumber(phone) {
   if (!phone) return "+91 98******12";
   const clean = phone.trim();
   if (clean.length < 8) return "+91 98******12";
-  // keep first 6 chars, mask middle, keep last 2
   const prefix = clean.slice(0, Math.min(6, clean.length - 4));
   const suffix = clean.slice(-2);
   return `${prefix}******${suffix}`;
@@ -60,9 +57,12 @@ export default function ProfileCard({
   onToggleBookmark,
   onOpenEditModal,
   onShowToast,
-  onOpenPosterModal
+  onOpenPosterModal,
+  isCompared = false,
+  onToggleCompare,
+  viewMode = 'grid'
 }) {
-  const { isContactUnlocked, unlockContact, pricing } = useAuth();
+  const { isContactUnlocked, unlockContact, pricing, isParent } = useAuth();
 
   const {
     id,
@@ -79,33 +79,40 @@ export default function ProfileCard({
   const isBride = basicInfo.gender === "Bride" || profile.gender === "female";
   const isUnlocked = isContactUnlocked(id);
 
-  // Raw phone & whatsapp
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
   const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
 
-  // Islamic qualifications array
+  const candidateDisplayName = isParent 
+    ? `Candidate ${isBride ? 'Bride' : 'Groom'} (${id})` 
+    : (basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal'));
+
   const islamicList = Array.isArray(islamicQualification) && islamicQualification.length > 0
     ? islamicQualification.filter(q => q && q !== 'None')
     : (islamicBackground.qualification && islamicBackground.qualification !== 'None' ? [islamicBackground.qualification] : []);
 
-  // General academic degree display
   const academicDegree = generalEducation.degreeName || educationOccupation.degree || educationOccupation.education || "";
   const subjectCategory = generalEducation.subjectCategory || "";
   const specialization = generalEducation.specialization || "";
 
   const fee = pricing.contactUnlockFee || 15;
+  const postedInfo = formatPostedDate(profile.createdAt);
 
   const handleUnlockClick = (e) => {
     e.stopPropagation();
-    const result = unlockContact(profile);
-    if (result.success) {
+    if (isParent) {
       if (onShowToast) {
-        onShowToast(`Guardian contact unlocked successfully! (-1 Credit)`);
+        onShowToast("Names & direct phone numbers are protected in Parent View.");
       }
+      return;
+    }
+    const result = unlockContact(profile);
+    if (result.success && onShowToast) {
+      onShowToast(`Guardian contact unlocked successfully! (-1 Credit)`);
     }
   };
 
   const getWhatsAppLink = () => {
+    if (isParent) return "#";
     const rawNumber = (rawWhatsApp || "").replace(/[^0-9]/g, "");
     const formattedNum = rawNumber.startsWith("91") || rawNumber.startsWith("966") || rawNumber.startsWith("971") || rawNumber.startsWith("974") 
       ? rawNumber 
@@ -117,20 +124,114 @@ export default function ProfileCard({
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
 
+  // ===================== LIST VIEW =====================
+  if (viewMode === 'list') {
+    return (
+      <article 
+        id={`profile-card-${id}`}
+        aria-labelledby={`profile-heading-${id}`}
+        onClick={() => onSelectProfile(profile)}
+        className="group relative glass-card rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all duration-200 border border-slate-800 hover:border-slate-700 hover:shadow-lg cursor-pointer"
+      >
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          {/* Gender Indicator Icon */}
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+            isBride ? 'bg-rose-500/10 text-rose-300 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+          }`}>
+            <User className="w-5 h-5" />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                isBride ? 'bg-rose-500/10 text-rose-300 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+              }`}>
+                {isBride ? 'Bride' : 'Groom'} • {basicInfo.age} Yrs
+              </span>
+
+              {islamicList.length > 0 && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  {islamicList.join(', ')}
+                </span>
+              )}
+
+              {academicDegree && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 truncate max-w-[150px]">
+                  {academicDegree}
+                </span>
+              )}
+
+              {postedInfo?.isNew && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-400 text-slate-950">
+                  NEW
+                </span>
+              )}
+            </div>
+
+            <h3 id={`profile-heading-${id}`} className="font-bold text-sm text-white group-hover:text-emerald-300 transition-colors truncate">
+              {candidateDisplayName}
+            </h3>
+
+            <p className="text-xs text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+              <span>{educationOccupation.profession || 'Profession N/A'}</span>
+              <span>•</span>
+              <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3 text-rose-400" /> {locationFamily.homeDistrict || 'Kerala'}</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Right side actions in list view */}
+        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center" onClick={(e) => e.stopPropagation()}>
+          {onToggleCompare && (
+            <button
+              onClick={onToggleCompare}
+              className={`p-2 rounded-xl border text-xs transition-colors cursor-pointer ${
+                isCompared ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+              }`}
+              title={isCompared ? "Remove from comparison" : "Add to comparison"}
+            >
+              <Scale className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          <button
+            onClick={() => onToggleBookmark(id)}
+            className={`p-2 rounded-xl border text-xs transition-colors cursor-pointer ${
+              isBookmarked ? 'bg-rose-500/20 text-rose-400 border-rose-500/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+            }`}
+            title="Save to favorites"
+          >
+            <Heart className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-rose-400' : ''}`} />
+          </button>
+
+          <button
+            onClick={() => onSelectProfile(profile)}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs border border-slate-700 cursor-pointer"
+          >
+            <span>Details</span>
+            <ChevronRight className="w-3.5 h-3.5 text-emerald-400" />
+          </button>
+        </div>
+      </article>
+    );
+  }
+
+  // ===================== GRID VIEW (DEFAULT) =====================
   return (
     <article 
       id={`profile-card-${id}`}
       aria-labelledby={`profile-heading-${id}`}
-      className="group relative glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-300 active:scale-[0.98] sm:hover:-translate-y-1 sm:hover:shadow-xl sm:hover:shadow-emerald-950/40 card-pressable border border-slate-800"
+      className={`group relative glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 card-pressable border ${
+        isBride ? 'hover:border-rose-500/40' : 'hover:border-emerald-500/40'
+      } border-slate-800`}
     >
       
-      {/* Top Row: Gender Badge + Badges + Actions */}
+      {/* Top Row: Gender Badge + Qualifications + Actions */}
       <div>
         <div className="flex items-start justify-between gap-2 mb-3">
           
-          {/* Left: Gender + Badges */}
+          {/* Left Badges */}
           <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-            
             <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
               isBride
                 ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
@@ -142,7 +243,13 @@ export default function ProfileCard({
               <span>{basicInfo.age} Yrs</span>
             </span>
 
-            {/* ISLAMIC QUALIFICATION BADGE (Emerald/Green) */}
+            {postedInfo?.isNew && (
+              <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm animate-pulse">
+                NEW
+              </span>
+            )}
+
+            {/* Islamic Qualification Badge */}
             {islamicList.length > 0 && (
               <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm">
                 <BookOpen className="w-3 h-3 text-emerald-400 shrink-0" />
@@ -150,11 +257,11 @@ export default function ProfileCard({
               </span>
             )}
 
-            {/* GENERAL ACADEMIC BADGE (Sky / Blue / Slate) */}
+            {/* Academic Badge */}
             {academicDegree && (
               <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-sm">
                 <GraduationCap className="w-3 h-3 text-sky-400 shrink-0" />
-                <span className="truncate max-w-[140px]">
+                <span className="truncate max-w-[130px]">
                   {academicDegree}
                   {specialization && !academicDegree.includes(specialization) ? ` (${specialization})` : ''}
                 </span>
@@ -166,34 +273,50 @@ export default function ProfileCard({
                 <Sparkles className="w-2.5 h-2.5" /> Sayyid
               </span>
             )}
-
           </div>
 
-          {/* Right: Edit + Bookmark */}
+          {/* Right Action Icons */}
           <div className="flex items-center gap-0.5 shrink-0">
+            {onToggleCompare && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleCompare();
+                }}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  isCompared ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-500 hover:text-white hover:bg-slate-800'
+                }`}
+                title={isCompared ? "Remove from comparison" : "Add to comparison"}
+                aria-label="Toggle comparison"
+              >
+                <Scale className="w-3.5 h-3.5" />
+              </button>
+            )}
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onOpenEditModal(profile);
               }}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-300 hover:bg-slate-800 transition-colors touch-target"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-300 hover:bg-slate-800 transition-colors cursor-pointer"
               title="Edit / Remove Proposal"
-              aria-label={`Edit or remove proposal ${id}`}
+              aria-label={`Edit proposal ${id}`}
             >
               <Edit className="w-3.5 h-3.5" />
             </button>
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleBookmark(id);
               }}
-              className={`p-1.5 rounded-lg transition-colors touch-target ${
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isBookmarked
                   ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/80'
               }`}
               title={isBookmarked ? "Remove from Favorites" : "Save to Favorites"}
-              aria-label={isBookmarked ? `Remove proposal ${id} from favorites` : `Save proposal ${id} to favorites`}
+              aria-label={`Favorite proposal ${id}`}
             >
               <Heart className={`w-4 h-4 ${isBookmarked ? 'fill-rose-400' : ''}`} />
             </button>
@@ -208,7 +331,7 @@ export default function ProfileCard({
               id={`profile-heading-${id}`}
               className="text-base sm:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors truncate"
             >
-              {basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal')}
+              {candidateDisplayName}
             </h3>
             <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 shrink-0">
               {id}
@@ -230,12 +353,17 @@ export default function ProfileCard({
                 <span className="text-sky-300/80">{subjectCategory}</span>
               </>
             )}
+            {isParent && (
+              <>
+                <span>•</span>
+                <span className="text-teal-400 font-medium">Protected View</span>
+              </>
+            )}
           </p>
         </div>
 
         {/* Key Detail List */}
         <div className="space-y-1.5 text-xs text-slate-300 mb-3 border-t border-b border-slate-800/80 py-2.5">
-          
           <div className="flex items-start gap-2">
             <GraduationCap className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
             <span className="line-clamp-1 font-medium text-slate-200">
@@ -260,7 +388,6 @@ export default function ProfileCard({
               {locationFamily.homeDistrict ? `${locationFamily.homeDistrict}` : 'Kerala'}, {locationFamily.nativePlace || 'Native place'}
             </span>
           </div>
-
         </div>
 
         {/* Guardian Contact Info / Masked State */}
@@ -269,26 +396,35 @@ export default function ProfileCard({
             <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
               <Phone className="w-3 h-3 text-slate-400" />
               <span>Guardian Phone</span>
-              {isUnlocked ? (
+              {isParent ? (
+                <span className="text-[9px] text-teal-400 font-extrabold uppercase bg-teal-500/10 px-1 rounded">Parent View</span>
+              ) : isUnlocked ? (
                 <span className="text-[9px] text-emerald-400 font-extrabold uppercase bg-emerald-500/10 px-1 rounded">Unlocked</span>
               ) : (
                 <span className="text-[9px] text-amber-400 font-extrabold uppercase bg-amber-500/10 px-1 rounded">Protected</span>
               )}
             </div>
             <div className="text-xs font-mono font-bold text-slate-200 mt-0.5">
-              {isUnlocked ? rawPhone || "Contact provided" : maskPhoneNumber(rawPhone)}
+              {isParent 
+                ? "Protected for Parent View"
+                : (isUnlocked ? rawPhone || "Contact provided" : maskPhoneNumber(rawPhone))}
             </div>
           </div>
 
-          {/* Pay-Per-View Unlock CTA Button if not unlocked */}
-          {!isUnlocked ? (
+          {/* Pay-Per-View Unlock CTA Button */}
+          {isParent ? (
+            <span className="px-2.5 py-1.5 rounded-lg bg-teal-500/10 text-teal-300 border border-teal-500/20 text-[11px] font-semibold flex items-center gap-1 shrink-0">
+              <Lock className="w-3.5 h-3.5 text-teal-400" />
+              <span>Hidden</span>
+            </span>
+          ) : !isUnlocked ? (
             <button
               onClick={handleUnlockClick}
-              className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-[11px] shadow-sm flex items-center gap-1 transition-all active:scale-95 shrink-0"
+              className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-[11px] shadow-sm flex items-center gap-1 transition-all active:scale-95 shrink-0 cursor-pointer"
               title="Unlock Guardian Phone and WhatsApp"
             >
               <Coins className="w-3.5 h-3.5" />
-              <span>Unlock (₹{fee}<span className="hidden xs:inline"> / 1 Credit</span>)</span>
+              <span>Unlock (₹{fee})</span>
             </button>
           ) : (
             <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
@@ -301,21 +437,18 @@ export default function ProfileCard({
       </div>
 
       {/* Posted Date */}
-      {(() => {
-        const label = formatPostedDate(profile.createdAt);
-        return label ? (
-          <div className="flex items-center gap-1 mb-2.5 mt-[-4px]">
-            <Clock className="w-3 h-3 text-slate-500 shrink-0" />
-            <span className="text-[10px] text-slate-500 font-medium">{label}</span>
-          </div>
-        ) : null;
-      })()}
+      {postedInfo?.text && (
+        <div className="flex items-center gap-1 mb-2.5 mt-[-4px]">
+          <Clock className="w-3 h-3 text-slate-500 shrink-0" />
+          <span className="text-[10px] text-slate-500 font-medium">{postedInfo.text}</span>
+        </div>
+      )}
 
       {/* Action Footer */}
       <div className="flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={() => onSelectProfile(profile)}
-          className="flex-1 inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 active:bg-slate-600/90 text-white font-semibold text-xs border border-slate-700/70 transition-colors touch-target"
+          className="flex-1 inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 active:bg-slate-600/90 text-white font-semibold text-xs border border-slate-700/70 transition-colors touch-target cursor-pointer"
           aria-label={`View full details of proposal ${id}`}
         >
           <span>View Profile</span>
@@ -327,7 +460,7 @@ export default function ProfileCard({
             e.stopPropagation();
             if (onOpenPosterModal) onOpenPosterModal(profile);
           }}
-          className="inline-flex items-center justify-center p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors touch-target"
+          className="inline-flex items-center justify-center p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors touch-target cursor-pointer"
           title="Generate Social Poster Photo"
           aria-label={`Generate social poster card for proposal ${id}`}
         >
@@ -339,21 +472,33 @@ export default function ProfileCard({
             e.stopPropagation();
             shareProfile(profile, onShowToast);
           }}
-          className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors touch-target"
+          className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors touch-target cursor-pointer"
           title="Share Proposal Link"
           aria-label={`Share link for proposal ${id}`}
         >
           <Share2 className="w-4 h-4 text-emerald-400" />
         </button>
 
-        {/* WhatsApp Button: Direct if unlocked, or prompt unlock */}
-        {isUnlocked ? (
+        {/* WhatsApp Direct / Unlock Chat */}
+        {isParent ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onShowToast) onShowToast("Direct WhatsApp contact numbers are protected in Parent View.");
+            }}
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 text-slate-500 border border-slate-700/60 transition-colors touch-target opacity-70 cursor-pointer"
+            title="Contact numbers protected in Parent View"
+            aria-label="Contact numbers protected in Parent View"
+          >
+            <Lock className="w-4 h-4 text-slate-400" />
+          </button>
+        ) : isUnlocked ? (
           <a
             href={getWhatsAppLink()}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 active:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 transition-colors touch-target"
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 transition-colors touch-target"
             title="Direct WhatsApp Chat"
             aria-label={`Chat directly on WhatsApp with guardian of proposal ${id}`}
           >
@@ -362,7 +507,7 @@ export default function ProfileCard({
         ) : (
           <button
             onClick={handleUnlockClick}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors touch-target"
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors touch-target cursor-pointer"
             title="Unlock Contact to Chat on WhatsApp"
             aria-label={`Unlock contact to chat on WhatsApp with guardian of proposal ${id}`}
           >

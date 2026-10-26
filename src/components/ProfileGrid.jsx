@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ProfileCard from './ProfileCard';
-import { SlidersHorizontal, RefreshCw, Heart, X, Filter } from 'lucide-react';
+import { 
+  SlidersHorizontal, 
+  RefreshCw, 
+  Heart, 
+  X, 
+  Filter, 
+  LayoutGrid, 
+  List, 
+  Scale
+} from 'lucide-react';
 
 export default function ProfileGrid({ 
   profiles, 
@@ -17,6 +26,27 @@ export default function ProfileGrid({
   onOpenPosterModal,
   showCountNumber = true
 }) {
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+  const [compareIds, setCompareIds] = useState([]);
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+
+  const toggleCompare = (profileId) => {
+    setCompareIds(prev => {
+      if (prev.includes(profileId)) {
+        return prev.filter(id => id !== profileId);
+      }
+      if (prev.length >= 3) {
+        if (onShowToast) onShowToast("You can compare up to 3 proposals at a time.");
+        return prev;
+      }
+      const updated = [...prev, profileId];
+      if (onShowToast) onShowToast(`Added to comparison (${updated.length}/3)`);
+      return updated;
+    });
+  };
+
+  const comparedProfiles = profiles.filter(p => compareIds.includes(p.id));
+
   return (
     <section aria-label="Proposals directory" className="flex-1 space-y-3 sm:space-y-4 min-w-0">
       
@@ -31,7 +61,7 @@ export default function ProfileGrid({
           </div>
           <button
             onClick={onToggleShowFavorites}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold transition-colors shadow-sm"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold transition-colors shadow-sm cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
             <span>View All Directory</span>
@@ -39,7 +69,7 @@ export default function ProfileGrid({
         </div>
       )}
 
-      {/* Grid Top Bar: Counter & Sorting */}
+      {/* Grid Top Bar: Counter, View Mode Toggle & Sorting */}
       <div className="flex items-center justify-between gap-2 bg-slate-900/70 backdrop-blur-md px-3 py-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800">
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></div>
@@ -60,27 +90,58 @@ export default function ProfileGrid({
           </span>
         </div>
 
-        {/* Sort Selector */}
-        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-          <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 shrink-0 hidden xs:inline" />
-          <label htmlFor="sort-proposals" className="text-xs text-slate-400 hidden sm:inline">Sort:</label>
-          <select
-            id="sort-proposals"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="bg-slate-950 text-white text-[11px] sm:text-xs font-medium py-1.5 px-2 sm:px-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-sm"
-            aria-label="Sort proposals"
-          >
-            <option value="newest">Newest First</option>
-            <option value="ageAsc">Youngest</option>
-            <option value="ageDesc">Eldest</option>
-          </select>
+        {/* View Mode & Sort Selector */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          
+          {/* Grid vs List View Switcher */}
+          <div className="hidden xs:inline-flex p-0.5 rounded-xl bg-slate-950 border border-slate-800">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                viewMode === 'grid' ? 'bg-emerald-500/20 text-emerald-300' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Grid View"
+              aria-label="Grid View"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                viewMode === 'list' ? 'bg-emerald-500/20 text-emerald-300' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Compact List View"
+              aria-label="Compact List View"
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 shrink-0 hidden xs:inline" />
+            <label htmlFor="sort-proposals" className="text-xs text-slate-400 hidden sm:inline">Sort:</label>
+            <select
+              id="sort-proposals"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-slate-950 text-white text-[11px] sm:text-xs font-medium py-1.5 px-2 sm:px-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-sm"
+              aria-label="Sort proposals"
+            >
+              <option value="newest">Newest First</option>
+              <option value="ageAsc">Youngest</option>
+              <option value="ageDesc">Eldest</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Profile Cards Grid */}
+      {/* Profile Cards Grid / List */}
       {profiles.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5">
+        <div className={
+          viewMode === 'grid' 
+            ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5" 
+            : "space-y-3"
+        }>
           {profiles.map((profile) => (
             <ProfileCard
               key={profile.id}
@@ -91,6 +152,9 @@ export default function ProfileGrid({
               onOpenEditModal={onOpenEditModal}
               onShowToast={onShowToast}
               onOpenPosterModal={onOpenPosterModal}
+              isCompared={compareIds.includes(profile.id)}
+              onToggleCompare={() => toggleCompare(profile.id)}
+              viewMode={viewMode}
             />
           ))}
         </div>
@@ -114,11 +178,151 @@ export default function ProfileGrid({
           </p>
           <button
             onClick={onResetFilters}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all active:scale-95 cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
             <span>{showFavoritesOnly ? 'View All Proposals' : 'Reset All Filters'}</span>
           </button>
+        </div>
+      )}
+
+      {/* Floating Comparison Drawer Indicator */}
+      {compareIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-2xl px-4 py-2.5 shadow-2xl flex items-center gap-3 animate-slide-up">
+          <div className="flex items-center gap-1.5 text-xs text-slate-200">
+            <Scale className="w-4 h-4 text-emerald-400" />
+            <span>Comparing <strong>{compareIds.length}</strong> of 3</span>
+          </div>
+          <button
+            onClick={() => setIsCompareModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+          >
+            Compare Now
+          </button>
+          <button
+            onClick={() => setCompareIds([])}
+            className="p-1 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
+            title="Clear comparison"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Comparison Modal */}
+      {isCompareModalOpen && (
+        <div 
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+        >
+          <div 
+            onClick={() => setIsCompareModalOpen(false)}
+            className="fixed inset-0 bg-slate-950/85 backdrop-blur-md"
+          ></div>
+
+          <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl p-5 sm:p-6 z-10 animate-fade-in my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+              <div className="flex items-center gap-2">
+                <Scale className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-lg font-bold text-white">Side-by-Side Proposal Comparison</h3>
+              </div>
+              <button
+                onClick={() => setIsCompareModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Comparison Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800">
+                    <th className="p-3 text-slate-400 font-bold uppercase tracking-wider w-1/4">Criteria</th>
+                    {comparedProfiles.map(p => (
+                      <th key={p.id} className="p-3 text-white font-bold text-sm">
+                        <div className="truncate">{p.basicInfo?.fullName || p.id}</div>
+                        <div className="text-[10px] text-emerald-400 font-mono font-normal">ID: {p.id}</div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800 text-slate-200">
+                  <tr>
+                    <td className="p-3 text-slate-400 font-medium">Gender &amp; Age</td>
+                    {comparedProfiles.map(p => (
+                      <td key={p.id} className="p-3 font-semibold">
+                        {p.basicInfo?.gender || (p.gender === 'female' ? 'Bride' : 'Groom')}, {p.basicInfo?.age} Yrs
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-slate-400 font-medium">Islamic Degree</td>
+                    {comparedProfiles.map(p => {
+                      const list = Array.isArray(p.islamicQualification) ? p.islamicQualification.join(', ') : (p.islamicBackground?.qualification || 'None');
+                      return (
+                        <td key={p.id} className="p-3 font-semibold text-emerald-300">
+                          {list}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-slate-400 font-medium">Academic Qualification</td>
+                    {comparedProfiles.map(p => (
+                      <td key={p.id} className="p-3">
+                        {p.generalEducation?.degreeName || p.educationOccupation?.degree || p.educationOccupation?.education || 'Not specified'}
+                        {p.generalEducation?.specialization ? ` (${p.generalEducation.specialization})` : ''}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-slate-400 font-medium">Profession</td>
+                    {comparedProfiles.map(p => (
+                      <td key={p.id} className="p-3 font-semibold text-amber-300">
+                        {p.educationOccupation?.profession || 'Not specified'}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-slate-400 font-medium">District &amp; Location</td>
+                    {comparedProfiles.map(p => (
+                      <td key={p.id} className="p-3">
+                        {p.locationFamily?.homeDistrict || 'Kerala'}, {p.locationFamily?.nativePlace || ''}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-slate-400 font-medium">Marital Status &amp; Height</td>
+                    {comparedProfiles.map(p => (
+                      <td key={p.id} className="p-3">
+                        {p.basicInfo?.maritalStatus || 'Never Married'} • {p.basicInfo?.height || 'N/A'}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="p-3 text-slate-400 font-medium">Actions</td>
+                    {comparedProfiles.map(p => (
+                      <td key={p.id} className="p-3">
+                        <button
+                          onClick={() => {
+                            setIsCompareModalOpen(false);
+                            onSelectProfile(p);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs cursor-pointer"
+                        >
+                          View Full Details
+                        </button>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
       )}
 
