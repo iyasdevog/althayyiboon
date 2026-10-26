@@ -1,110 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
-import HeroBanner from './components/HeroBanner';
-import StatsBar from './components/StatsBar';
-import FilterSidebar from './components/FilterSidebar';
-import ProfileGrid from './components/ProfileGrid';
-import ProfileDetailModal from './components/ProfileDetailModal';
-import AddProfileModal from './components/AddProfileModal';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import BrowsePage from './pages/BrowsePage';
+import ProfileDetailPage from './pages/ProfileDetailPage';
+import SavedProfilesPage from './pages/SavedProfilesPage';
+import PosterMakerPage from './pages/PosterMakerPage';
+import AddProfilePage from './pages/AddProfilePage';
+import AdminPage from './pages/AdminPage';
+import WalletPage from './pages/WalletPage';
+import SignInPage from './pages/SignInPage';
+import NotFoundPage from './pages/NotFoundPage';
+import CampaignPage from './components/CampaignPage';
+import LandingPage from './components/LandingPage';
+
 import EditProfileModal from './components/EditProfileModal';
-import AdminPortalModal from './components/AdminPortalModal';
 import RequestFilterModal from './components/RequestFilterModal';
 import SharePosterModal from './components/SharePosterModal';
 import WalletRechargeModal from './components/WalletRechargeModal';
-import LandingPage from './components/LandingPage';
-import CampaignPage from './components/CampaignPage';
-import DemoNoticeBanner from './components/DemoNoticeBanner';
 import SignInModal from './components/SignInModal';
-import Footer from './components/Footer';
-import { useProfiles } from './hooks/useProfiles';
+import AddProfileModal from './components/AddProfileModal';
+
+import { useProfiles } from './context/ProfilesContext';
 import { useAuth } from './context/AuthContext';
 import { Check } from 'lucide-react';
 
 export default function App() {
+  const navigate = useNavigate();
+
   const {
-    profiles,
     rawProfiles,
-    totalCount,
-    searchQuery,
-    setSearchQuery,
-    selectedGender,
-    setSelectedGender,
-    activeQuickTag,
-    setActiveQuickTag,
-    filters,
-    setFilters,
-    resetFilters,
-    activeFilterCount,
-    sortBy,
-    setSortBy,
-    isMobileFilterOpen,
-    setIsMobileFilterOpen,
-    bookmarks,
-    toggleBookmark,
-    showFavoritesOnly,
-    setShowFavoritesOnly,
     addNewProfile,
     updateProfile,
     deleteProfile,
-    bulkDeleteProfiles,
-    bulkUpdateStatus,
-    approvedCustomFilters,
-    filterRequests,
     handleUserFilterRequest,
-    handleApproveFilterRequest,
-    handleRejectFilterRequest
+    selectedGender
   } = useProfiles();
 
   const { 
-    currentUser, 
     switchUserPersona, 
     isCheckoutOpen, 
-    setIsCheckoutOpen, 
-    isStatsNumbersVisible, 
-    pricing,
-    isAdmin
+    setIsCheckoutOpen
   } = useAuth();
-  const showStatsNumbers = isStatsNumbersVisible ? isStatsNumbersVisible(rawProfiles.length) : true;
 
-  const [selectedProfile, setSelectedProfile] = useState(null);
+  // Modals state
   const [editingProfile, setEditingProfile] = useState(null);
   const [isAdminOverrideEdit, setIsAdminOverrideEdit] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [signInDefaultRole, setSignInDefaultRole] = useState('groom');
-  const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const path = window.location.pathname.toLowerCase();
-    const hash = window.location.hash.toLowerCase();
-    return path === '/admin' || path.startsWith('/admin') || hash === '#admin';
-  });
   const [isRequestFilterOpen, setIsRequestFilterOpen] = useState(false);
   const [posterProfile, setPosterProfile] = useState(null);
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
-
-  // Synchronize on hash change or popstate
-  useEffect(() => {
-    const handleLocationChange = () => {
-      const path = window.location.pathname.toLowerCase();
-      const hash = window.location.hash.toLowerCase();
-      if (path === '/admin' || path.startsWith('/admin') || hash === '#admin') {
-        setIsAdminPortalOpen(true);
-      }
-    };
-    window.addEventListener('popstate', handleLocationChange);
-    window.addEventListener('hashchange', handleLocationChange);
-    return () => {
-      window.removeEventListener('popstate', handleLocationChange);
-      window.removeEventListener('hashchange', handleLocationChange);
-    };
-  }, []);
-
-  const handleCloseAdminPortal = () => {
-    setIsAdminPortalOpen(false);
-    if (window.location.pathname.toLowerCase().startsWith('/admin') || window.location.hash.toLowerCase() === '#admin') {
-      window.history.pushState({}, '', '/');
-    }
-  };
 
   // Global Toast Notification State
   const [toastMessage, setToastMessage] = useState("");
@@ -115,6 +61,15 @@ export default function App() {
       setToastMessage("");
     }, 3000);
   };
+
+  // Backwards compatibility for legacy query params: ?profile=XYZ or ?id=XYZ
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const profileId = params.get('profile') || params.get('id');
+    if (profileId) {
+      navigate(`/profile/${profileId}`, { replace: true });
+    }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
@@ -127,140 +82,315 @@ export default function App() {
         </div>
       )}
 
-      {/* View Routing & Conditions */}
-      {!isAdmin && pricing?.campaignMode && !currentUser?.isDemo ? (
-        /* Condition 1: Active Campaign Mode for Non-Admin & Non-Demo visitors: Show Launch Countdown Page */
-        <CampaignPage
-          onOpenAddModal={() => setIsAddModalOpen(true)}
-          onOpenSignIn={(role) => {
-            setSignInDefaultRole(role || 'groom');
-            setIsSignInModalOpen(true);
-          }}
-          onSwitchPersona={(role) => {
-            switchUserPersona(role);
-            showToast(`Switched to ${role} demo mode (Sample Data)!`);
-          }}
-          onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
+      {/* Multi-Page Routes */}
+      <Routes>
+        <Route 
+          path="/" 
+          element={
+            <HomePage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenPosterModal={(p) => {
+                setPosterProfile(p || null);
+                setIsPosterModalOpen(true);
+              }}
+              onOpenEditModal={(p) => {
+                setIsAdminOverrideEdit(false);
+                setEditingProfile(p);
+              }}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onRequestFilterModal={() => setIsRequestFilterOpen(true)}
+              onShowToast={showToast}
+            />
+          } 
         />
-      ) : !currentUser ? (
-        /* Condition 2: Guest Visitor: Show Matrimonial Landing Page */
-        <LandingPage
-          onSignIn={(role) => {
-            setSignInDefaultRole(role || 'groom');
-            setIsSignInModalOpen(true);
-          }}
-          onSwitchPersona={(role) => {
-            switchUserPersona(role);
-            showToast(`Switched to ${role} demo mode (Sample Data)!`);
-          }}
-          onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
+
+        <Route 
+          path="/profiles" 
+          element={
+            <BrowsePage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenPosterModal={(p) => {
+                setPosterProfile(p || null);
+                setIsPosterModalOpen(true);
+              }}
+              onOpenEditModal={(p) => {
+                setIsAdminOverrideEdit(false);
+                setEditingProfile(p);
+              }}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onRequestFilterModal={() => setIsRequestFilterOpen(true)}
+              onShowToast={showToast}
+            />
+          } 
         />
-      ) : (
-        /* Condition 3: Authenticated Member or Instant Demo: Show Main Directory with Sample Notice if Demo */
-        <>
-          {/* Top Demo Notice Banner */}
-          <DemoNoticeBanner 
-            onOpenSignIn={(role) => {
-              setSignInDefaultRole(role || 'groom');
-              setIsSignInModalOpen(true);
-            }} 
-          />
 
-          {/* Sticky Header Navbar */}
-          <Navbar
-            onOpenAddModal={() => setIsAddModalOpen(true)}
-            totalProfiles={totalCount}
-            onToggleMobileFilter={() => setIsMobileFilterOpen(true)}
-            activeFilterCount={activeFilterCount}
-            onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
-            bookmarkCount={bookmarks.length}
-            showFavoritesOnly={showFavoritesOnly}
-            onToggleShowFavorites={() => setShowFavoritesOnly(prev => !prev)}
-            onOpenPosterGenerator={() => {
-              setPosterProfile(null);
-              setIsPosterModalOpen(true);
-            }}
-            onOpenWalletModal={() => setIsCheckoutOpen(true)}
-            onOpenSignIn={() => setIsSignInModalOpen(true)}
-          />
-
-          {/* Hero Banner with Search Bar & Quick Tags */}
-          <HeroBanner
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            selectedGender={selectedGender}
-            setSelectedGender={setSelectedGender}
-            activeQuickTag={activeQuickTag}
-            setActiveQuickTag={setActiveQuickTag}
-          />
-
-          {/* Aggregate Statistics Overview (Conditionally shown if 200+ profiles or enabled by admin) */}
-          {showStatsNumbers && (
-            <StatsBar profiles={profiles} />
-          )}
-
-          {/* Main Directory Layout Container */}
-          <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex-1 w-full">
-            <div className="flex gap-8 items-start">
-              
-              {/* Desktop & Mobile Filter Drawer */}
-              <FilterSidebar
-                filters={filters}
-                setFilters={setFilters}
-                onResetFilters={resetFilters}
-                isMobileOpen={isMobileFilterOpen}
-                onCloseMobile={() => setIsMobileFilterOpen(false)}
-                approvedCustomFilters={approvedCustomFilters}
-                onRequestCustomFilter={() => setIsRequestFilterOpen(true)}
-              />
-
-              {/* Proposals Grid Display */}
-              <ProfileGrid
-                profiles={profiles}
-                showCountNumber={showStatsNumbers}
-                onSelectProfile={(p) => setSelectedProfile(p)}
-                bookmarks={bookmarks}
-                onToggleBookmark={toggleBookmark}
-                showFavoritesOnly={showFavoritesOnly}
-                onToggleShowFavorites={() => setShowFavoritesOnly(prev => !prev)}
-                onResetFilters={resetFilters}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                onOpenEditModal={(p) => {
-                  setIsAdminOverrideEdit(false);
-                  setEditingProfile(p);
-                }}
-                onShowToast={showToast}
-                onOpenPosterModal={(p) => {
-                  setPosterProfile(p);
-                  setIsPosterModalOpen(true);
-                }}
-              />
-
-            </div>
-          </main>
-
-          {/* Footer */}
-          <Footer onOpenAdminPortal={() => setIsAdminPortalOpen(true)} />
-        </>
-      )}
-
-      {/* Profile Detail View Modal */}
-      {selectedProfile && (
-        <ProfileDetailModal
-          profile={selectedProfile}
-          onClose={() => setSelectedProfile(null)}
-          isBookmarked={bookmarks.includes(selectedProfile.id)}
-          onToggleBookmark={toggleBookmark}
-          onShowToast={showToast}
-          onOpenPosterModal={(p) => {
-            setPosterProfile(p);
-            setIsPosterModalOpen(true);
-          }}
-          allProfiles={profiles}
-          onSelectProfile={setSelectedProfile}
+        <Route 
+          path="/browse" 
+          element={
+            <BrowsePage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenPosterModal={(p) => {
+                setPosterProfile(p || null);
+                setIsPosterModalOpen(true);
+              }}
+              onOpenEditModal={(p) => {
+                setIsAdminOverrideEdit(false);
+                setEditingProfile(p);
+              }}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onRequestFilterModal={() => setIsRequestFilterOpen(true)}
+              onShowToast={showToast}
+            />
+          } 
         />
-      )}
+
+        <Route 
+          path="/profile/:id" 
+          element={
+            <ProfileDetailPage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/saved" 
+          element={
+            <SavedProfilesPage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onOpenEditModal={(p) => {
+                setIsAdminOverrideEdit(false);
+                setEditingProfile(p);
+              }}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/bookmarks" 
+          element={
+            <SavedProfilesPage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onOpenEditModal={(p) => {
+                setIsAdminOverrideEdit(false);
+                setEditingProfile(p);
+              }}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/poster" 
+          element={
+            <PosterMakerPage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/poster/:id" 
+          element={
+            <PosterMakerPage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/add" 
+          element={
+            <AddProfilePage
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/register" 
+          element={
+            <AddProfilePage
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenWalletModal={() => setIsCheckoutOpen(true)}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/admin" 
+          element={
+            <AdminPage
+              onSelectEditProfile={(p) => {
+                setIsAdminOverrideEdit(true);
+                setEditingProfile(p);
+              }}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/wallet" 
+          element={
+            <WalletPage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/pricing" 
+          element={
+            <WalletPage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onOpenAdminPortal={() => navigate('/admin')}
+              onShowToast={showToast}
+            />
+          } 
+        />
+
+        <Route 
+          path="/login" 
+          element={
+            <SignInPage onShowToast={showToast} />
+          } 
+        />
+
+        <Route 
+          path="/signin" 
+          element={
+            <SignInPage onShowToast={showToast} />
+          } 
+        />
+
+        <Route 
+          path="/campaign" 
+          element={
+            <CampaignPage
+              onOpenAddModal={() => setIsAddModalOpen(true)}
+              onOpenSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onSwitchPersona={(role) => {
+                switchUserPersona(role);
+                showToast(`Switched to ${role} demo mode (Sample Data)!`);
+                navigate('/profiles');
+              }}
+              onOpenAdminPortal={() => navigate('/admin')}
+            />
+          } 
+        />
+
+        <Route 
+          path="/welcome" 
+          element={
+            <LandingPage
+              onSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onSwitchPersona={(role) => {
+                switchUserPersona(role);
+                showToast(`Switched to ${role} demo mode (Sample Data)!`);
+                navigate('/profiles');
+              }}
+              onOpenAdminPortal={() => navigate('/admin')}
+            />
+          } 
+        />
+
+        <Route 
+          path="/landing" 
+          element={
+            <LandingPage
+              onSignIn={(role) => {
+                setSignInDefaultRole(role || 'groom');
+                setIsSignInModalOpen(true);
+              }}
+              onSwitchPersona={(role) => {
+                switchUserPersona(role);
+                showToast(`Switched to ${role} demo mode (Sample Data)!`);
+                navigate('/profiles');
+              }}
+              onOpenAdminPortal={() => navigate('/admin')}
+            />
+          } 
+        />
+
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
 
       {/* Proposal Owner / Admin Edit Modal */}
       {editingProfile && (
@@ -276,7 +406,7 @@ export default function App() {
         />
       )}
 
-      {/* Public "Add Profile" Submission Form Modal */}
+      {/* Public "Add Profile" Submission Form Modal (when triggered via shortcut) */}
       {isAddModalOpen && (
         <AddProfileModal
           onClose={() => setIsAddModalOpen(false)}
@@ -284,6 +414,10 @@ export default function App() {
             const newDoc = await addNewProfile(formData);
             const propType = newDoc.basicInfo?.gender === 'Bride' || newDoc.gender === 'female' ? 'Bride' : 'Groom';
             showToast(`Proposal for ${propType} added successfully!`);
+            setIsAddModalOpen(false);
+            if (newDoc?.id) {
+              navigate(`/profile/${newDoc.id}`);
+            }
           }}
           defaultGender={selectedGender !== 'All' ? selectedGender : 'Bride'}
         />
@@ -297,26 +431,7 @@ export default function App() {
         />
       )}
 
-      {/* Admin Management Portal Modal */}
-      {isAdminPortalOpen && (
-        <AdminPortalModal
-          onClose={handleCloseAdminPortal}
-          profiles={rawProfiles}
-          onDeleteProfile={deleteProfile}
-          onUpdateProfile={updateProfile}
-          onBulkDelete={bulkDeleteProfiles}
-          onBulkUpdateStatus={bulkUpdateStatus}
-          onSelectEditProfile={(p) => {
-            setIsAdminOverrideEdit(true);
-            setEditingProfile(p);
-          }}
-          filterRequests={filterRequests}
-          onApproveFilterRequest={handleApproveFilterRequest}
-          onRejectFilterRequest={handleRejectFilterRequest}
-        />
-      )}
-
-      {/* Social Media Poster Generator Modal */}
+      {/* Social Media Poster Generator Modal (when triggered via shortcut) */}
       {isPosterModalOpen && (
         <SharePosterModal
           profile={posterProfile}
@@ -328,18 +443,18 @@ export default function App() {
         />
       )}
 
-      {/* In-App Wallet & Recharge Checkout Modal */}
+      {/* In-App Wallet & Recharge Checkout Modal (when triggered via shortcut) */}
       <WalletRechargeModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         onShowToast={showToast}
         onOpenAdminPortal={() => {
           setIsCheckoutOpen(false);
-          setIsAdminPortalOpen(true);
+          navigate('/admin');
         }}
       />
 
-      {/* Unified Sign-In Modal (Google, Email/Password, Legacy ID) */}
+      {/* Unified Sign-In Modal (when triggered via shortcut) */}
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}

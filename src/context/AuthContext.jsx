@@ -32,6 +32,7 @@ export const DEFAULT_PRICING = {
   statsThreshold: 200 // Threshold for auto-showing profile numbers
 };
 
+let _googlePopupInProgress = false;
 
 export function AuthProvider({ children }) {
   // Firebase Auth user
@@ -178,6 +179,11 @@ export function AuthProvider({ children }) {
   };
 
   const loginWithGoogle = async (intendedRole = 'groom') => {
+    // Guard: prevent a second popup while one is already open (causes auth/cancelled-popup-request)
+    if (_googlePopupInProgress) {
+      return { success: false, error: 'Sign-in already in progress. Please wait.' };
+    }
+    _googlePopupInProgress = true;
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
@@ -209,8 +215,15 @@ export function AuthProvider({ children }) {
       setUserProfile(profile);
       return { success: true, user, profile };
     } catch (err) {
+      // auth/cancelled-popup-request is benign — another popup was opened, just ignore it
+      if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
+        console.info('Google sign-in popup cancelled or superseded:', err.code);
+        return { success: false, error: null }; // silent, no toast needed
+      }
       console.warn("Google Sign-In notice:", err.message);
       return { success: false, error: err.message };
+    } finally {
+      _googlePopupInProgress = false;
     }
   };
 
@@ -388,6 +401,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         currentUser,
+        isDemo: Boolean(currentUser?.isDemo),
         isAdmin,
         isParent,
         isGroom,

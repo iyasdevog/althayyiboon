@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   User, 
   Heart, 
@@ -74,6 +75,12 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              to="/profiles"
+              className="hidden sm:inline-flex px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 transition-colors"
+            >
+              Browse Proposals
+            </Link>
             <button
               onClick={() => onSignIn('parent')}
               className="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-colors"

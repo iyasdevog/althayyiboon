@@ -62,7 +62,8 @@ export default function ProfileCard({
   onToggleCompare,
   viewMode = 'grid'
 }) {
-  const { isContactUnlocked, unlockContact, pricing, isParent } = useAuth();
+  const { isContactUnlocked, unlockContact, pricing, isParent, isDemo: authIsDemo } = useAuth();
+  const isDemo = Boolean(authIsDemo || profile.isFakeData || profile.id?.startsWith('DEMO-'));
 
   const {
     id,
@@ -82,9 +83,11 @@ export default function ProfileCard({
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
   const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
 
-  const candidateDisplayName = isParent 
-    ? `Candidate ${isBride ? 'Bride' : 'Groom'} (${id})` 
-    : (basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal'));
+  const candidateDisplayName = isDemo
+    ? (isBride ? 'Bride' : 'Groom')
+    : isParent 
+      ? `Candidate ${isBride ? 'Bride' : 'Groom'} (${id})` 
+      : (basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal'));
 
   const islamicList = Array.isArray(islamicQualification) && islamicQualification.length > 0
     ? islamicQualification.filter(q => q && q !== 'None')
@@ -99,6 +102,12 @@ export default function ProfileCard({
 
   const handleUnlockClick = (e) => {
     e.stopPropagation();
+    if (isDemo) {
+      if (onShowToast) {
+        onShowToast("Contact details are hidden in Demo View. Sign in for real verified proposals.");
+      }
+      return;
+    }
     if (isParent) {
       if (onShowToast) {
         onShowToast("Names & direct phone numbers are protected in Parent View.");
@@ -112,14 +121,14 @@ export default function ProfileCard({
   };
 
   const getWhatsAppLink = () => {
-    if (isParent) return "#";
+    if (isDemo || isParent) return "#";
     const rawNumber = (rawWhatsApp || "").replace(/[^0-9]/g, "");
     const formattedNum = rawNumber.startsWith("91") || rawNumber.startsWith("966") || rawNumber.startsWith("971") || rawNumber.startsWith("974") 
       ? rawNumber 
       : "91" + rawNumber;
 
     const text = encodeURIComponent(
-      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${basicInfo.gender || 'Candidate'}, ${basicInfo.age || ''} Yrs, ID: ${id}) listed on Al-ThayyiBoon Matrimony.`
+      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${candidateDisplayName}, ${basicInfo.age || ''} Yrs, ID: ${id}) listed on Al-ThayyiBoon Matrimony.`
     );
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
@@ -396,7 +405,9 @@ export default function ProfileCard({
             <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
               <Phone className="w-3 h-3 text-slate-400" />
               <span>Guardian Phone</span>
-              {isParent ? (
+              {isDemo ? (
+                <span className="text-[9px] text-amber-400 font-extrabold uppercase bg-amber-500/10 px-1 rounded">Demo View</span>
+              ) : isParent ? (
                 <span className="text-[9px] text-teal-400 font-extrabold uppercase bg-teal-500/10 px-1 rounded">Parent View</span>
               ) : isUnlocked ? (
                 <span className="text-[9px] text-emerald-400 font-extrabold uppercase bg-emerald-500/10 px-1 rounded">Unlocked</span>
@@ -405,14 +416,21 @@ export default function ProfileCard({
               )}
             </div>
             <div className="text-xs font-mono font-bold text-slate-200 mt-0.5">
-              {isParent 
-                ? "Protected for Parent View"
-                : (isUnlocked ? rawPhone || "Contact provided" : maskPhoneNumber(rawPhone))}
+              {isDemo
+                ? "Hidden in Demo Mode"
+                : isParent 
+                  ? "Protected for Parent View"
+                  : (isUnlocked ? rawPhone || "Contact provided" : maskPhoneNumber(rawPhone))}
             </div>
           </div>
 
           {/* Pay-Per-View Unlock CTA Button */}
-          {isParent ? (
+          {isDemo ? (
+            <span className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[11px] font-semibold flex items-center gap-1 shrink-0">
+              <Lock className="w-3.5 h-3.5 text-amber-400" />
+              <span>Hidden</span>
+            </span>
+          ) : isParent ? (
             <span className="px-2.5 py-1.5 rounded-lg bg-teal-500/10 text-teal-300 border border-teal-500/20 text-[11px] font-semibold flex items-center gap-1 shrink-0">
               <Lock className="w-3.5 h-3.5 text-teal-400" />
               <span>Hidden</span>
@@ -480,7 +498,19 @@ export default function ProfileCard({
         </button>
 
         {/* WhatsApp Direct / Unlock Chat */}
-        {isParent ? (
+        {isDemo ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onShowToast) onShowToast("Contact details are hidden in Demo View. Sign in for real verified proposals.");
+            }}
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 text-slate-500 border border-slate-700/60 transition-colors touch-target opacity-70 cursor-pointer"
+            title="Contact details hidden in Demo Mode"
+            aria-label="Contact details hidden in Demo Mode"
+          >
+            <Lock className="w-4 h-4 text-slate-400" />
+          </button>
+        ) : isParent ? (
           <button
             onClick={(e) => {
               e.stopPropagation();

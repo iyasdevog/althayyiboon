@@ -10,9 +10,10 @@ import {
   Phone, 
   User, 
   Heart, 
-  BookOpen 
+  BookOpen
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
+import { useAuth } from '../context/AuthContext';
 
 const FacebookIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -99,6 +100,8 @@ const GROOM_KERALA_SCHOLAR_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www
 
 export default function SharePosterModal({ profile = null, onClose, onShowToast }) {
   const cardRef = useRef(null);
+  const { isDemo: authIsDemo } = useAuth();
+  const isDemo = Boolean(authIsDemo || profile?.isFakeData || profile?.id?.startsWith('DEMO-'));
 
   // Default initial profile state
   const initialGender = profile?.basicInfo?.gender === "Bride" ? "Bride" : "Groom";
@@ -134,7 +137,8 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
 
   // Proposal ID
   const proposalId = profile?.id ? profile.id.slice(0, 7).toUpperCase() : (isBride ? "B12512" : "G12512");
-  const phoneNo = contactPreferences.phone || contactPreferences.whatsapp || "";
+  // Hide phone number in demo mode
+  const phoneNo = isDemo ? "" : (contactPreferences.phone || contactPreferences.whatsapp || "");
 
   // Photo to display (User uploaded > SVG Fallback)
   const displayPhoto = customPhoto || (isBride ? BRIDE_BACKSIDE_SVG : GROOM_KERALA_SCHOLAR_SVG);

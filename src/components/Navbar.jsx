@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Heart, 
   UserPlus, 
@@ -100,7 +101,7 @@ export default function Navbar({
             
             {/* Logo & Branding */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
-              <a href="/" aria-label="Al-ThayyiBoon Matrimony Home" className="flex items-center gap-1.5 sm:gap-3 group">
+              <Link to="/" aria-label="Al-ThayyiBoon Matrimony Home" className="flex items-center gap-1.5 sm:gap-3 group">
                 <img 
                   src="/favicon.svg" 
                   alt="Al-ThayyiBoon Logo" 
@@ -119,7 +120,7 @@ export default function Navbar({
                     Kerala &amp; Gulf Matrimony • <span className="text-emerald-400 font-bold">Verified Direct Contacts</span>
                   </p>
                 </div>
-              </a>
+              </Link>
             </div>
 
             {/* Action Buttons: Responsive & prioritized for mobile */}
@@ -174,20 +175,22 @@ export default function Navbar({
               </button>
 
               {/* Filter Drawer Toggle Button */}
-              <button
-                id="mobile-filter-toggle"
-                onClick={onToggleMobileFilter}
-                className="relative inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target shrink-0 cursor-pointer"
-                aria-label={`Toggle filters. ${activeFilterCount} active filters`}
-              >
-                <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
-                <span className="hidden xs:inline">Filter</span>
-                {activeFilterCount > 0 && (
-                  <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-bold inline-flex items-center justify-center shadow-md ml-0.5">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
+              {onToggleMobileFilter && (
+                <button
+                  id="mobile-filter-toggle"
+                  onClick={onToggleMobileFilter}
+                  className="relative inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors touch-target shrink-0 cursor-pointer"
+                  aria-label={`Toggle filters. ${activeFilterCount} active filters`}
+                >
+                  <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                  <span className="hidden xs:inline">Filter</span>
+                  {activeFilterCount > 0 && (
+                    <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-bold inline-flex items-center justify-center shadow-md ml-0.5">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {/* Add Proposal Button */}
               {currentUser ? (

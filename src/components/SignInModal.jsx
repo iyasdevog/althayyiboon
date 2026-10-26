@@ -41,9 +41,11 @@ export default function SignInModal({ isOpen, onClose, onShowToast, defaultRole 
     if (res.success) {
       if (onShowToast) onShowToast(`Welcome back, ${res.profile?.name || 'Member'}!`);
       onClose();
-    } else {
-      setErrorMsg(res.error || 'Failed to sign in with Google.');
+    } else if (res.error) {
+      // Silently ignore cancelled-popup-request (already handled in AuthContext)
+      setErrorMsg(res.error);
     }
+    // If res.error is null, it was a silent cancellation — do nothing
   };
 
   const handleEmailAuth = async (e) => {

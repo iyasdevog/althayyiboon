@@ -48,7 +48,8 @@ export default function ProfileDetailModal({
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'islamic' | 'family' | 'contact'
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { isContactUnlocked, unlockContact, pricing, isParent } = useAuth();
+  const { isContactUnlocked, unlockContact, pricing, isParent, isDemo: authIsDemo } = useAuth();
+  const isDemo = Boolean(authIsDemo || profile?.isFakeData || profile?.id?.startsWith('DEMO-'));
 
   // Keyboard navigation: Escape closes, Left/Right arrow moves prev/next
   useEffect(() => {
@@ -86,9 +87,11 @@ export default function ProfileDetailModal({
   const isUnlocked = isContactUnlocked(id);
   const fee = pricing.contactUnlockFee || 15;
 
-  const candidateDisplayName = isParent 
-    ? `Candidate ${isBride ? 'Bride' : 'Groom'} (${id})` 
-    : (basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal'));
+  const candidateDisplayName = isDemo
+    ? (isBride ? 'Bride' : 'Groom')
+    : isParent 
+      ? `Candidate ${isBride ? 'Bride' : 'Groom'} (${id})` 
+      : (basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal'));
 
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
   const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
@@ -108,6 +111,10 @@ export default function ProfileDetailModal({
   const hasNext = currentIndex >= 0 && currentIndex < allProfiles.length - 1;
 
   const handleUnlock = () => {
+    if (isDemo) {
+      if (onShowToast) onShowToast("Contact details are hidden in Demo View. Sign in to access real proposals.");
+      return;
+    }
     if (isParent) {
       if (onShowToast) onShowToast("Contact numbers are protected in Parent View.");
       return;
@@ -119,7 +126,7 @@ export default function ProfileDetailModal({
   };
 
   const getWhatsAppLink = () => {
-    if (isParent) return "#";
+    if (isDemo || isParent) return "#";
     const rawNumber = (rawWhatsApp || "").replace(/[^0-9]/g, "");
     const formattedNum = rawNumber.startsWith("91") || rawNumber.startsWith("966") || rawNumber.startsWith("971") || rawNumber.startsWith("974") 
       ? rawNumber 
@@ -149,8 +156,8 @@ export default function ProfileDetailModal({
       `💼 *Profession:* ${educationOccupation.profession || 'Not specified'}\n` +
       `📍 *Location:* ${locationFamily.homeDistrict || 'Kerala'}, ${locationFamily.nativePlace || ''}\n` +
       `👨‍👩‍👧 *Family:* ${locationFamily.familyType || 'Nuclear'}\n` +
-      `📞 *Guardian Contact:* ${isUnlocked ? rawPhone : 'Protected on Al-ThayyiBoon'}\n\n` +
-      `🔗 *View Online:* ${window.location.origin}/?id=${id}`;
+      `📞 *Guardian Contact:* ${isDemo ? 'Hidden in Demo View' : isUnlocked ? rawPhone : 'Protected on Al-ThayyiBoon'}\n\n` +
+      `🔗 *View Online:* ${window.location.origin}/profile/${id}`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -486,10 +493,10 @@ export default function ProfileDetailModal({
               </div>
               <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80 text-xs space-y-1.5">
                 <p className="text-slate-300">
-                  <span className="text-slate-400 font-medium">Father:</span> {isParent ? 'Protected for Parent View' : (locationFamily.fatherName || 'Father details provided to Wali')}
+                  <span className="text-slate-400 font-medium">Father:</span> {isDemo ? 'Hidden in Demo View' : isParent ? 'Protected for Parent View' : (locationFamily.fatherName || 'Father details provided to Wali')}
                 </p>
                 <p className="text-slate-300">
-                  <span className="text-slate-400 font-medium">Mother:</span> {isParent ? 'Protected for Parent View' : (locationFamily.motherName || 'Mother details provided to Wali')}
+                  <span className="text-slate-400 font-medium">Mother:</span> {isDemo ? 'Hidden in Demo View' : isParent ? 'Protected for Parent View' : (locationFamily.motherName || 'Mother details provided to Wali')}
                 </p>
                 {locationFamily.siblings && (
                   <p className="text-slate-300">
@@ -525,13 +532,20 @@ export default function ProfileDetailModal({
                   <div>
                     <span className="text-slate-400 block text-[11px]">Guardian Name</span>
                     <span className="font-bold text-white text-sm">
-                      {isParent 
-                        ? 'Protected Guardian Name' 
-                        : (contactPreferences.guardianName || contactPreferences.contactPerson || 'Parent / Guardian')}
+                      {isDemo
+                        ? 'Hidden in Demo View'
+                        : isParent 
+                          ? 'Protected Guardian Name' 
+                          : (contactPreferences.guardianName || contactPreferences.contactPerson || 'Parent / Guardian')}
                     </span>
                   </div>
                   <div>
-                    {isParent ? (
+                    {isDemo ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-bold">
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Demo Mode</span>
+                      </span>
+                    ) : isParent ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20 text-xs font-bold">
                         <Lock className="w-3.5 h-3.5" />
                         <span>Parent Privacy Mode</span>
@@ -557,9 +571,11 @@ export default function ProfileDetailModal({
                       <Phone className="w-3.5 h-3.5 text-sky-400" /> Phone:
                     </span>
                     <span className="font-mono font-bold text-white text-xs">
-                      {isParent 
-                        ? 'Protected for Parent View' 
-                        : (isUnlocked ? rawPhone || 'Available' : maskPhoneNumber(rawPhone))}
+                      {isDemo
+                        ? 'Hidden in Demo View'
+                        : isParent 
+                          ? 'Protected for Parent View' 
+                          : (isUnlocked ? rawPhone || 'Available' : maskPhoneNumber(rawPhone))}
                     </span>
                   </div>
 
@@ -568,15 +584,24 @@ export default function ProfileDetailModal({
                       <MessageSquare className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp:
                     </span>
                     <span className="font-mono font-bold text-emerald-300 text-xs">
-                      {isParent 
-                        ? 'Protected for Parent View' 
-                        : (isUnlocked ? rawWhatsApp || 'Available' : maskPhoneNumber(rawWhatsApp))}
+                      {isDemo
+                        ? 'Hidden in Demo View'
+                        : isParent 
+                          ? 'Protected for Parent View' 
+                          : (isUnlocked ? rawWhatsApp || 'Available' : maskPhoneNumber(rawWhatsApp))}
                     </span>
                   </div>
                 </div>
 
                 {/* Notice Banner or Unlock Button */}
-                {isParent ? (
+                {isDemo ? (
+                  <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-center gap-3 mt-2">
+                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                    <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                      <span className="font-bold text-amber-300">Demo View Active:</span> Candidate personal names and contact details are hidden in demo mode. To initiate contact with verified candidates and walis, please sign in.
+                    </p>
+                  </div>
+                ) : isParent ? (
                   <div className="p-3 rounded-xl bg-teal-950/30 border border-teal-500/30 flex items-center gap-3 mt-2">
                     <Lock className="w-4 h-4 text-teal-400 shrink-0" />
                     <p className="text-[11px] text-teal-200/90 leading-relaxed">
@@ -619,7 +644,12 @@ export default function ProfileDetailModal({
             <span>Back</span>
           </button>
 
-          {isParent ? (
+          {isDemo ? (
+            <div className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-slate-900 border border-amber-500/30 text-amber-300 font-semibold text-xs text-center flex items-center justify-center gap-2">
+              <Lock className="w-4 h-4 text-amber-400" />
+              <span>Contact Details Hidden in Demo View</span>
+            </div>
+          ) : isParent ? (
             <div className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-slate-900 border border-teal-500/30 text-teal-300 font-semibold text-xs text-center flex items-center justify-center gap-2">
               <Lock className="w-4 h-4 text-teal-400" />
               <span>Contact Protected in Parent View</span>

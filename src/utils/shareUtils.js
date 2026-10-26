@@ -33,7 +33,7 @@ export async function shareProfile(profile, onShowToast) {
     `View full proposal details:`
   ].join('\n');
 
-  const shareUrl = `${window.location.origin}/?profile=${id}`;
+  const shareUrl = `${window.location.origin}/profile/${id}`;
 
   // 1. Try native Web Share API (Mobile Browsers, Chrome, Safari)
   if (navigator.share) {
