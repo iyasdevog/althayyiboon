@@ -56,7 +56,7 @@ const STEPS = [
 ];
 
 export default function AddProfileModal({ onClose, onSubmitProfile, defaultGender = 'Bride' }) {
-  const { currentUser, loginWithGoogle } = useAuth();
+  const { currentUser, loginWithGoogle, pricing } = useAuth();
   const [authError, setAuthError] = useState('');
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,6 +68,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
 
   const [formData, setFormData] = useState({
     gender: initialGender === 'Bride' ? 'female' : 'male',
+    whatsappConsent: true,
+    whatsappGroupNumber: '',
     basicInfo: {
       fullName: '',
       gender: initialGender,
@@ -226,6 +228,13 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
           phone: phone,
           whatsapp: whatsapp,
           secretPin: pin
+        },
+        whatsappConsent: formData.whatsappConsent !== false,
+        whatsappGroupNumber: formData.whatsappGroupNumber || whatsapp || phone,
+        registeredDuringCampaign: Boolean(pricing?.campaignMode),
+        loginCredentials: {
+          username: `ALTB-${Date.now().toString().slice(-4)}`,
+          password: pin || `altb${Date.now().toString().slice(-4)}`
         },
         creatorUid: currentUser?.uid || null,
         creatorEmail: currentUser?.email || null,
@@ -415,6 +424,18 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
               </div>
             ) : (
               <>
+                {/* Campaign Mode Free Notice Banner */}
+                {pricing?.campaignMode && (
+                  <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-xs text-emerald-200 flex items-center gap-2.5">
+                    <span className="p-1 rounded-lg bg-emerald-500/20 text-emerald-300 shrink-0 font-bold">
+                      FREE (₹0)
+                    </span>
+                    <span className="leading-snug">
+                      <strong>Launch Campaign Active:</strong> Proposal registration is 100% free! You will not be prompted for payment and will receive <strong>{pricing.campaignRewardCredits || 3} complimentary contact views</strong> when the directory opens.
+                    </span>
+                  </div>
+                )}
+
                 {/* ── STEP 1: BASIC INFO ── */}
                 {step === 1 && (
                   <div className="space-y-4 animate-fade-in">
@@ -799,6 +820,43 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                         placeholder="e.g. Seeking educated, religious partner (Wafiyya / Doctor / Engineer)..."
                         className={inputCls}
                       ></textarea>
+                    </div>
+
+                    {/* WHATSAPP GROUP NOTIFICATION CONSENT */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-teal-950/30 border border-emerald-500/40 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id="whatsappConsent"
+                          checked={formData.whatsappConsent}
+                          onChange={e => setFormData(prev => ({ ...prev, whatsappConsent: e.target.checked }))}
+                          className="w-5 h-5 mt-0.5 rounded-lg text-emerald-500 focus:ring-emerald-500 bg-slate-900 border-slate-700 cursor-pointer"
+                        />
+                        <label htmlFor="whatsappConsent" className="text-xs text-slate-200 cursor-pointer">
+                          <span className="font-bold text-emerald-400 block mb-0.5">
+                            Join Official Matrimonial WhatsApp Group
+                          </span>
+                          Yes, I give consent to add my number to the Al-ThayyiBoon WhatsApp group to receive newly updated verified candidate profiles directly.
+                        </label>
+                      </div>
+
+                      {formData.whatsappConsent && (
+                        <div className="pt-2 border-t border-slate-800">
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            WhatsApp Number for Group Alerts
+                          </label>
+                          <input
+                            type="tel"
+                            value={formData.whatsappGroupNumber}
+                            onChange={e => setFormData(prev => ({ ...prev, whatsappGroupNumber: e.target.value }))}
+                            placeholder={formData.contactDetails.whatsappNumber || formData.contactDetails.guardianPhone || "+91 9847123456"}
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:border-emerald-500 text-xs"
+                          />
+                          <p className="text-[10px] text-slate-400 mt-1">
+                            Leave blank to automatically use the Guardian phone/WhatsApp number above.
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* SECRET 4-DIGIT PIN */}

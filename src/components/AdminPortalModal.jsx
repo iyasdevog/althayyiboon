@@ -9,15 +9,23 @@ import {
   Plus, 
   Download, 
   Search, 
-  Sparkles,
-  Users,
-  FileCheck,
-  Coins,
-  GraduationCap,
-  ToggleLeft,
-  ToggleRight,
-  Save,
-  Tag
+  Sparkles, 
+  Users, 
+  FileCheck, 
+  Coins, 
+  GraduationCap, 
+  ToggleLeft, 
+  ToggleRight, 
+  Save, 
+  Tag,
+  MessageSquare,
+  Key,
+  Share2,
+  Copy,
+  Send,
+  Calendar,
+  ExternalLink,
+  Check
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { SUBJECT_CATEGORIES } from '../data/mockProfiles';
@@ -45,7 +53,7 @@ export default function AdminPortalModal({
   const [passcode, setPasscode] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(isAdmin);
   const [authError, setAuthError] = useState("");
-  const [activeTab, setActiveTab] = useState("proposals"); // "proposals" | "pricing" | "taxonomies" | "filterRequests"
+  const [activeTab, setActiveTab] = useState("proposals"); // "proposals" | "whatsapp" | "credentials" | "pricing" | "taxonomies" | "filterRequests"
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -54,15 +62,23 @@ export default function AdminPortalModal({
   // Bulk Selection State
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Local Pricing & Platform Settings State
+  // Local Pricing, Campaign & Platform Settings State
   const [localPricing, setLocalPricing] = useState({
     contactUnlockFee: pricing.contactUnlockFee || 15,
     profileSubmissionFee: pricing.profileSubmissionFee || 0,
     campaignMode: pricing.campaignMode !== undefined ? pricing.campaignMode : true,
+    campaignEndDate: pricing.campaignEndDate || '2026-11-20T23:59:00',
+    campaignRewardCredits: pricing.campaignRewardCredits || 3,
+    whatsappGroupLink: pricing.whatsappGroupLink || 'https://chat.whatsapp.com/sample-althayyiboon-group',
+    whatsappGroupName: pricing.whatsappGroupName || 'Al-ThayyiBoon Official Matrimony',
+    razorpayKeyId: pricing.razorpayKeyId || '',
+    razorpayKeySecret: pricing.razorpayKeySecret || '',
+    whatsappApiKey: pricing.whatsappApiKey || '',
     statsVisibility: pricing.statsVisibility || 'auto',
     statsThreshold: pricing.statsThreshold || 200
   });
   const [pricingSavedToast, setPricingSavedToast] = useState(false);
+  const [whatsappToast, setWhatsappToast] = useState("");
 
   // Custom Taxonomy inputs
   const [newSubjectCategory, setNewSubjectCategory] = useState("");
@@ -158,10 +174,136 @@ export default function AdminPortalModal({
     document.body.removeChild(link);
   };
 
+  // WhatsApp & Legacy Credentials Management Actions
+  const handleSendWhatsAppInvite = (profile) => {
+    const phone = profile.whatsappGroupNumber || profile.contactDetails?.whatsappNumber || profile.contactDetails?.guardianPhone || profile.contactPreferences?.phone || '';
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const name = profile.basicInfo?.fullName || 'Candidate';
+    const groupLink = localPricing.whatsappGroupLink || 'https://chat.whatsapp.com/sample-althayyiboon-group';
+    
+    const text = `Assalamu Alaikum ${name},\n\nWelcome to Al-ThayyiBoon Matrimony! Join our official WhatsApp group to receive newly verified profiles:\n${groupLink}\n\nJazakallahu Khair.`;
+    
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleShareCredentials = (profile) => {
+    const phone = profile.contactDetails?.whatsappNumber || profile.contactDetails?.guardianPhone || profile.contactPreferences?.phone || '';
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const name = profile.basicInfo?.fullName || 'Candidate';
+    const username = profile.loginCredentials?.username || profile.id;
+    const password = profile.loginCredentials?.password || profile.security?.editPin || `ALTB@${profile.id}`;
+    const siteUrl = window.location.origin;
+
+    const text = `Assalamu Alaikum ${name},\n\nHere are your account login credentials for Al-ThayyiBoon Matrimonial Network:\n\n👤 Username / ID: ${username}\n🔑 Password / PIN: ${password}\n🌐 Login at: ${siteUrl}\n\nPlease keep your credentials confidential. You can view matching proposals and manage your profile anytime.`;
+
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleShareProfileBiodata = (profile) => {
+    const basic = profile.basicInfo || {};
+    const edu = profile.educationOccupation || {};
+    const loc = profile.locationFamily || {};
+    const islamic = Array.isArray(profile.islamicQualification) ? profile.islamicQualification.join(', ') : (profile.islamicBackground?.qualification || 'None');
+    
+    const text = `*Al-ThayyiBoon Matrimonial Proposal*\n` +
+      `🆔 Proposal ID: ${profile.id}\n` +
+      `👤 Candidate: ${basic.gender || profile.gender} (${basic.age || ''} Yrs)\n` +
+      `📍 District: ${loc.homeDistrict || 'Kerala'}\n` +
+      `🎓 Islamic Qualification: ${islamic}\n` +
+      `📚 General Education: ${profile.generalEducation?.degreeName || edu.education || 'Graduate'}\n` +
+      `💼 Profession: ${edu.profession || 'Not Specified'}\n` +
+      `🌍 Work Location: ${edu.workCountry || 'Kerala'}\n\n` +
+      `To view full guardian contact details, visit: ${window.location.origin}`;
+
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleCopyAllWhatsAppNumbers = () => {
+    const numbers = profiles
+      .filter(p => p.whatsappConsent !== false)
+      .map(p => p.whatsappGroupNumber || p.contactDetails?.whatsappNumber || p.contactDetails?.guardianPhone || p.contactPreferences?.phone || '')
+      .map(n => n.replace(/[^0-9]/g, ''))
+      .filter(n => n.length >= 10);
+
+    const uniqueNumbers = Array.from(new Set(numbers));
+    if (uniqueNumbers.length === 0) {
+      alert("No WhatsApp numbers found to copy.");
+      return;
+    }
+    navigator.clipboard.writeText(uniqueNumbers.join(', '));
+    setWhatsappToast(`Copied ${uniqueNumbers.length} WhatsApp numbers to clipboard!`);
+    setTimeout(() => setWhatsappToast(""), 3000);
+  };
+
+  const handleDownloadVCard = () => {
+    const optIns = profiles.filter(p => p.whatsappConsent !== false);
+    if (optIns.length === 0) {
+      alert("No opted-in profiles found.");
+      return;
+    }
+
+    let vcfContent = "";
+    optIns.forEach(p => {
+      const name = p.basicInfo?.fullName || p.id;
+      const phone = (p.whatsappGroupNumber || p.contactDetails?.whatsappNumber || p.contactDetails?.guardianPhone || '').replace(/[^0-9]/g, '');
+      if (phone) {
+        vcfContent += `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:AT-${name}\r\nTEL;TYPE=CELL:+${phone}\r\nNOTE:Al-ThayyiBoon Candidate (${p.id})\r\nEND:VCARD\r\n`;
+      }
+    });
+
+    const blob = new Blob([vcfContent], { type: "text/vcard;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `althayyiboon_whatsapp_contacts_${Date.now()}.vcf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setWhatsappToast(`Downloaded ${optIns.length} contacts (.vcf) for one-click WhatsApp import!`);
+    setTimeout(() => setWhatsappToast(""), 3000);
+  };
+
+  const handleExportCredentialsCSV = () => {
+    const headers = ["Profile ID", "Candidate Name", "Gender", "Phone / WhatsApp", "Username", "Password / PIN", "Status"];
+    const rows = profiles.map(p => {
+      const basic = p.basicInfo || {};
+      const phone = p.contactDetails?.whatsappNumber || p.contactDetails?.guardianPhone || p.contactPreferences?.phone || '';
+      const username = p.loginCredentials?.username || p.id;
+      const pass = p.loginCredentials?.password || p.security?.editPin || `ALTB@${p.id}`;
+      return [
+        p.id,
+        `"${basic.fullName || ''}"`,
+        basic.gender || p.gender || '',
+        `"${phone}"`,
+        `"${username}"`,
+        `"${pass}"`,
+        p.status || 'approved'
+      ];
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `althayyiboon_candidate_credentials_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Filtered proposal list for admin
   const adminProfiles = profiles.filter(p => {
     const currentStatus = p.status || "approved";
-    if (statusFilter !== "all" && currentStatus !== statusFilter) return false;
+    if (statusFilter === "campaign") {
+      if (!p.registeredDuringCampaign) return false;
+    } else if (statusFilter === "whatsapp") {
+      if (p.whatsappConsent === false) return false;
+    } else if (statusFilter !== "all" && currentStatus !== statusFilter) {
+      return false;
+    }
     if (genderFilter !== "all" && (p.basicInfo?.gender || "").toLowerCase() !== genderFilter.toLowerCase()) return false;
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
@@ -176,6 +318,8 @@ export default function AdminPortalModal({
   const hiddenCount = profiles.filter(p => p.status === "hidden").length;
   const brideCount = profiles.filter(p => p.basicInfo?.gender === "Bride" || p.gender === "female").length;
   const groomCount = profiles.filter(p => p.basicInfo?.gender === "Groom" || p.gender === "male").length;
+  const campaignCount = profiles.filter(p => p.registeredDuringCampaign).length;
+  const whatsappCount = profiles.filter(p => p.whatsappConsent !== false).length;
   const pendingFilterReqs = filterRequests.filter(r => r.status === "pending").length;
 
   // Selection Logic
@@ -321,19 +465,43 @@ export default function AdminPortalModal({
               <div className="flex items-center gap-1 sm:gap-2">
                 <button
                   onClick={() => setActiveTab("proposals")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 ${
+                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
                     activeTab === "proposals"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
                   <Users className="w-4 h-4" />
-                  <span>Proposals Directory ({totalCount})</span>
+                  <span>Proposals ({totalCount})</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("whatsapp")}
+                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                    activeTab === "whatsapp"
+                      ? "border-emerald-500 text-emerald-300 bg-slate-900"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4 text-emerald-400" />
+                  <span>WhatsApp &amp; Broadcast ({whatsappCount})</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("credentials")}
+                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                    activeTab === "credentials"
+                      ? "border-emerald-500 text-emerald-300 bg-slate-900"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Key className="w-4 h-4 text-amber-400" />
+                  <span>Candidate Logins ({totalCount})</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("pricing")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 ${
+                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
                     activeTab === "pricing"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
@@ -345,7 +513,7 @@ export default function AdminPortalModal({
 
                 <button
                   onClick={() => setActiveTab("taxonomies")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 ${
+                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
                     activeTab === "taxonomies"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
@@ -357,7 +525,7 @@ export default function AdminPortalModal({
 
                 <button
                   onClick={() => setActiveTab("filterRequests")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 ${
+                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
                     activeTab === "filterRequests"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
@@ -387,6 +555,14 @@ export default function AdminPortalModal({
             {/* TAB CONTENT CONTAINER */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
               
+              {/* WhatsApp Notification Toast */}
+              {whatsappToast && (
+                <div className="mb-4 p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  <span>{whatsappToast}</span>
+                </div>
+              )}
+
               {/* ========================================================= */}
               {/* TAB 1: PROPOSALS DIRECTORY MANAGEMENT                      */}
               {/* ========================================================= */}
@@ -394,7 +570,7 @@ export default function AdminPortalModal({
                 <div className="space-y-4">
                   
                   {/* Top Stats Strip */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
                       <span className="text-[11px] text-slate-400 block">Total Proposals</span>
                       <span className="text-xl font-extrabold text-white">{totalCount}</span>
@@ -403,14 +579,18 @@ export default function AdminPortalModal({
                       <span className="text-[11px] text-slate-400 block">Brides / Grooms</span>
                       <span className="text-xl font-extrabold text-white">{brideCount} / {groomCount}</span>
                     </div>
-                    <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block">Hidden Records</span>
-                      <span className="text-xl font-extrabold text-amber-400">{hiddenCount}</span>
+                    <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5">
+                      <span className="text-[11px] text-amber-300 block font-semibold">Campaign Regs</span>
+                      <span className="text-xl font-extrabold text-amber-300">{campaignCount}</span>
+                    </div>
+                    <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
+                      <span className="text-[11px] text-emerald-300 block font-semibold">WhatsApp Opt-Ins</span>
+                      <span className="text-xl font-extrabold text-emerald-300">{whatsappCount}</span>
                     </div>
                     <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
                       <span className="text-[11px] text-slate-400 block">Campaign Mode</span>
                       <span className={`text-base font-bold ${localPricing.campaignMode ? 'text-emerald-400' : 'text-slate-400'}`}>
-                        {localPricing.campaignMode ? 'Active (Free Add)' : 'Standard (Paid)'}
+                        {localPricing.campaignMode ? 'Active (Free)' : 'Standard (Paid)'}
                       </span>
                     </div>
                   </div>
@@ -432,7 +612,7 @@ export default function AdminPortalModal({
                       <select
                         value={genderFilter}
                         onChange={(e) => setGenderFilter(e.target.value)}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-xs text-slate-300 border border-slate-800"
+                        className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-xs text-slate-300 border border-slate-800 cursor-pointer"
                       >
                         <option value="all">All Genders</option>
                         <option value="bride">Brides Only</option>
@@ -442,9 +622,11 @@ export default function AdminPortalModal({
                       <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-xs text-slate-300 border border-slate-800"
+                        className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-xs text-slate-300 border border-slate-800 cursor-pointer"
                       >
                         <option value="all">All Status</option>
+                        <option value="campaign">Campaign Registrations ({campaignCount})</option>
+                        <option value="whatsapp">WhatsApp Opt-Ins ({whatsappCount})</option>
                         <option value="approved">Active / Approved</option>
                         <option value="hidden">Hidden</option>
                       </select>
@@ -575,6 +757,27 @@ export default function AdminPortalModal({
                                 <td className="p-3 text-right">
                                   <div className="flex items-center justify-end gap-1.5">
                                     <button
+                                      onClick={() => handleSendWhatsAppInvite(p)}
+                                      className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30"
+                                      title="Send WhatsApp Group Invite"
+                                    >
+                                      <MessageSquare className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleShareCredentials(p)}
+                                      className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30"
+                                      title="Share Login Credentials via WhatsApp"
+                                    >
+                                      <Key className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleShareProfileBiodata(p)}
+                                      className="p-1.5 rounded-lg bg-teal-500/10 text-teal-400 hover:bg-teal-500/20 border border-teal-500/30"
+                                      title="Share Proposal Biodata to WhatsApp"
+                                    >
+                                      <Share2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
                                       onClick={() => onSelectEditProfile(p)}
                                       className="p-1.5 rounded-lg bg-slate-800 text-amber-300 hover:bg-slate-700"
                                       title="Admin Override Edit"
@@ -606,7 +809,277 @@ export default function AdminPortalModal({
               )}
 
               {/* ========================================================= */}
-              {/* TAB 2: DYNAMIC PRICING CONTROLS & CAMPAIGN MODE TOGGLE     */}
+              {/* TAB 2: WHATSAPP GROUP & BROADCAST MANAGEMENT              */}
+              {/* ========================================================= */}
+              {activeTab === "whatsapp" && (
+                <div className="space-y-6">
+                  
+                  {/* WhatsApp Group Configuration Card */}
+                  <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                      <div>
+                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-emerald-400" />
+                          <span>Official WhatsApp Group Settings</span>
+                        </h4>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Configure group invite link shared with candidates when they register or receive invites.
+                        </p>
+                      </div>
+                      {localPricing.whatsappGroupLink && (
+                        <a
+                          href={localPricing.whatsappGroupLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-500/30 shrink-0"
+                        >
+                          <span>Test Group Link</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">WhatsApp Group Link</label>
+                        <input
+                          type="url"
+                          value={localPricing.whatsappGroupLink}
+                          onChange={(e) => setLocalPricing(prev => ({ ...prev, whatsappGroupLink: e.target.value }))}
+                          placeholder="https://chat.whatsapp.com/..."
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white placeholder-slate-500 border border-slate-700 text-xs focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">WhatsApp Group Name</label>
+                        <input
+                          type="text"
+                          value={localPricing.whatsappGroupName}
+                          onChange={(e) => setLocalPricing(prev => ({ ...prev, whatsappGroupName: e.target.value }))}
+                          placeholder="Al-ThayyiBoon Verified Proposals"
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white placeholder-slate-500 border border-slate-700 text-xs focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={handleSavePricing}
+                        className="py-2 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save Group Settings</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp Bulk Action Bar */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/30 via-slate-950 to-teal-950/20 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Users className="w-4 h-4 text-emerald-400" />
+                        <span>Candidate WhatsApp Opt-Ins ({whatsappCount} Candidates)</span>
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Candidates who gave consent in their registration form to receive matrimonial proposals on WhatsApp.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleCopyAllWhatsAppNumbers}
+                        className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                        title="Copy all phone numbers comma-separated to paste in WhatsApp"
+                      >
+                        <Copy className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Copy All Numbers</span>
+                      </button>
+                      <button
+                        onClick={handleDownloadVCard}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-950/30 cursor-pointer"
+                        title="Download .vcf file to import into phone contacts and add to WhatsApp group"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download Contacts (.vcf)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp Opt-in Candidates Table */}
+                  <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                          <tr>
+                            <th className="p-3">ID / Candidate</th>
+                            <th className="p-3">Gender / Age</th>
+                            <th className="p-3">Opt-in WhatsApp Number</th>
+                            <th className="p-3">District</th>
+                            <th className="p-3">Campaign Reg?</th>
+                            <th className="p-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                          {profiles.filter(p => p.whatsappConsent !== false).map(p => {
+                            const basic = p.basicInfo || {};
+                            const number = p.whatsappGroupNumber || p.contactDetails?.whatsappNumber || p.contactDetails?.guardianPhone || p.contactPreferences?.phone || 'N/A';
+                            return (
+                              <tr key={p.id} className="hover:bg-slate-900/50 transition-colors">
+                                <td className="p-3">
+                                  <div className="font-mono text-emerald-400 font-bold">{p.id}</div>
+                                  <div className="font-semibold text-white">{basic.fullName || "Candidate"}</div>
+                                </td>
+                                <td className="p-3">
+                                  <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
+                                    basic.gender === 'Bride' || p.gender === 'female'
+                                      ? 'bg-rose-500/10 text-rose-300'
+                                      : 'bg-emerald-500/10 text-emerald-300'
+                                  }`}>
+                                    {basic.gender || (p.gender === 'female' ? 'Bride' : 'Groom')}
+                                  </span>
+                                  <span className="text-slate-400 ml-1.5">{basic.age} Yrs</span>
+                                </td>
+                                <td className="p-3 font-mono text-slate-200 font-semibold">
+                                  {number}
+                                </td>
+                                <td className="p-3 text-slate-300">
+                                  {p.locationFamily?.homeDistrict || 'Kerala'}
+                                </td>
+                                <td className="p-3">
+                                  {p.registeredDuringCampaign ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                      Campaign Reg
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-500 text-[11px]">Standard</span>
+                                  )}
+                                </td>
+                                <td className="p-3 text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      onClick={() => handleSendWhatsAppInvite(p)}
+                                      className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <MessageSquare className="w-3 h-3 text-emerald-400" />
+                                      <span>Invite to Group</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleShareProfileBiodata(p)}
+                                      className="p-1.5 rounded-xl bg-slate-800 text-teal-300 hover:bg-slate-700 border border-slate-700 cursor-pointer"
+                                      title="Share Proposal Biodata"
+                                    >
+                                      <Share2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ========================================================= */}
+              {/* TAB 3: CANDIDATE LOGINS & LEGACY PROFILE CREDENTIALS      */}
+              {/* ========================================================= */}
+              {activeTab === "credentials" && (
+                <div className="space-y-6">
+                  
+                  {/* Credentials Header & Explanation */}
+                  <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                          <Key className="w-4 h-4 text-amber-400" />
+                          <span>Candidate Account Credentials &amp; Passwords</span>
+                        </h4>
+                        <p className="text-xs text-slate-400 mt-1 max-w-xl leading-relaxed">
+                          Legacy profiles and offline candidates do not have Google authentication accounts yet. 
+                          You can share their unique username/ID and password individually via WhatsApp, or export them all together. 
+                          Candidates can log in using their credentials to view and manage their proposal.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={handleExportCredentialsCSV}
+                          className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Export Credentials (CSV)</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Credentials Table */}
+                  <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                          <tr>
+                            <th className="p-3">ID / Candidate Name</th>
+                            <th className="p-3">Phone / WhatsApp</th>
+                            <th className="p-3">Username / Login ID</th>
+                            <th className="p-3">Password / Access PIN</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3 text-right">Share Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                          {profiles.map(p => {
+                            const basic = p.basicInfo || {};
+                            const phone = p.contactDetails?.whatsappNumber || p.contactDetails?.guardianPhone || p.contactPreferences?.phone || 'N/A';
+                            const username = p.loginCredentials?.username || p.id;
+                            const password = p.loginCredentials?.password || p.security?.editPin || `ALTB@${p.id}`;
+
+                            return (
+                              <tr key={p.id} className="hover:bg-slate-900/50 transition-colors">
+                                <td className="p-3">
+                                  <div className="font-mono text-emerald-400 font-bold">{p.id}</div>
+                                  <div className="font-semibold text-white">{basic.fullName || "Candidate"}</div>
+                                </td>
+                                <td className="p-3 font-mono text-slate-300">
+                                  {phone}
+                                </td>
+                                <td className="p-3 font-mono text-slate-200 font-bold bg-slate-900/40 px-2 py-1 rounded">
+                                  {username}
+                                </td>
+                                <td className="p-3 font-mono text-amber-400 font-bold bg-slate-900/40 px-2 py-1 rounded">
+                                  {password}
+                                </td>
+                                <td className="p-3">
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                                    Ready to Share
+                                  </span>
+                                </td>
+                                <td className="p-3 text-right">
+                                  <button
+                                    onClick={() => handleShareCredentials(p)}
+                                    className="px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    <Send className="w-3 h-3 text-amber-400" />
+                                    <span>Share via WhatsApp</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ========================================================= */}
+              {/* TAB 4: DYNAMIC PRICING CONTROLS & CAMPAIGN MODE TOGGLE     */}
               {/* ========================================================= */}
               {activeTab === "pricing" && (
                 <div className="max-w-2xl space-y-6">
@@ -619,20 +1092,25 @@ export default function AdminPortalModal({
                   )}
 
                   {/* Campaign Mode Override Card */}
-                  <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
-                    <div className="flex items-center justify-between">
+                  <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
                       <div>
-                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-amber-400" />
-                          <span>Campaign Drive Mode (Free Onboarding)</span>
-                        </h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-amber-400" />
+                            <span>Campaign Drive Mode (Free Onboarding &amp; Profile Guarding)</span>
+                          </h4>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            {campaignCount} Registrations
+                          </span>
+                        </div>
                         <p className="text-xs text-slate-400 mt-1 max-w-md">
-                          When Campaign Mode is ACTIVE, profile submission is free (₹0) to encourage data collection and directory growth. When turned OFF, submission fee is applied.
+                          When active, the directory is guarded behind the Campaign Launch Holding Page, registration is 100% free (₹0), and candidates earn free contact views when directory unlocks.
                         </p>
                       </div>
                       <button
                         onClick={toggleCampaignMode}
-                        className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all ${
+                        className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                           localPricing.campaignMode
                             ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
                             : 'bg-slate-800 text-slate-300 border border-slate-700'
@@ -641,6 +1119,43 @@ export default function AdminPortalModal({
                         {localPricing.campaignMode ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                         <span>{localPricing.campaignMode ? 'Campaign ACTIVE' : 'Campaign OFF'}</span>
                       </button>
+                    </div>
+
+                    {/* Campaign End Date & Time and Reward Credits */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Campaign Target End Date &amp; Time</span>
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={localPricing.campaignEndDate ? localPricing.campaignEndDate.slice(0, 16) : '2026-11-20T23:59'}
+                          onChange={(e) => setLocalPricing(prev => ({ ...prev, campaignEndDate: e.target.value }))}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                        />
+                        <p className="text-[10px] text-slate-500 mt-1">
+                          The public countdown page will count down to this exact date and time.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
+                          <Coins className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Complimentary Contact Views at Launch</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="20"
+                          value={localPricing.campaignRewardCredits || 3}
+                          onChange={(e) => setLocalPricing(prev => ({ ...prev, campaignRewardCredits: Number(e.target.value) || 0 }))}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                        />
+                        <p className="text-[10px] text-slate-500 mt-1">
+                          Free contact views promised to registered candidates when directory opens.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -787,13 +1302,67 @@ export default function AdminPortalModal({
                       )}
                     </div>
 
+                    {/* Gateway Integrations (Razorpay & WhatsApp Business API) */}
+                    <div className="pt-4 border-t border-slate-800 space-y-3">
+                      <div>
+                        <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <Coins className="w-4 h-4 text-emerald-400" />
+                          <span>Payment &amp; Communication Gateways (Ready for Connection)</span>
+                        </h4>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Enter your Razorpay account keys and WhatsApp business details. The application is configured to connect immediately.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            Razorpay Key ID
+                          </label>
+                          <input
+                            type="text"
+                            value={localPricing.razorpayKeyId}
+                            onChange={(e) => setLocalPricing(prev => ({ ...prev, razorpayKeyId: e.target.value }))}
+                            placeholder="rzp_live_... or rzp_test_..."
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            Razorpay Key Secret
+                          </label>
+                          <input
+                            type="password"
+                            value={localPricing.razorpayKeySecret}
+                            onChange={(e) => setLocalPricing(prev => ({ ...prev, razorpayKeySecret: e.target.value }))}
+                            placeholder="••••••••••••"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                          WhatsApp Business API Token / Webhook (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={localPricing.whatsappApiKey}
+                          onChange={(e) => setLocalPricing(prev => ({ ...prev, whatsappApiKey: e.target.value }))}
+                          placeholder="Optional WhatsApp cloud API key or provider token"
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                    </div>
+
                     <div className="pt-2">
                       <button
                         type="submit"
-                        className="py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all"
+                        className="py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all cursor-pointer"
                       >
                         <Save className="w-4 h-4" />
-                        <span>Save Pricing &amp; Visibility Configuration</span>
+                        <span>Save Pricing, Campaign &amp; Gateway Configuration</span>
                       </button>
                     </div>
                   </form>

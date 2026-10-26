@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, googleProvider } from '../firebase/config';
 import { 
-  onAuthStateChanged, 
-  signInWithPopup, 
-  signOut as fbSignOut 
-} from 'firebase/auth';
+  auth, 
+  googleProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  firebaseSignOut 
+} from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const AuthContext = createContext();
 
@@ -17,10 +20,18 @@ const TAXONOMY_STORAGE_KEY = 'althayyiboon_custom_taxonomies_v2';
 export const DEFAULT_PRICING = {
   contactUnlockFee: 15, // in INR (1 Credit)
   profileSubmissionFee: 0, // ₹0 during campaign
-  campaignMode: true, // When true, submissions are free and campaign banner is displayed
+  campaignMode: true, // When true, submissions are free and campaign holding page is displayed
+  campaignEndDate: '2026-11-20T23:59:00', // End date & time defined by admin
+  campaignRewardCredits: 3, // Granted at campaign ending date (e.g. 3 contact views)
+  whatsappGroupLink: 'https://chat.whatsapp.com/sample-althayyiboon-group',
+  whatsappGroupName: 'Al-ThayyiBoon Matrimonial Network',
+  razorpayKeyId: '',
+  razorpayKeySecret: '',
+  whatsappApiKey: '',
   statsVisibility: 'auto', // 'auto' | 'always_show' | 'always_hide'
   statsThreshold: 200 // Threshold for auto-showing profile numbers
 };
+
 
 export function AuthProvider({ children }) {
   // Firebase Auth user
@@ -203,9 +214,95 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginWithEmailPassword = async (email, password, isSignUp = false, intendedRole = 'groom') => {
+    try {
+      let result;
+      if (isSignUp) {
+        result = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      } else {
+        result = await signInWithEmailAndPassword(auth, email.trim(), password);
+      }
+      const user = result.user;
+      let gender = intendedRole === 'bride' ? 'female' : 'male';
+      let role = intendedRole || 'groom';
+      if (intendedRole === 'parent') {
+        gender = null;
+        role = 'parent';
+      }
+      const profile = {
+        uid: user.uid,
+        name: user.displayName || email.split('@')[0],
+        email: user.email,
+        gender: gender,
+        role: role,
+        isDemo: false
+      };
+      setUserProfile(profile);
+      return { success: true, user, profile };
+    } catch (err) {
+      console.warn("Email/Password Sign-In error:", err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const loginWithLegacyCredentials = async (identifier, password, profileList = []) => {
+    try {
+      const cleanId = (identifier || '').trim().toLowerCase();
+      const cleanPass = (password || '').trim();
+
+      if (!cleanId || !cleanPass) {
+        return { success: false, error: 'Please enter your username/ID and password.' };
+      }
+
+      // Search in profile list
+      const matched = profileList.find(p => {
+        const pId = (p.id || '').toLowerCase();
+        const pUser = (p.loginCredentials?.username || '').toLowerCase();
+        const pEmail = (p.email || p.contactPreferences?.email || '').toLowerCase();
+        const pPhone = (p.contactDetails?.guardianPhone || p.contactPreferences?.phone || '').replace(/[^0-9]/g, '');
+        const cleanInputPhone = cleanId.replace(/[^0-9]/g, '');
+
+        const matchesIdentifier = (pId === cleanId) || 
+                                  (pUser === cleanId) || 
+                                  (pEmail === cleanId) || 
+                                  (cleanInputPhone && pPhone && pPhone.endsWith(cleanInputPhone));
+
+        if (!matchesIdentifier) return false;
+
+        const storedPass = p.loginCredentials?.password || p.security?.editPin || `ALTB@${p.id}`;
+        return storedPass === cleanPass;
+      });
+
+      if (!matched) {
+        return { success: false, error: 'Invalid username, ID or password. Please contact admin if you need credentials.' };
+      }
+
+      const isBrideGender = matched.basicInfo?.gender === 'Bride' || matched.gender === 'female';
+      const role = isBrideGender ? 'bride' : 'groom';
+      const gender = isBrideGender ? 'female' : 'male';
+
+      const profile = {
+        uid: matched.id,
+        name: matched.basicInfo?.fullName || `Candidate (${matched.id})`,
+        email: matched.email || `${matched.id.toLowerCase()}@althayyiboon.com`,
+        gender: gender,
+        role: role,
+        profileId: matched.id,
+        isLegacyUser: true,
+        isDemo: false,
+        linkedProfile: matched
+      };
+
+      setUserProfile(profile);
+      return { success: true, profile };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
   const logout = async () => {
     try {
-      await fbSignOut(auth);
+      await firebaseSignOut(auth);
     } catch (e) {}
     setUserProfile(null);
   };
@@ -303,6 +400,8 @@ export function AuthProvider({ children }) {
         addCredits,
         switchUserPersona,
         loginWithGoogle,
+        loginWithEmailPassword,
+        loginWithLegacyCredentials,
         logout,
         pricing,
         updatePricingConfig,

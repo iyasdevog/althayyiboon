@@ -12,6 +12,7 @@ import {
   rejectFilterRequest
 } from '../firebase/profileService';
 import { useAuth } from '../context/AuthContext';
+import { DEMO_PROFILES } from '../data/mockProfiles';
 
 const BOOKMARKS_KEY = "althayyiboon_bookmarks_v1";
 
@@ -35,7 +36,8 @@ const PROFESSION_KEYWORDS = {
 };
 
 export function useProfiles() {
-  const { userGender, isAdmin } = useAuth();
+  const { userGender, isAdmin, currentUser } = useAuth();
+  const isDemoMode = Boolean(currentUser?.isDemo);
 
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,6 +112,14 @@ export function useProfiles() {
 
     async function loadData() {
       setLoading(true);
+
+      // In Demo Mode: load fake sample profiles strictly to guard real candidate privacy
+      if (isDemoMode) {
+        setProfiles(DEMO_PROFILES);
+        setLoading(false);
+        return;
+      }
+
       const data = await fetchProfilesFromStore(userGender, isAdmin);
       setProfiles(data);
 
@@ -128,7 +138,7 @@ export function useProfiles() {
 
     loadData();
     return () => unsubscribe();
-  }, [userGender, isAdmin]);
+  }, [userGender, isAdmin, isDemoMode]);
 
   // CRUD Handlers
   const addNewProfile = async (formData) => {
@@ -448,6 +458,7 @@ export function useProfiles() {
     filterRequests,
     handleUserFilterRequest,
     handleApproveFilterRequest,
-    handleRejectFilterRequest
+    handleRejectFilterRequest,
+    isDemoMode
   };
 }

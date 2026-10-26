@@ -12,6 +12,9 @@ import RequestFilterModal from './components/RequestFilterModal';
 import SharePosterModal from './components/SharePosterModal';
 import WalletRechargeModal from './components/WalletRechargeModal';
 import LandingPage from './components/LandingPage';
+import CampaignPage from './components/CampaignPage';
+import DemoNoticeBanner from './components/DemoNoticeBanner';
+import SignInModal from './components/SignInModal';
 import Footer from './components/Footer';
 import { useProfiles } from './hooks/useProfiles';
 import { useAuth } from './context/AuthContext';
@@ -58,7 +61,8 @@ export default function App() {
     isCheckoutOpen, 
     setIsCheckoutOpen, 
     isStatsNumbersVisible, 
-    loginWithGoogle 
+    pricing,
+    isAdmin
   } = useAuth();
   const showStatsNumbers = isStatsNumbersVisible ? isStatsNumbersVisible(rawProfiles.length) : true;
 
@@ -66,6 +70,8 @@ export default function App() {
   const [editingProfile, setEditingProfile] = useState(null);
   const [isAdminOverrideEdit, setIsAdminOverrideEdit] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
+  const [signInDefaultRole, setSignInDefaultRole] = useState('groom');
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(() => {
     if (typeof window === 'undefined') return false;
     const path = window.location.pathname.toLowerCase();
@@ -121,25 +127,45 @@ export default function App() {
         </div>
       )}
 
-      {/* If Guest (Not Authenticated): Show Dedicated Matrimonial Landing Page */}
-      {!currentUser ? (
-        <LandingPage
-          onSignIn={async (role) => {
-            const res = await loginWithGoogle(role);
-            if (res.success) {
-              showToast(`Welcome, ${res.profile?.name || 'Member'}!`);
-            } else {
-              setIsCheckoutOpen(true);
-            }
+      {/* View Routing & Conditions */}
+      {!isAdmin && pricing?.campaignMode && !currentUser?.isDemo ? (
+        /* Condition 1: Active Campaign Mode for Non-Admin & Non-Demo visitors: Show Launch Countdown Page */
+        <CampaignPage
+          onOpenAddModal={() => setIsAddModalOpen(true)}
+          onOpenSignIn={(role) => {
+            setSignInDefaultRole(role || 'groom');
+            setIsSignInModalOpen(true);
           }}
           onSwitchPersona={(role) => {
             switchUserPersona(role);
-            showToast(`Switched to ${role} demo mode!`);
+            showToast(`Switched to ${role} demo mode (Sample Data)!`);
+          }}
+          onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
+        />
+      ) : !currentUser ? (
+        /* Condition 2: Guest Visitor: Show Matrimonial Landing Page */
+        <LandingPage
+          onSignIn={(role) => {
+            setSignInDefaultRole(role || 'groom');
+            setIsSignInModalOpen(true);
+          }}
+          onSwitchPersona={(role) => {
+            switchUserPersona(role);
+            showToast(`Switched to ${role} demo mode (Sample Data)!`);
           }}
           onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
         />
       ) : (
+        /* Condition 3: Authenticated Member or Instant Demo: Show Main Directory with Sample Notice if Demo */
         <>
+          {/* Top Demo Notice Banner */}
+          <DemoNoticeBanner 
+            onOpenSignIn={(role) => {
+              setSignInDefaultRole(role || 'groom');
+              setIsSignInModalOpen(true);
+            }} 
+          />
+
           {/* Sticky Header Navbar */}
           <Navbar
             onOpenAddModal={() => setIsAddModalOpen(true)}
@@ -155,14 +181,7 @@ export default function App() {
               setIsPosterModalOpen(true);
             }}
             onOpenWalletModal={() => setIsCheckoutOpen(true)}
-            onOpenSignIn={async () => {
-              const res = await loginWithGoogle();
-              if (res.success) {
-                showToast(`Welcome, ${res.user.displayName || 'Member'}!`);
-              } else {
-                setIsCheckoutOpen(true);
-              }
-            }}
+            onOpenSignIn={() => setIsSignInModalOpen(true)}
           />
 
           {/* Hero Banner with Search Bar & Quick Tags */}
@@ -318,6 +337,15 @@ export default function App() {
           setIsCheckoutOpen(false);
           setIsAdminPortalOpen(true);
         }}
+      />
+
+      {/* Unified Sign-In Modal (Google, Email/Password, Legacy ID) */}
+      <SignInModal
+        isOpen={isSignInModalOpen}
+        onClose={() => setIsSignInModalOpen(false)}
+        onShowToast={showToast}
+        defaultRole={signInDefaultRole}
+        profiles={rawProfiles}
       />
 
     </div>

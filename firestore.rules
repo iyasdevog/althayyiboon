@@ -2,7 +2,7 @@ rules_version = '2';
 
 // ============================================================
 //  Al-ThayyiBoon Matrimony – Open Firestore Security Rules
-//  Project: althayyiboon-8c49d
+//  Project: althayyiboon-e6f3d
 //
 //  Allows public read and write access for all collections:
 //  - /profiles (create, read, update, delete)
