@@ -13,7 +13,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
-  Users
+  Users,
+  CreditCard,
+  QrCode,
+  Copy,
+  Gift,
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import {
   KERALA_DISTRICTS,
@@ -65,7 +71,15 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
   const [submittedPin, setSubmittedPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const initialGender = (defaultGender === 'Groom' || defaultGender === 'Bride') ? defaultGender : 'Bride';
+  const determinedGender = (defaultGender === 'Groom' || defaultGender === 'Bride')
+    ? defaultGender
+    : (currentUser?.gender === 'female' || currentUser?.role === 'bride' ? 'Bride' : 'Groom');
+  const initialGender = determinedGender;
+
+  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' | 'razorpay'
+  const [paymentRef, setPaymentRef] = useState('');
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [showUpiQr, setShowUpiQr] = useState(false);
 
   const [formData, setFormData] = useState({
     profileCreatedBy: 'Parent', // 'Parent' | 'Self'
@@ -73,7 +87,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
     whatsappConsent: true,
     whatsappGroupNumber: '',
     basicInfo: {
-      fullName: '',
+      fullName: (currentUser?.name && currentUser.name !== 'Member') ? currentUser.name : '',
       gender: initialGender,
       age: 23,
       dob: '',
@@ -119,6 +133,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
       relation: 'Father',
       phone: '',
       whatsapp: '',
+      email: currentUser?.email || '',
       alternateContact: '',
       contactMethod: 'both',
       expectations: '',
@@ -236,6 +251,10 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
         whatsappConsent: formData.whatsappConsent !== false,
         whatsappGroupNumber: formData.whatsappGroupNumber || whatsapp || phone,
         registeredDuringCampaign: Boolean(pricing?.campaignMode),
+        paymentStatus: pricing?.campaignMode ? 'free_campaign' : (paymentRef ? 'paid' : 'pending_payment'),
+        submissionFee: pricing?.campaignMode ? 0 : (pricing?.profileSubmissionFee || 499),
+        paymentRef: paymentRef.trim() || null,
+        paymentMethod: pricing?.campaignMode ? 'campaign_free' : paymentMethod,
         loginCredentials: {
           username: `ALTB-${Date.now().toString().slice(-4)}`,
           password: pin || `altb${Date.now().toString().slice(-4)}`
@@ -944,6 +963,116 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                         className="w-full px-4 py-2.5 rounded-xl bg-slate-900 text-emerald-400 font-mono font-bold tracking-widest text-center text-lg border border-slate-700 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
+
+                    {/* LISTING FEE & CAMPAIGN STATUS */}
+                    {pricing?.campaignMode ? (
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-teal-950/30 border border-emerald-500/40 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Gift className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span className="text-xs font-bold text-white uppercase tracking-wider">
+                            Campaign Listing Benefit
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold uppercase ml-auto border border-emerald-500/40">
+                            100% Free (₹0)
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-relaxed">
+                          During this active candidate drive, registration and directory listing are completely <strong>FREE (₹0)</strong>. No payment required. You will also receive 3 complimentary contact views when the directory opens!
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-4 sm:p-5 rounded-2xl bg-slate-950 border border-amber-500/40 space-y-3.5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4 text-amber-400 shrink-0" />
+                            <div>
+                              <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                                Proposal Listing &amp; Verification Fee
+                              </span>
+                              <span className="text-[11px] text-slate-400">
+                                One-time directory verification &amp; listing charge
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-lg font-black text-amber-300">
+                              ₹{pricing?.profileSubmissionFee || 499}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* UPI Payment Instructions */}
+                        <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-slate-200">
+                              Direct UPI Payment (GPay / PhonePe / Paytm)
+                            </span>
+                            <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                              0% Platform Fee
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-700/80">
+                            <span className="text-xs font-mono text-emerald-300 font-bold flex-1 truncate">
+                              {pricing?.upiId || 'althayyiboon@upi'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (navigator.clipboard) {
+                                  navigator.clipboard.writeText(pricing?.upiId || 'althayyiboon@upi');
+                                  setCopiedUpi(true);
+                                  setTimeout(() => setCopiedUpi(false), 2000);
+                                }
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <Copy className="w-3 h-3" />
+                              <span>{copiedUpi ? 'Copied!' : 'Copy UPI'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowUpiQr(prev => !prev)}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <QrCode className="w-3 h-3" />
+                              <span>{showUpiQr ? 'Hide QR' : 'Show QR'}</span>
+                            </button>
+                          </div>
+
+                          {showUpiQr && (
+                            <div className="p-3 bg-white rounded-xl flex flex-col items-center justify-center text-center animate-fade-in">
+                              <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
+                                  `upi://pay?pa=${pricing?.upiId || 'althayyiboon@upi'}&pn=AlThayyiBoon&am=${pricing?.profileSubmissionFee || 499}&cu=INR`
+                                )}`}
+                                alt="UPI QR Code"
+                                className="w-36 h-36 rounded-lg"
+                              />
+                              <p className="text-[10px] text-slate-900 font-bold mt-1">
+                                Scan with GPay / PhonePe / Paytm to Pay ₹{pricing?.profileSubmissionFee || 499}
+                              </p>
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                              UPI Transaction ID / UTR Number
+                            </label>
+                            <input
+                              type="text"
+                              value={paymentRef}
+                              onChange={e => setPaymentRef(e.target.value)}
+                              placeholder="e.g. 4289XXXXXXXX (12-digit UTR)"
+                              className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:border-amber-500 text-xs font-mono"
+                            />
+                            <p className="text-[10px] text-slate-400 mt-1">
+                              Enter the 12-digit transaction reference number from your payment app after completing payment.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </>

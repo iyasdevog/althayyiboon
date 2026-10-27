@@ -81,15 +81,9 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
             >
               Browse Proposals
             </Link>
-            <Link
-              to="/register"
-              className="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 transition-colors"
-            >
-              Register Proposal
-            </Link>
             <button
-              onClick={() => onSignIn('groom')}
-              className="px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-950/30 transition-transform active:scale-95"
+              onClick={() => onSignIn && onSignIn('groom')}
+              className="px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-950/30 transition-transform active:scale-95 cursor-pointer"
             >
               Sign In
             </button>
@@ -161,8 +155,8 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
           </div>
         </div>
 
-        {/* 3 Role Sign-In Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 w-full max-w-5xl mb-14 text-left">
+        {/* 2 Role Sign-In Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl mb-14 text-left">
           
           {/* Card 1: Groom */}
           <div className="relative group bg-slate-900/90 hover:bg-slate-900 border border-emerald-500/30 hover:border-emerald-500/60 rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 shadow-xl shadow-emerald-950/20 hover:-translate-y-1">
@@ -171,10 +165,10 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-300 mb-4">
                 <User className="w-6 h-6" />
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">For Brothers</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">For Brothers / Grooms</span>
               <h2 className="text-xl font-bold text-white mt-1 mb-2">I am a Groom</h2>
               <p className="text-xs sm:text-sm text-slate-400 mb-5 leading-relaxed">
-                Discover verified Bride proposals with full Islamic backgrounds (Wafiyya, etc.), academic degrees, and direct guardian contacts.
+                Discover verified Bride proposals with full Islamic backgrounds (Wafiyya, etc.), academic degrees, and direct guardian contacts. Direct registration for Parents or Candidates.
               </p>
               <div className="space-y-2 text-xs text-slate-300 mb-6">
                 <div className="flex items-center gap-2">
@@ -184,6 +178,10 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   <span>Direct WhatsApp contact with Wali / Guardian</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Register proposal as Parent, Guardian or Self</span>
                 </div>
               </div>
             </div>
@@ -214,10 +212,10 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
               <div className="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-300 mb-4">
                 <Heart className="w-6 h-6" />
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-rose-400">For Sisters</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-rose-400">For Sisters / Brides</span>
               <h2 className="text-xl font-bold text-white mt-1 mb-2">I am a Bride</h2>
               <p className="text-xs sm:text-sm text-slate-400 mb-5 leading-relaxed">
-                Explore verified Groom proposals with complete career, profession, Islamic scholarship, and family details.
+                Explore verified Groom proposals with complete career, profession, Islamic scholarship, and family details. Direct registration for Parents or Candidates.
               </p>
               <div className="space-y-2 text-xs text-slate-300 mb-6">
                 <div className="flex items-center gap-2">
@@ -227,6 +225,10 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                   <span>Direct family and guardian coordination</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                  <span>Register proposal as Parent, Guardian or Self</span>
                 </div>
               </div>
             </div>
@@ -245,49 +247,6 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
                   className="w-full py-2 px-3 text-center text-[11px] text-rose-400 hover:text-rose-300 font-semibold transition-colors cursor-pointer"
                 >
                   ⚡ Instant Demo: Bride Mode
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Card 3: Register Proposal (Parent or Self) */}
-          <div className="relative group bg-slate-900/90 hover:bg-slate-900 border border-teal-500/30 hover:border-teal-500/60 rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 shadow-xl shadow-teal-950/20 hover:-translate-y-1">
-            <div className="absolute top-0 right-0 w-28 h-28 bg-teal-500/10 rounded-full blur-2xl group-hover:bg-teal-500/20 transition-all"></div>
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-300 mb-4">
-                <Users className="w-6 h-6" />
-              </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-400">For Parents &amp; Candidates</span>
-              <h2 className="text-xl font-bold text-white mt-1 mb-2">Register Proposal</h2>
-              <p className="text-xs sm:text-sm text-slate-400 mb-5 leading-relaxed">
-                Submit a proposal as a Parent / Guardian or directly for Yourself. Sacred privacy protection with direct family contact verification.
-              </p>
-              <div className="space-y-2 text-xs text-slate-300 mb-6">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                  <span>Register as Parent / Guardian or Self</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                  <span>Phone &amp; WhatsApp numbers spam-protected</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-slate-800">
-              <Link
-                to="/register"
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-teal-600 via-emerald-600 to-amber-600 hover:from-teal-500 hover:to-amber-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-teal-950/40 flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
-              >
-                <span>Register Proposal (Parent / Self)</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              {onSwitchPersona && (
-                <button
-                  onClick={() => onSwitchPersona('parent')}
-                  className="w-full py-2 px-3 text-center text-[11px] text-teal-400 hover:text-teal-300 font-semibold transition-colors cursor-pointer"
-                >
-                  ⚡ Instant Demo: Parent View
                 </button>
               )}
             </div>

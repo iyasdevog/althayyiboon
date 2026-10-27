@@ -19,6 +19,7 @@ import SharePosterModal from './components/SharePosterModal';
 import WalletRechargeModal from './components/WalletRechargeModal';
 import SignInModal from './components/SignInModal';
 import AddProfileModal from './components/AddProfileModal';
+import GenderVerificationModal from './components/GenderVerificationModal';
 
 import { useProfiles } from './context/ProfilesContext';
 import { useAuth } from './context/AuthContext';
@@ -37,6 +38,10 @@ export default function App() {
   } = useProfiles();
 
   const { 
+    currentUser,
+    isGenderVerified,
+    isDemo,
+    isAdmin,
     switchUserPersona, 
     isCheckoutOpen, 
     setIsCheckoutOpen
@@ -465,6 +470,15 @@ export default function App() {
         onShowToast={showToast}
         defaultRole={signInDefaultRole}
         profiles={rawProfiles}
+      />
+
+      {/* Identity & Gender Verification Modal for Google sign-ins */}
+      <GenderVerificationModal
+        isOpen={Boolean(currentUser) && !isGenderVerified && !isDemo && !isAdmin}
+        onClose={() => {}}
+        onVerified={(gender, role) => {
+          showToast(`Modesty lock set to ${role === 'bride' ? 'Bride (Sister)' : 'Groom (Brother)'}`);
+        }}
       />
 
     </div>

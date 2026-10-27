@@ -214,6 +214,7 @@ export function AuthProvider({ children }) {
         photoURL: user.photoURL,
         gender: gender,
         role: role,
+        genderVerified: Boolean(intendedRole === 'groom' || intendedRole === 'bride'),
         isDemo: false
       };
 
@@ -385,20 +386,55 @@ export function AuthProvider({ children }) {
     });
   };
 
+  const setUserGender = (gender, role) => {
+    const chosenGender = gender === 'female' ? 'female' : 'male';
+    const chosenRole = role || (chosenGender === 'female' ? 'bride' : 'groom');
+    setUserProfile(prev => {
+      const base = prev || (fbUser ? {
+        uid: fbUser.uid,
+        name: fbUser.displayName || 'Member',
+        email: fbUser.email,
+        photoURL: fbUser.photoURL,
+      } : {
+        uid: `user_${Date.now()}`,
+        name: 'Member',
+        email: 'member@althayyiboon.com'
+      });
+      const updated = {
+        ...base,
+        gender: chosenGender,
+        role: chosenRole,
+        genderVerified: true,
+        isDemo: false
+      };
+      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const currentUser = userProfile || (fbUser ? {
     uid: fbUser.uid,
     name: fbUser.displayName || 'Member',
     email: fbUser.email,
     photoURL: fbUser.photoURL,
-    gender: 'male',
-    role: 'user'
+    gender: null,
+    role: 'user',
+    genderVerified: false
   } : null);
 
   const isAdmin = currentUser?.role === 'admin';
   const isParent = currentUser?.role === 'parent';
   const isGroom = currentUser?.role === 'groom' || (!isParent && !isAdmin && currentUser?.gender === 'male');
   const isBride = currentUser?.role === 'bride' || (!isParent && !isAdmin && currentUser?.gender === 'female');
-  const userGender = isParent ? null : (isAdmin ? 'all' : (currentUser?.gender || (isBride ? 'female' : 'male')));
+  const isGenderVerified = Boolean(
+    currentUser?.genderVerified || 
+    currentUser?.isLegacyUser || 
+    currentUser?.isAdmin || 
+    currentUser?.isDemo ||
+    (currentUser?.role === 'groom' && currentUser?.gender === 'male') ||
+    (currentUser?.role === 'bride' && currentUser?.gender === 'female')
+  );
+  const userGender = isParent ? null : (isAdmin ? 'all' : (currentUser?.gender || (isBride ? 'female' : (isGroom ? 'male' : null))));
 
   // Helper to determine if statistics numbers should be shown publicly
   const isStatsNumbersVisible = (totalCount = 0) => {
@@ -419,6 +455,8 @@ export function AuthProvider({ children }) {
         isParent,
         isGroom,
         isBride,
+        isGenderVerified,
+        setUserGender,
         userGender, // 'male' | 'female' | 'all' | null (for parent)
         credits,
         unlockedProfileIds,
