@@ -27,7 +27,8 @@ import {
   Copy, 
   Check, 
   Image as ImageIcon,
-  Sparkles
+  Sparkles,
+  Users
 } from 'lucide-react';
 
 function maskPhoneNumber(phone) {
@@ -310,6 +311,9 @@ export default function ProfileDetailPage({
                     </span>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold flex items-center gap-1">
                       <ShieldCheck className="w-3 h-3" /> Verified
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30 text-[11px] font-semibold flex items-center gap-1">
+                      <Users className="w-3 h-3" /> By {profile.profileCreatedBy || profile.registeredBy || 'Parent'}
                     </span>
                   </div>
 

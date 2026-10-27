@@ -12,7 +12,8 @@ import {
   Key,
   ChevronLeft,
   ChevronRight,
-  Shield
+  Shield,
+  Users
 } from 'lucide-react';
 import {
   KERALA_DISTRICTS,
@@ -67,6 +68,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
   const initialGender = (defaultGender === 'Groom' || defaultGender === 'Bride') ? defaultGender : 'Bride';
 
   const [formData, setFormData] = useState({
+    profileCreatedBy: 'Parent', // 'Parent' | 'Self'
     gender: initialGender === 'Bride' ? 'female' : 'male',
     whatsappConsent: true,
     whatsappGroupNumber: '',
@@ -202,6 +204,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
 
       const payload = {
         ...formData,
+        profileCreatedBy: formData.profileCreatedBy || 'Parent',
+        registeredBy: formData.profileCreatedBy || 'Parent',
         gender: formData.basicInfo.gender === 'Bride' ? 'female' : 'male',
         islamicQualification: formData.islamicQualification,
         islamicBackground: {
@@ -439,6 +443,60 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                 {/* ── STEP 1: BASIC INFO ── */}
                 {step === 1 && (
                   <div className="space-y-4 animate-fade-in">
+                    {/* PROFILE CREATED BY: PARENT OR SELF */}
+                    <div>
+                      <label className={labelCls}>Profile Registered By / Created By *</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              profileCreatedBy: 'Parent',
+                              contactPreferences: {
+                                ...prev.contactPreferences,
+                                relation: prev.contactPreferences.relation === 'Self' ? 'Father' : prev.contactPreferences.relation
+                              }
+                            }));
+                          }}
+                          className={`py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all border flex items-center justify-center gap-2 cursor-pointer ${
+                            formData.profileCreatedBy === 'Parent'
+                              ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20 ring-1 ring-emerald-400'
+                              : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                          }`}
+                        >
+                          <Users className="w-4 h-4" />
+                          <span>Parent / Guardian</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              profileCreatedBy: 'Self',
+                              contactPreferences: {
+                                ...prev.contactPreferences,
+                                relation: 'Self'
+                              }
+                            }));
+                          }}
+                          className={`py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all border flex items-center justify-center gap-2 cursor-pointer ${
+                            formData.profileCreatedBy === 'Self'
+                              ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20 ring-1 ring-emerald-400'
+                              : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                          }`}
+                        >
+                          <User className="w-4 h-4" />
+                          <span>Self (Candidate)</span>
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-1.5">
+                        {formData.profileCreatedBy === 'Parent'
+                          ? 'Registration on behalf of son or daughter with family / guardian oversight.'
+                          : 'Direct registration by the candidate (Brother or Sister).'}
+                      </p>
+                    </div>
+
                     <div>
                       <label className={labelCls}>Candidate Name / Identifier *</label>
                       <input
@@ -769,7 +827,9 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className={labelCls}>Guardian Phone Call Number *</label>
+                        <label className={labelCls}>
+                          {formData.profileCreatedBy === 'Self' ? 'Contact Phone Call Number (Self) *' : 'Guardian Phone Call Number *'}
+                        </label>
                         <input
                           type="tel"
                           required
@@ -785,7 +845,9 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                       </div>
 
                       <div>
-                        <label className={labelCls}>Guardian WhatsApp Number</label>
+                        <label className={labelCls}>
+                          {formData.profileCreatedBy === 'Self' ? 'WhatsApp Number (Self)' : 'Guardian WhatsApp Number'}
+                        </label>
                         <input
                           type="tel"
                           value={formData.contactDetails.whatsappNumber}
@@ -801,12 +863,14 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                     </div>
 
                     <div>
-                      <label className={labelCls}>Guardian Relation / Name</label>
+                      <label className={labelCls}>
+                        {formData.profileCreatedBy === 'Self' ? 'Guardian / Family Reference Name & Relation' : 'Guardian Relation / Name'}
+                      </label>
                       <input
                         type="text"
                         value={formData.contactPreferences.guardianName}
                         onChange={e => updateSection('contactPreferences', 'guardianName', e.target.value)}
-                        placeholder="e.g. Father, Uncle, Mother"
+                        placeholder={formData.profileCreatedBy === 'Self' ? "e.g. Father Abdul Latheef / Brother" : "e.g. Father, Uncle, Mother"}
                         className={inputCls}
                       />
                     </div>

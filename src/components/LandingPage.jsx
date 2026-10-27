@@ -81,12 +81,12 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
             >
               Browse Proposals
             </Link>
-            <button
-              onClick={() => onSignIn('parent')}
-              className="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-colors"
+            <Link
+              to="/register"
+              className="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 transition-colors"
             >
-              Parent Sign In
-            </button>
+              Register Proposal
+            </Link>
             <button
               onClick={() => onSignIn('groom')}
               className="px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-950/30 transition-transform active:scale-95"
@@ -250,44 +250,44 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
             </div>
           </div>
 
-          {/* Card 3: Parent / Guardian */}
+          {/* Card 3: Register Proposal (Parent or Self) */}
           <div className="relative group bg-slate-900/90 hover:bg-slate-900 border border-teal-500/30 hover:border-teal-500/60 rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 shadow-xl shadow-teal-950/20 hover:-translate-y-1">
             <div className="absolute top-0 right-0 w-28 h-28 bg-teal-500/10 rounded-full blur-2xl group-hover:bg-teal-500/20 transition-all"></div>
             <div>
               <div className="w-12 h-12 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-300 mb-4">
                 <Users className="w-6 h-6" />
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-400">For Parents &amp; Walis</span>
-              <h2 className="text-xl font-bold text-white mt-1 mb-2">I am a Parent</h2>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-400">For Parents &amp; Candidates</span>
+              <h2 className="text-xl font-bold text-white mt-1 mb-2">Register Proposal</h2>
               <p className="text-xs sm:text-sm text-slate-400 mb-5 leading-relaxed">
-                Review proposals for your son or daughter. To preserve sacred privacy, candidate names, guardian names, and direct phone numbers remain protected during preliminary evaluation.
+                Submit a proposal as a Parent / Guardian or directly for Yourself. Sacred privacy protection with direct family contact verification.
               </p>
               <div className="space-y-2 text-xs text-slate-300 mb-6">
                 <div className="flex items-center gap-2">
-                  <EyeOff className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                  <span>Candidate &amp; guardian names masked</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                  <span>Register as Parent / Guardian or Self</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Lock className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                  <span>Phone &amp; WhatsApp numbers protected</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                  <span>Phone &amp; WhatsApp numbers spam-protected</span>
                 </div>
               </div>
             </div>
 
             <div className="space-y-2 pt-2 border-t border-slate-800">
-              <button
-                onClick={() => onSignIn('parent')}
+              <Link
+                to="/register"
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-teal-600 via-emerald-600 to-amber-600 hover:from-teal-500 hover:to-amber-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-teal-950/40 flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
               >
-                <span>Sign In as Parent / Guardian</span>
+                <span>Register Proposal (Parent / Self)</span>
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
               {onSwitchPersona && (
                 <button
                   onClick={() => onSwitchPersona('parent')}
                   className="w-full py-2 px-3 text-center text-[11px] text-teal-400 hover:text-teal-300 font-semibold transition-colors cursor-pointer"
                 >
-                  ⚡ Instant Demo: Parent Mode
+                  ⚡ Instant Demo: Parent View
                 </button>
               )}
             </div>

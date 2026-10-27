@@ -282,6 +282,10 @@ export default function ProfileCard({
                 <Sparkles className="w-2.5 h-2.5" /> Sayyid
               </span>
             )}
+
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-slate-900 text-teal-300 border border-teal-500/30">
+              By: {profile.profileCreatedBy || profile.registeredBy || 'Parent'}
+            </span>
           </div>
 
           {/* Right Action Icons */}

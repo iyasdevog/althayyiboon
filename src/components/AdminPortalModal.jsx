@@ -474,8 +474,8 @@ export default function AdminPortalModal({
           <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
             
             {/* Top Navigation Tabs */}
-            <div className="px-4 sm:px-6 pt-3 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between gap-2 overflow-x-auto shrink-0">
-              <div className="flex items-center gap-1 sm:gap-2">
+            <div className="px-4 sm:px-6 pt-3 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto custom-scrollbar flex-1 min-w-0 pb-1">
                 <button
                   onClick={() => setActiveTab("proposals")}
                   className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
@@ -554,15 +554,17 @@ export default function AdminPortalModal({
                 </button>
               </div>
 
-              {/* CSV Export Button */}
-              <button
-                onClick={handleExportCSV}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors shrink-0 mb-1"
-                title="Export all database records to CSV spreadsheet"
-              >
-                <Download className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="hidden sm:inline">Export CSV</span>
-              </button>
+              {/* Dedicated CSV Export Button Container */}
+              <div className="flex items-center gap-2 shrink-0 pb-1 pl-3 border-l border-slate-800">
+                <button
+                  onClick={handleExportCSV}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors shadow-sm"
+                  title="Export all database records to CSV spreadsheet"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="hidden sm:inline">Export CSV</span>
+                </button>
+              </div>
             </div>
 
             {/* TAB CONTENT CONTAINER */}
@@ -960,13 +962,22 @@ export default function AdminPortalModal({
                                   {p.locationFamily?.homeDistrict || 'Kerala'}
                                 </td>
                                 <td className="p-3">
-                                  {p.registeredDuringCampaign ? (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                      Campaign Reg
+                                  <div className="flex flex-col gap-1 items-start">
+                                    {p.registeredDuringCampaign ? (
+                                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                        Campaign Reg
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-500 text-[11px]">Standard</span>
+                                    )}
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                      (p.profileCreatedBy === 'Self' || p.registeredBy === 'Self')
+                                        ? 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+                                        : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                                    }`}>
+                                      By: {p.profileCreatedBy || p.registeredBy || 'Parent'}
                                     </span>
-                                  ) : (
-                                    <span className="text-slate-500 text-[11px]">Standard</span>
-                                  )}
+                                  </div>
                                 </td>
                                 <td className="p-3 text-right">
                                   <div className="flex items-center justify-end gap-1.5">

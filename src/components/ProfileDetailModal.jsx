@@ -21,7 +21,8 @@ import {
   Check, 
   Copy,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Users
 } from 'lucide-react';
 import { shareProfile } from '../utils/shareUtils';
 import { useAuth } from '../context/AuthContext';
@@ -309,6 +310,11 @@ export default function ProfileDetailModal({
 
               <span className="text-xs font-mono text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-800">
                 {id}
+              </span>
+
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-teal-300 border border-teal-500/30">
+                <Users className="w-3 h-3" />
+                By {profile.profileCreatedBy || profile.registeredBy || 'Parent'}
               </span>
             </div>
 

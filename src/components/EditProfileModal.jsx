@@ -24,6 +24,7 @@ export default function EditProfileModal({
 
   // Initialize form state supporting both old & new schemas
   const [formData, setFormData] = useState({
+    profileCreatedBy: profile.profileCreatedBy || profile.registeredBy || "Parent",
     status: profile.status || "approved",
     basicInfo: { color: "", ...profile.basicInfo },
     islamicQualification: Array.isArray(profile.islamicQualification)
@@ -78,6 +79,8 @@ export default function EditProfileModal({
     try {
       const payload = {
         ...formData,
+        profileCreatedBy: formData.profileCreatedBy || 'Parent',
+        registeredBy: formData.profileCreatedBy || 'Parent',
         islamicBackground: {
           ...formData.islamicBackground,
           qualification: formData.islamicQualification[0] || 'None'
@@ -257,6 +260,40 @@ export default function EditProfileModal({
                         <div className="text-[9px] opacity-75">{st.desc}</div>
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Profile Registered By / Created By */}
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-white uppercase tracking-wider">
+                      Profile Registered By
+                    </label>
+                    <span className="text-[10px] text-slate-400">Proposal origin</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(p => ({ ...p, profileCreatedBy: 'Parent' }))}
+                      className={`p-2 rounded-xl text-center border transition-all cursor-pointer text-xs font-bold ${
+                        formData.profileCreatedBy === 'Parent'
+                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-sm'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      Parent / Guardian
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(p => ({ ...p, profileCreatedBy: 'Self' }))}
+                      className={`p-2 rounded-xl text-center border transition-all cursor-pointer text-xs font-bold ${
+                        formData.profileCreatedBy === 'Self'
+                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-sm'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      Self (Candidate)
+                    </button>
                   </div>
                 </div>
 

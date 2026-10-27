@@ -18,24 +18,23 @@ export default function HomePage({
   const navigate = useNavigate();
   const { currentUser, switchUserPersona, pricing, isAdmin } = useAuth();
 
-  // Condition 1: Active Campaign Mode for Non-Admin & Non-Demo visitors
-  if (!isAdmin && pricing?.campaignMode && !currentUser?.isDemo) {
-    return (
-      <CampaignPage
-        onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
-        onOpenSignIn={(role) => onOpenSignIn ? onOpenSignIn(role) : navigate('/login')}
-        onSwitchPersona={(role) => {
-          switchUserPersona(role);
-          onShowToast?.(`Switched to ${role} demo mode (Sample Data)!`);
-          navigate('/profiles');
-        }}
-        onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
-      />
-    );
-  }
-
-  // Condition 2: Guest Visitor: Show Matrimonial Landing Page
+  // Condition 1: Guest Visitor (Not Authenticated)
   if (!currentUser) {
+    if (!isAdmin && pricing?.campaignMode) {
+      return (
+        <CampaignPage
+          onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+          onOpenSignIn={(role) => onOpenSignIn ? onOpenSignIn(role) : navigate('/login')}
+          onSwitchPersona={(role) => {
+            switchUserPersona(role);
+            onShowToast?.(`Switched to ${role} demo mode (Sample Data)!`);
+            navigate('/profiles');
+          }}
+          onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
+        />
+      );
+    }
+
     return (
       <LandingPage
         onSignIn={(role) => onOpenSignIn ? onOpenSignIn(role) : navigate('/login')}

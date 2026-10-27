@@ -458,6 +458,10 @@ export default function App() {
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}
+        onSuccess={() => {
+          setIsSignInModalOpen(false);
+          navigate('/profiles');
+        }}
         onShowToast={showToast}
         defaultRole={signInDefaultRole}
         profiles={rawProfiles}

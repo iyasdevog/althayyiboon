@@ -13,11 +13,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function SignInModal({ isOpen, onClose, onShowToast, defaultRole = 'groom', profiles = [] }) {
+export default function SignInModal({ isOpen, onClose, onSuccess, onShowToast, defaultRole = 'groom', profiles = [] }) {
   const { loginWithGoogle, loginWithEmailPassword, loginWithLegacyCredentials } = useAuth();
 
   const [activeTab, setActiveTab] = useState('google'); // 'google' | 'email' | 'legacy'
-  const [selectedRole, setSelectedRole] = useState(defaultRole);
+  const normalizedDefaultRole = defaultRole === 'bride' ? 'bride' : 'groom';
+  const [selectedRole, setSelectedRole] = useState(normalizedDefaultRole);
   
   // Email Auth State
   const [email, setEmail] = useState('');
@@ -40,7 +41,11 @@ export default function SignInModal({ isOpen, onClose, onShowToast, defaultRole 
     setLoading(false);
     if (res.success) {
       if (onShowToast) onShowToast(`Welcome back, ${res.profile?.name || 'Member'}!`);
-      onClose();
+      if (onSuccess) {
+        onSuccess(res.profile);
+      } else {
+        onClose();
+      }
     } else if (res.error) {
       // Silently ignore cancelled-popup-request (already handled in AuthContext)
       setErrorMsg(res.error);
@@ -60,7 +65,11 @@ export default function SignInModal({ isOpen, onClose, onShowToast, defaultRole 
     setLoading(false);
     if (res.success) {
       if (onShowToast) onShowToast(`Signed in successfully as ${res.profile?.name || 'Member'}!`);
-      onClose();
+      if (onSuccess) {
+        onSuccess(res.profile);
+      } else {
+        onClose();
+      }
     } else {
       setErrorMsg(res.error || 'Authentication failed. Please check your credentials.');
     }
@@ -78,7 +87,11 @@ export default function SignInModal({ isOpen, onClose, onShowToast, defaultRole 
     setLoading(false);
     if (res.success) {
       if (onShowToast) onShowToast(`Welcome, ${res.profile?.name || 'Candidate'}! Logged in with proposal credentials.`);
-      onClose();
+      if (onSuccess) {
+        onSuccess(res.profile);
+      } else {
+        onClose();
+      }
     } else {
       setErrorMsg(res.error || 'Could not verify credentials. Please verify with the administrator.');
     }
@@ -113,19 +126,19 @@ export default function SignInModal({ isOpen, onClose, onShowToast, defaultRole 
           </p>
         </div>
 
-        {/* Role Selector */}
+        {/* Role Selector (Groom or Bride) */}
         <div className="mb-5">
           <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-            Select Your Role / Persona
+            Select Candidate Proposal Type
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={() => setSelectedRole('groom')}
-              className={`p-2.5 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                 selectedRole === 'groom'
-                  ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300 shadow-md shadow-emerald-950/30'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300 shadow-md shadow-emerald-950/30 ring-1 ring-emerald-500/40'
+                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
               }`}
             >
               <User className="w-4 h-4" />
@@ -134,26 +147,14 @@ export default function SignInModal({ isOpen, onClose, onShowToast, defaultRole 
             <button
               type="button"
               onClick={() => setSelectedRole('bride')}
-              className={`p-2.5 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                 selectedRole === 'bride'
-                  ? 'bg-rose-600/20 border-rose-500 text-rose-300 shadow-md shadow-rose-950/30'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  ? 'bg-rose-600/20 border-rose-500 text-rose-300 shadow-md shadow-rose-950/30 ring-1 ring-rose-500/40'
+                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
               }`}
             >
               <Heart className="w-4 h-4" />
               <span>Bride (Sister)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedRole('parent')}
-              className={`p-2.5 rounded-2xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                selectedRole === 'parent'
-                  ? 'bg-teal-600/20 border-teal-500 text-teal-300 shadow-md shadow-teal-950/30'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              <span>Parent / Wali</span>
             </button>
           </div>
         </div>
@@ -204,7 +205,7 @@ export default function SignInModal({ isOpen, onClose, onShowToast, defaultRole 
         {activeTab === 'google' && (
           <div className="space-y-4 py-2">
             <p className="text-xs text-slate-400 leading-relaxed text-center">
-              Quick and secure access. All new users can sign in instantly using their verified Google Account.
+              Quick and secure access. All users can sign in instantly using their verified Google Account.
             </p>
             <button
               onClick={handleGoogleSignIn}
@@ -229,7 +230,7 @@ export default function SignInModal({ isOpen, onClose, onShowToast, defaultRole 
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>{loading ? 'Signing In...' : `Continue with Google as ${selectedRole === 'bride' ? 'Bride' : selectedRole === 'parent' ? 'Parent' : 'Groom'}`}</span>
+              <span>{loading ? 'Signing In...' : `Continue with Google as ${selectedRole === 'bride' ? 'Bride' : 'Groom'}`}</span>
             </button>
           </div>
         )}
