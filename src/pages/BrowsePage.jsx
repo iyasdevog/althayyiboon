@@ -6,6 +6,7 @@ import StatsBar from '../components/StatsBar';
 import FilterSidebar from '../components/FilterSidebar';
 import ProfileGrid from '../components/ProfileGrid';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
+import CampaignMalayalamBanner from '../components/CampaignMalayalamBanner';
 import Footer from '../components/Footer';
 import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
@@ -94,6 +95,9 @@ export default function BrowsePage({
         onOpenWalletModal={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
         onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
       />
+
+      {/* Campaign Malayalam Data Collection & WhatsApp Announcement Banner */}
+      <CampaignMalayalamBanner onOpenAddModal={onOpenAddModal} />
 
       {/* Hero Banner with Search Bar & Quick Tags */}
       <HeroBanner

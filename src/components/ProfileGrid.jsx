@@ -9,7 +9,12 @@ import {
   Filter, 
   LayoutGrid, 
   List, 
-  Scale
+  Scale,
+  MessageSquare,
+  ShieldCheck,
+  Lock,
+  ExternalLink,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -30,8 +35,11 @@ export default function ProfileGrid({
   onOpenSignIn
 }) {
   const navigate = useNavigate();
-  const { currentUser, isDemo } = useAuth();
+  const { currentUser, isDemo, isAdmin, pricing } = useAuth();
   const isDemoMode = Boolean(isDemo || currentUser?.isDemo || !currentUser);
+  const isCampaignModeActive = Boolean(pricing?.campaignMode && !isAdmin && !currentUser?.isDemo);
+  const whatsappGroupLink = pricing?.whatsappGroupLink || 'https://chat.whatsapp.com/sample-althayyiboon-group';
+  const rewardCredits = pricing?.campaignRewardCredits || 3;
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [compareIds, setCompareIds] = useState([]);
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
@@ -78,8 +86,12 @@ export default function ProfileGrid({
       {/* Grid Top Bar: Counter, View Mode Toggle & Sorting */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-2 bg-slate-900/70 backdrop-blur-md px-3 py-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <div className={`w-2 h-2 rounded-full shrink-0 ${isDemoMode && !showFavoritesOnly && !showCountNumber ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`}></div>
-          {showCountNumber ? (
+          <div className={`w-2 h-2 rounded-full shrink-0 ${isCampaignModeActive ? 'bg-amber-400 animate-ping' : isDemoMode && !showFavoritesOnly && !showCountNumber ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`}></div>
+          {isCampaignModeActive ? (
+            <span className="text-xs sm:text-sm text-emerald-300 font-bold flex items-center gap-1.5 truncate">
+              <span>ഡാറ്റാ ശേഖരണം പുരോഗമിക്കുന്നു • പ്രൊഫൈലുകൾ നിലവിൽ രഹസ്യമാണ്</span>
+            </span>
+          ) : showCountNumber ? (
             <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
               <span className="text-emerald-400 font-extrabold text-sm sm:text-base">{profiles.length}</span>
               <span className="ml-1 text-slate-400">
@@ -163,8 +175,56 @@ export default function ProfileGrid({
         </div>
       </div>
 
-      {/* Profile Cards Grid / List */}
-      {profiles.length > 0 ? (
+      {/* Profile Cards Grid / List OR Campaign Mode Hidden State */}
+      {isCampaignModeActive ? (
+        <div className="rounded-3xl p-6 sm:p-10 text-center max-w-2xl mx-auto my-3 sm:my-6 bg-gradient-to-b from-slate-900/95 via-slate-900 to-emerald-950/40 border border-emerald-500/40 shadow-2xl relative overflow-hidden animate-fade-in">
+          {/* Ambient Glows */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-emerald-500/15 text-emerald-400 mx-auto flex items-center justify-center mb-4 border border-emerald-500/30 shadow-xl shadow-emerald-950/50">
+            <ShieldCheck className="w-9 h-9 sm:w-11 sm:h-11 text-emerald-400" />
+          </div>
+
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-3">
+            <Lock className="w-3.5 h-3.5 text-emerald-400" />
+            <span>പ്രൊഫൈലുകൾ നിലവിൽ രഹസ്യമാണ് (Profiles Protected &amp; Hidden)</span>
+          </div>
+
+          <h3 className="text-xl sm:text-2xl font-black text-white mb-2.5 tracking-tight">
+            ഡാറ്റാ ശേഖരണം പുരോഗമിക്കുന്നു
+          </h3>
+
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6 max-w-xl mx-auto font-normal">
+            അൽ-ത്വയ്യിബൂൻ പ്രീ-ലോഞ്ച് കാമ്പയിൻ കാലയളവിൽ ഉദ്യോഗാർത്ഥികളുടെ സ്വകാര്യത ഉറപ്പാക്കാൻ എല്ലാ പ്രൊഫൈലുകളും താല്ക്കാലികമായി മറച്ചിരിക്കുകയാണ്. പ്ലാറ്റ്‌ഫോം പൊതുജനങ്ങൾക്കായി തുറക്കുമ്പോൾ ആദ്യമേ വിവരങ്ങൾ അറിയാനും, <strong className="text-amber-300 font-bold">{rewardCredits} സൗജന്യ കോൺടാക്റ്റ് അൺലോക്ക് ക്രെഡിറ്റുകൾ</strong> ആസ്വദിക്കാനും ഞങ്ങളുടെ ഔദ്യോഗിക വാട്സാപ്പ് ഗ്രൂപ്പിൽ അംഗമാകൂ!
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+            <a
+              href={whatsappGroupLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
+            >
+              <MessageSquare className="w-4 h-4 fill-white" />
+              <span>വാട്സാപ്പ് ഗ്രൂപ്പിൽ ചേരുക</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+            </a>
+
+            <button
+              onClick={() => navigate('/register')}
+              className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 font-bold text-xs sm:text-sm border border-emerald-500/40 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
+            >
+              <UserPlus className="w-4 h-4 text-emerald-400" />
+              <span>സൗജന്യ രജിസ്ട്രേഷൻ (₹0)</span>
+            </button>
+          </div>
+
+          <p className="text-[11px] text-slate-400 mt-5">
+            ✨ കാമ്പയിൻ കാലയളവിൽ പ്രൊപ്പോസൽ രജിസ്ട്രേഷൻ തികച്ചും സൗജന്യമാണ് (₹0 Fee).
+          </p>
+        </div>
+      ) : profiles.length > 0 ? (
         <div className={
           viewMode === 'grid' 
             ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5" 
