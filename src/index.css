@@ -125,6 +125,15 @@
   animation: pulseGlow 4s infinite ease-in-out;
 }
 
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-left {
+  animation: slideLeft 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Touch friendly minimum sizing */
 .touch-target {
   min-height: 42px;

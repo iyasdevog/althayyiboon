@@ -25,7 +25,11 @@ import {
   Send,
   Calendar,
   ExternalLink,
-  Check
+  Check,
+  QrCode,
+  CreditCard,
+  Smartphone,
+  Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { SUBJECT_CATEGORIES } from '../data/mockProfiles';
@@ -71,8 +75,13 @@ export default function AdminPortalModal({
     campaignRewardCredits: pricing.campaignRewardCredits || 3,
     whatsappGroupLink: pricing.whatsappGroupLink || 'https://chat.whatsapp.com/sample-althayyiboon-group',
     whatsappGroupName: pricing.whatsappGroupName || 'Al-ThayyiBoon Official Matrimony',
+    upiId: pricing.upiId || '',
+    upiName: pricing.upiName || 'Al-ThayyiBoon Matrimony',
+    paymentMode: pricing.paymentMode || 'all',
     razorpayKeyId: pricing.razorpayKeyId || '',
     razorpayKeySecret: pricing.razorpayKeySecret || '',
+    cashfreeAppId: pricing.cashfreeAppId || '',
+    cashfreeSecretKey: pricing.cashfreeSecretKey || '',
     whatsappApiKey: pricing.whatsappApiKey || '',
     statsVisibility: pricing.statsVisibility || 'auto',
     statsThreshold: pricing.statsThreshold || 200
@@ -191,11 +200,15 @@ export default function AdminPortalModal({
     const phone = profile.contactDetails?.whatsappNumber || profile.contactDetails?.guardianPhone || profile.contactPreferences?.phone || '';
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const name = profile.basicInfo?.fullName || 'Candidate';
-    const username = profile.loginCredentials?.username || profile.id;
-    const password = profile.loginCredentials?.password || profile.security?.editPin || `ALTB@${profile.id}`;
+
+    // Consistent with table display logic: explicit credentials > PIN > auto-generated
+    const username = (profile.loginCredentials?.username || '').trim() || profile.id;
+    const password = (profile.loginCredentials?.password || '').trim()
+      || (profile.security?.editPin || '').trim()
+      || `ALTB@${profile.id}`;
     const siteUrl = window.location.origin;
 
-    const text = `Assalamu Alaikum ${name},\n\nHere are your account login credentials for Al-ThayyiBoon Matrimonial Network:\n\n👤 Username / ID: ${username}\n🔑 Password / PIN: ${password}\n🌐 Login at: ${siteUrl}\n\nPlease keep your credentials confidential. You can view matching proposals and manage your profile anytime.`;
+    const text = `Assalamu Alaikum ${name},\n\nHere are your account login credentials for Al-ThayyiBoon Matrimonial Network:\n\n👤 Username / ID: ${username}\n🔑 Password / PIN: ${password}\n🌐 Login at: ${siteUrl}/login\n\nPlease keep your credentials confidential. You can view matching proposals and manage your profile anytime.`;
 
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
@@ -1015,6 +1028,19 @@ export default function AdminPortalModal({
                         </button>
                       </div>
                     </div>
+
+                    {/* Legend */}
+                    <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-800 text-[11px]">
+                      <span className="text-slate-500 font-semibold uppercase tracking-wider">Legend:</span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-semibold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                        Modern — Credentials Set During Registration
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 font-semibold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 animate-pulse"></span>
+                        Legacy — Auto-Generated Credentials (share via WhatsApp)
+                      </span>
+                    </div>
                   </div>
 
                   {/* Credentials Table */}
@@ -1027,7 +1053,7 @@ export default function AdminPortalModal({
                             <th className="p-3">Phone / WhatsApp</th>
                             <th className="p-3">Username / Login ID</th>
                             <th className="p-3">Password / Access PIN</th>
-                            <th className="p-3">Status</th>
+                            <th className="p-3">Type</th>
                             <th className="p-3 text-right">Share Action</th>
                           </tr>
                         </thead>
@@ -1035,28 +1061,62 @@ export default function AdminPortalModal({
                           {profiles.map(p => {
                             const basic = p.basicInfo || {};
                             const phone = p.contactDetails?.whatsappNumber || p.contactDetails?.guardianPhone || p.contactPreferences?.phone || 'N/A';
-                            const username = p.loginCredentials?.username || p.id;
-                            const password = p.loginCredentials?.password || p.security?.editPin || `ALTB@${p.id}`;
+
+                            // Determine if credentials were explicitly set during registration
+                            const hasExplicitCredentials = Boolean(
+                              (p.loginCredentials?.username || '').trim() &&
+                              (p.loginCredentials?.password || '').trim()
+                            );
+
+                            const username = (p.loginCredentials?.username || '').trim() || p.id;
+                            const password = (p.loginCredentials?.password || '').trim()
+                              || (p.security?.editPin || '').trim()
+                              || `ALTB@${p.id}`;
+
+                            const isLegacy = !hasExplicitCredentials;
 
                             return (
-                              <tr key={p.id} className="hover:bg-slate-900/50 transition-colors">
+                              <tr key={p.id} className={`hover:bg-slate-900/50 transition-colors ${isLegacy ? 'bg-amber-950/10' : ''}`}>
                                 <td className="p-3">
                                   <div className="font-mono text-emerald-400 font-bold">{p.id}</div>
-                                  <div className="font-semibold text-white">{basic.fullName || "Candidate"}</div>
+                                  <div className="font-semibold text-white">{basic.fullName || 'Candidate'}</div>
+                                  <div className="text-[10px] text-slate-500 mt-0.5">{basic.gender || p.gender || 'Unknown'}</div>
                                 </td>
                                 <td className="p-3 font-mono text-slate-300">
-                                  {phone}
-                                </td>
-                                <td className="p-3 font-mono text-slate-200 font-bold bg-slate-900/40 px-2 py-1 rounded">
-                                  {username}
-                                </td>
-                                <td className="p-3 font-mono text-amber-400 font-bold bg-slate-900/40 px-2 py-1 rounded">
-                                  {password}
+                                  {phone !== 'N/A' ? (
+                                    <a href={`https://wa.me/${phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors underline underline-offset-2">{phone}</a>
+                                  ) : (
+                                    <span className="text-slate-600 italic">No phone saved</span>
+                                  )}
                                 </td>
                                 <td className="p-3">
-                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                                    Ready to Share
+                                  <span className={`font-mono font-bold px-2 py-1 rounded-lg ${isLegacy ? 'text-amber-200 bg-amber-500/10 border border-amber-500/20' : 'text-slate-200 bg-slate-900/60 border border-slate-700/60'}`}>
+                                    {username}
                                   </span>
+                                  {isLegacy && <div className="text-[10px] text-amber-600/70 mt-0.5 italic">ID-based (auto)</div>}
+                                </td>
+                                <td className="p-3">
+                                  <span className="font-mono font-bold px-2 py-1 rounded-lg text-amber-300 bg-amber-500/10 border border-amber-500/20">
+                                    {password}
+                                  </span>
+                                  {isLegacy && (
+                                    <div className="text-[10px] text-amber-600/70 mt-0.5 italic">
+                                      {(p.security?.editPin || '').trim() ? 'From edit PIN' : 'Auto-generated'}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-3">
+                                  {isLegacy ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20 inline-flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+                                      Legacy
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 inline-flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                                      Modern
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="p-3 text-right">
                                   <button
@@ -1302,15 +1362,124 @@ export default function AdminPortalModal({
                       )}
                     </div>
 
-                    {/* Gateway Integrations (Razorpay & WhatsApp Business API) */}
+                    {/* Direct UPI (0% Commission — 100% Free) */}
+                    <div className="pt-4 border-t border-slate-800 space-y-3">
+                      <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                            <Smartphone className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs font-bold text-white">Direct UPI Direct Top-up</h4>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500 text-slate-950">
+                                0% COMMISSION · ₹0 FEES
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-300 mt-0.5">
+                              100% free alternative to Razorpay. Money transfers directly to your bank account via Google Pay, PhonePe, Paytm, or BHIM with zero intermediary commission.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
+                            <QrCode className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Your Business / Personal UPI ID (VPA)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={localPricing.upiId}
+                            onChange={(e) => setLocalPricing(prev => ({ ...prev, upiId: e.target.value }))}
+                            placeholder="e.g. althayyiboon@okaxis or 9876543210@upi"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                          />
+                          <p className="text-[10px] text-slate-500 mt-1">Users will see a dynamic QR code & 1-tap UPI app link for this ID.</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            Payee / Merchant Display Name
+                          </label>
+                          <input
+                            type="text"
+                            value={localPricing.upiName}
+                            onChange={(e) => setLocalPricing(prev => ({ ...prev, upiName: e.target.value }))}
+                            placeholder="Al-ThayyiBoon Matrimony"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                          />
+                          <p className="text-[10px] text-slate-500 mt-1">Shown inside GPay/PhonePe when user makes the payment.</p>
+                        </div>
+                      </div>
+
+                      {/* Payment Mode Selector */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                          Enabled Payment Method for Users
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setLocalPricing(prev => ({ ...prev, paymentMode: 'upi' }))}
+                            className={`p-2.5 rounded-xl border text-left transition-all ${
+                              localPricing.paymentMode === 'upi'
+                                ? 'bg-emerald-500/20 border-emerald-500 text-white'
+                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            <div className="text-xs font-bold flex items-center justify-between">
+                              <span>Direct UPI Only (0% Fee)</span>
+                              {localPricing.paymentMode === 'upi' && <Check className="w-3 h-3 text-emerald-400" />}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5">Best for zero costs & fast direct transfers</p>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setLocalPricing(prev => ({ ...prev, paymentMode: 'all' }))}
+                            className={`p-2.5 rounded-xl border text-left transition-all ${
+                              localPricing.paymentMode === 'all'
+                                ? 'bg-teal-500/20 border-teal-500 text-white'
+                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            <div className="text-xs font-bold flex items-center justify-between">
+                              <span>UPI + Gateways (Cards)</span>
+                              {localPricing.paymentMode === 'all' && <Check className="w-3 h-3 text-teal-400" />}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5">Both UPI (0%) and Razorpay/Cards available</p>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setLocalPricing(prev => ({ ...prev, paymentMode: 'razorpay' }))}
+                            className={`p-2.5 rounded-xl border text-left transition-all ${
+                              localPricing.paymentMode === 'razorpay'
+                                ? 'bg-sky-500/20 border-sky-500 text-white'
+                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            <div className="text-xs font-bold flex items-center justify-between">
+                              <span>Razorpay Only</span>
+                              {localPricing.paymentMode === 'razorpay' && <Check className="w-3 h-3 text-sky-400" />}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5">Automated checkout (~2% commission)</p>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Paid Payment Gateways (Razorpay & Cashfree) */}
                     <div className="pt-4 border-t border-slate-800 space-y-3">
                       <div>
                         <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <Coins className="w-4 h-4 text-emerald-400" />
-                          <span>Payment &amp; Communication Gateways (Ready for Connection)</span>
+                          <CreditCard className="w-4 h-4 text-sky-400" />
+                          <span>Paid Gateways (Cards, NetBanking, Automated Verification)</span>
                         </h4>
                         <p className="text-[11px] text-slate-400 mt-0.5">
-                          Enter your Razorpay account keys and WhatsApp business details. The application is configured to connect immediately.
+                          Standard commercial gateways. Razorpay charges 2% + GST per txn. Cashfree charges 1.75% for cards.
                         </p>
                       </div>
 
@@ -1336,6 +1505,34 @@ export default function AdminPortalModal({
                             type="password"
                             value={localPricing.razorpayKeySecret}
                             onChange={(e) => setLocalPricing(prev => ({ ...prev, razorpayKeySecret: e.target.value }))}
+                            placeholder="••••••••••••"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            Cashfree App ID (Alternative Gateway)
+                          </label>
+                          <input
+                            type="text"
+                            value={localPricing.cashfreeAppId}
+                            onChange={(e) => setLocalPricing(prev => ({ ...prev, cashfreeAppId: e.target.value }))}
+                            placeholder="CF_APP_ID (optional)"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                            Cashfree Secret Key
+                          </label>
+                          <input
+                            type="password"
+                            value={localPricing.cashfreeSecretKey}
+                            onChange={(e) => setLocalPricing(prev => ({ ...prev, cashfreeSecretKey: e.target.value }))}
                             placeholder="••••••••••••"
                             className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white font-mono text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
                           />

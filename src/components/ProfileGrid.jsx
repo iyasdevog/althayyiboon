@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProfileCard from './ProfileCard';
 import { 
   SlidersHorizontal, 
@@ -10,6 +11,7 @@ import {
   List, 
   Scale
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProfileGrid({ 
   profiles, 
@@ -24,8 +26,12 @@ export default function ProfileGrid({
   onToggleShowFavorites,
   onShowToast,
   onOpenPosterModal,
-  showCountNumber = true
+  showCountNumber = true,
+  onOpenSignIn
 }) {
+  const navigate = useNavigate();
+  const { currentUser, isDemo } = useAuth();
+  const isDemoMode = Boolean(isDemo || currentUser?.isDemo || !currentUser);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [compareIds, setCompareIds] = useState([]);
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
@@ -70,24 +76,46 @@ export default function ProfileGrid({
       )}
 
       {/* Grid Top Bar: Counter, View Mode Toggle & Sorting */}
-      <div className="flex items-center justify-between gap-2 bg-slate-900/70 backdrop-blur-md px-3 py-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></div>
-          <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
-            {showCountNumber ? (
-              <>
-                <span className="text-emerald-400 font-extrabold text-sm sm:text-base">{profiles.length}</span>
-                <span className="ml-1 text-slate-400">
-                  <span className="sm:hidden">{showFavoritesOnly ? 'Saved' : 'Proposals'}</span>
-                  <span className="hidden sm:inline">{showFavoritesOnly ? 'Saved Proposals' : 'Matching Proposals Found'}</span>
-                </span>
-              </>
-            ) : (
-              <span className="text-emerald-300 font-bold">
-                {showFavoritesOnly ? 'Saved Proposals' : 'Verified Proposals Directory'}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-2 bg-slate-900/70 backdrop-blur-md px-3 py-2.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className={`w-2 h-2 rounded-full shrink-0 ${isDemoMode && !showFavoritesOnly && !showCountNumber ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`}></div>
+          {showCountNumber ? (
+            <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
+              <span className="text-emerald-400 font-extrabold text-sm sm:text-base">{profiles.length}</span>
+              <span className="ml-1 text-slate-400">
+                <span className="sm:hidden">{showFavoritesOnly ? 'Saved' : 'Proposals'}</span>
+                <span className="hidden sm:inline">{showFavoritesOnly ? 'Saved Proposals' : 'Matching Proposals Found'}</span>
               </span>
-            )}
-          </span>
+            </span>
+          ) : showFavoritesOnly ? (
+            <span className="text-xs sm:text-sm text-emerald-300 font-bold">
+              Saved Proposals
+            </span>
+          ) : isDemoMode ? (
+            <p className="text-xs sm:text-sm text-slate-300 leading-snug">
+              You are viewing <strong className="text-amber-300 font-bold">Fake / Sample Data</strong>. To browse real verified matrimonial proposals,{' '}
+              <button
+                type="button"
+                onClick={() => onOpenSignIn ? onOpenSignIn('groom') : navigate('/login')}
+                className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-2 transition-colors cursor-pointer inline"
+              >
+                sign in as Groom
+              </button>
+              {' '}or{' '}
+              <button
+                type="button"
+                onClick={() => onOpenSignIn ? onOpenSignIn('bride') : navigate('/login')}
+                className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-2 transition-colors cursor-pointer inline"
+              >
+                Bride
+              </button>
+              .
+            </p>
+          ) : (
+            <span className="text-xs sm:text-sm text-emerald-300 font-bold">
+              Verified Proposals Directory
+            </span>
+          )}
         </div>
 
         {/* View Mode & Sort Selector */}

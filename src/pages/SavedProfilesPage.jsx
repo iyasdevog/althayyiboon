@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -18,6 +18,12 @@ export default function SavedProfilesPage({
   const navigate = useNavigate();
   const { profiles, rawProfiles, bookmarks, toggleBookmark, totalCount, activeFilterCount } = useProfiles();
   const [selectedGender, setSelectedGender] = useState('All');
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = 'Saved Proposals | Al-ThayyiBoon – Your Bookmarked Matrimonial Profiles';
+    return () => { document.title = prev; };
+  }, []);
 
   // Filter bookmarked profiles
   const bookmarkedProfiles = rawProfiles.filter(p => bookmarks.includes(p.id));

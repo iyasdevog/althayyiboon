@@ -10,7 +10,14 @@ import {
   Zap,
   PhoneCall,
   Gift,
-  History
+  History,
+  QrCode,
+  Smartphone,
+  CreditCard,
+  Copy,
+  ExternalLink,
+  MessageSquare,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -25,13 +32,17 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
     switchUserPersona,
     loginWithGoogle,
     logout,
-    pricing,
+    pricing = {},
     unlockedProfileIds = []
   } = useAuth();
 
   const [selectedPack, setSelectedPack] = useState(5);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('recharge'); // 'recharge' | 'history' | 'account'
+  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' | 'razorpay'
+  const [showQr, setShowQr] = useState(true);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [utrNumber, setUtrNumber] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState('');
@@ -56,14 +67,24 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
     { credits: 10, price: Math.round(feePerContact * 10 * 0.8), tag: "Best Value", desc: "Unlock 10 Contacts (Save 20%)" }
   ];
 
-  const handleSimulatePayment = (packCredits, packPrice) => {
+  const handleCopyUpi = (upiId) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(upiId);
+      setCopiedUpi(true);
+      setTimeout(() => setCopiedUpi(false), 2200);
+    }
+  };
+
+  const handleConfirmPayment = (packCredits, packPrice, utr = '') => {
     setIsProcessing(true);
     setTimeout(() => {
       addCredits(packCredits);
       setIsProcessing(false);
+      setUtrNumber('');
       
+      const utrMsg = utr ? ` (Ref: ${utr})` : '';
       if (onShowToast) {
-        onShowToast(`Payment of ₹${packPrice} successful! Added ${packCredits} Credits.`);
+        onShowToast(`Payment of ₹${packPrice}${utrMsg} recorded! Added ${packCredits} Credits.`);
       }
 
       // If user was trying to unlock a specific candidate
@@ -78,7 +99,72 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
       }
 
       onClose();
-    }, 900);
+    }, 850);
+  };
+
+  const handleWhatsAppNotify = (packCredits, packPrice) => {
+    const adminPhone = (pricing.whatsappNumber || '919876543210').replace(/[^0-9]/g, '');
+    const userIdentifier = currentUser?.uid || currentUser?.email || 'Candidate';
+    const text = encodeURIComponent(
+      `Assalamu Alaikum Al-ThayyiBoon Admin,\n\nI have completed UPI payment for Credits Recharge:\n- Amount: ₹${packPrice}\n- Credits: ${packCredits}\n- User/Profile: ${userIdentifier}\n- UTR/Ref No: ${utrNumber || 'Attached in screenshot'}\n\nPlease verify and confirm access. Jazakallahu Khair.`
+    );
+    window.open(`https://wa.me/${adminPhone}?text=${text}`, '_blank');
+  };
+
+  const handleRazorpayCheckout = (packCredits, packPrice) => {
+    if (!pricing.razorpayKeyId) {
+      if (onShowToast) onShowToast("Razorpay Key ID not configured. Please use Direct UPI (0% Fee) instead.");
+      setPaymentMethod('upi');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    const proceedWithRazorpay = () => {
+      try {
+        const options = {
+          key: pricing.razorpayKeyId,
+          amount: packPrice * 100, // paise
+          currency: 'INR',
+          name: 'Al-ThayyiBoon Matrimony',
+          description: `Recharge ${packCredits} Credits`,
+          handler: function (response) {
+            setIsProcessing(false);
+            handleConfirmPayment(packCredits, packPrice, response.razorpay_payment_id || 'RZP-PAID');
+          },
+          prefill: {
+            name: currentUser?.name || '',
+            email: currentUser?.email || ''
+          },
+          theme: {
+            color: '#10b981'
+          }
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (resp) {
+          setIsProcessing(false);
+          if (onShowToast) onShowToast(`Payment cancelled: ${resp.error?.description || 'Try UPI'}`);
+        });
+        rzp.open();
+      } catch (err) {
+        setIsProcessing(false);
+        if (onShowToast) onShowToast("Failed to launch gateway. Please use Direct UPI.");
+      }
+    };
+
+    if (window.Razorpay) {
+      proceedWithRazorpay();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => proceedWithRazorpay();
+      script.onerror = () => {
+        setIsProcessing(false);
+        if (onShowToast) onShowToast("Failed to load Razorpay. Please use Direct UPI.");
+      };
+      document.body.appendChild(script);
+    }
   };
 
   const handleApplyPromo = (e) => {
@@ -252,25 +338,227 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
                 </div>
               </div>
 
-              {/* Pay Button */}
+              {/* Payment Method Selector & Gateway Options */}
               {(() => {
                 const currentPkg = packages.find(p => p.credits === selectedPack) || packages[1];
+                const upiId = pricing.upiId || 'althayyiboon@okaxis';
+                const upiName = pricing.upiName || 'Al-ThayyiBoon Matrimony';
+                const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${currentPkg.price}&cu=INR&tn=${encodeURIComponent(`Al-ThayyiBoon ${currentPkg.credits} Credits`)}`;
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(upiUrl)}&margin=8&color=16-185-129&bgcolor=02-06-23`;
+                const razorpayAvailable = Boolean(pricing.razorpayKeyId);
+
                 return (
-                  <button
-                    disabled={isProcessing}
-                    onClick={() => handleSimulatePayment(currentPkg.credits, currentPkg.price)}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-sm shadow-xl shadow-emerald-900/30 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-                  >
-                    {isProcessing ? (
-                      <span>Processing Instant Payment...</span>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4 fill-slate-950" />
-                        <span>Pay ₹{currentPkg.price} &amp; Add {currentPkg.credits} Credits</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
+                  <div className="space-y-3 pt-1">
+                    {/* Method Tabs */}
+                    <div className="flex p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('upi')}
+                        className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          paymentMethod === 'upi'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Direct UPI (0% Fee)</span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 font-extrabold">FREE</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('razorpay')}
+                        className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          paymentMethod === 'razorpay'
+                            ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <CreditCard className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Card / Netbanking</span>
+                      </button>
+                    </div>
+
+                    {/* DIRECT UPI TAB (100% Free, 0% Commission) */}
+                    {paymentMethod === 'upi' && (
+                      <div className="p-4 rounded-2xl bg-slate-950/90 border border-emerald-500/30 space-y-3.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span className="text-xs font-bold text-white">Instant UPI Transfer</span>
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                            0% Commission
+                          </span>
+                        </div>
+
+                        {/* Mobile One-Tap Pay Button */}
+                        <a
+                          href={upiUrl}
+                          className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 transition-all cursor-pointer text-center"
+                        >
+                          <Smartphone className="w-4 h-4 fill-slate-950" />
+                          <span>Pay ₹{currentPkg.price} via Any UPI App</span>
+                          <span className="text-[10px] opacity-75 font-normal">(GPay / PhonePe / Paytm)</span>
+                        </a>
+
+                        {/* UPI ID Pill with Copy Button */}
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-[11px] text-slate-400 shrink-0">UPI ID:</span>
+                            <span className="font-mono font-bold text-emerald-300 truncate">{upiId}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyUpi(upiId)}
+                            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold flex items-center gap-1 shrink-0 transition-colors cursor-pointer"
+                          >
+                            {copiedUpi ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-400" />
+                                <span className="text-emerald-400 font-bold">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* QR Code toggle / scan */}
+                        <div className="text-center pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setShowQr(prev => !prev)}
+                            className="text-[11px] text-emerald-400 hover:text-emerald-300 underline font-semibold flex items-center justify-center gap-1 mx-auto cursor-pointer"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                            <span>{showQr ? 'Hide Scan QR Code' : `Show Scan QR Code (₹${currentPkg.price})`}</span>
+                          </button>
+
+                          {showQr && (
+                            <div className="mt-2.5 p-3 rounded-2xl bg-slate-900 border border-slate-800 inline-block text-center shadow-inner">
+                              <img
+                                src={qrCodeUrl}
+                                alt={`UPI QR Code for ₹${currentPkg.price}`}
+                                className="w-40 h-40 mx-auto rounded-xl border border-emerald-500/30 p-1 bg-slate-950"
+                                loading="lazy"
+                              />
+                              <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                                Scan with Google Pay, PhonePe, Paytm, or BHIM
+                              </p>
+                              <div className="text-xs font-mono font-bold text-amber-300 mt-0.5">
+                                ₹{currentPkg.price} Exact Amount
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* UTR Reference Input & Verification */}
+                        <div className="pt-2 border-t border-slate-800/80 space-y-2">
+                          <label className="block text-[11px] font-semibold text-slate-300">
+                            Completed Payment? Enter UPI Reference / UTR Number:
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={utrNumber}
+                              onChange={(e) => setUtrNumber(e.target.value)}
+                              placeholder="12-digit UTR (e.g. 428937128931)"
+                              className="flex-1 px-3 py-2 bg-slate-900 text-white font-mono text-xs rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500"
+                            />
+                            <button
+                              type="button"
+                              disabled={isProcessing}
+                              onClick={() => handleConfirmPayment(currentPkg.credits, currentPkg.price, utrNumber)}
+                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer whitespace-nowrap"
+                            >
+                              {isProcessing ? 'Verifying...' : 'Claim Credits'}
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+                            <span>Instant credit addition</span>
+                            <button
+                              type="button"
+                              onClick={() => handleWhatsAppNotify(currentPkg.credits, currentPkg.price)}
+                              className="text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <MessageSquare className="w-3 h-3" />
+                              <span>Send proof via WhatsApp</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     )}
-                  </button>
+
+                    {/* RAZORPAY / GATEWAY TAB */}
+                    {paymentMethod === 'razorpay' && (
+                      <div className="p-4 rounded-2xl bg-slate-950/90 border border-sky-500/30 space-y-3.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4 text-sky-400" />
+                            <span className="text-xs font-bold text-white">Credit / Debit Card / Netbanking</span>
+                          </div>
+                          <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">
+                            Online Gateway
+                          </span>
+                        </div>
+
+                        {razorpayAvailable ? (
+                          <div className="space-y-3">
+                            <p className="text-xs text-slate-300">
+                              Instant automated checkout with Visa, MasterCard, RuPay, NetBanking &amp; International cards.
+                            </p>
+                            <button
+                              disabled={isProcessing}
+                              onClick={() => handleRazorpayCheckout(currentPkg.credits, currentPkg.price)}
+                              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-950/40 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                            >
+                              {isProcessing ? (
+                                <span>Opening Razorpay Secure Checkout...</span>
+                              ) : (
+                                <>
+                                  <Lock className="w-4 h-4" />
+                                  <span>Pay ₹{currentPkg.price} with Card / NetBanking</span>
+                                  <ArrowRight className="w-4 h-4" />
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+                            <p className="text-xs text-amber-200 leading-relaxed">
+                              Razorpay Live Key ID has not been entered yet in the Admin Portal.
+                            </p>
+                            <p className="text-[11px] text-slate-400">
+                              Please use <strong className="text-emerald-400">Direct UPI (0% Fee)</strong> above for zero commission payments directly to the platform account.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setPaymentMethod('upi')}
+                              className="text-xs font-bold text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>Switch to Direct UPI (0% Fee)</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Subtle Demo Simulation Mode for testing */}
+                    <div className="text-center pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => handleConfirmPayment(currentPkg.credits, currentPkg.price, 'DEMO-TEST')}
+                        className="text-[10px] text-slate-500 hover:text-slate-300 underline cursor-pointer"
+                      >
+                        [Demo / Test Mode: Instant Top-up without payment]
+                      </button>
+                    </div>
+                  </div>
                 );
               })()}
 

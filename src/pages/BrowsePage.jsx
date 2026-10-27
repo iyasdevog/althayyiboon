@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import HeroBanner from '../components/HeroBanner';
@@ -46,14 +46,32 @@ export default function BrowsePage({
     approvedCustomFilters
   } = useProfiles();
 
-  const { isStatsNumbersVisible } = useAuth();
+  const { isStatsNumbersVisible, currentUser, isDemo } = useAuth();
   const showStatsNumbers = isStatsNumbersVisible ? isStatsNumbersVisible(rawProfiles.length) : true;
+
+  // Guard: Redirect unauthenticated non-demo guests to landing (home)
+  // /profiles should only be accessible to signed-in members or demo mode users
+  useEffect(() => {
+    if (!currentUser && !isDemo) {
+      navigate('/', { replace: true });
+    }
+  }, [currentUser, isDemo, navigate]);
+
+  // Update page title for SEO
+  useEffect(() => {
+    const prev = document.title;
+    document.title = 'Browse Proposals | Al-ThayyiBoon Matrimony – Kerala & Gulf Islamic Directory';
+    return () => { document.title = prev; };
+  }, []);
 
   const handleSelectProfile = (profile) => {
     if (profile?.id) {
       navigate(`/profile/${profile.id}`);
     }
   };
+
+  // Don't render while redirecting
+  if (!currentUser && !isDemo) return null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
@@ -128,6 +146,7 @@ export default function BrowsePage({
                 onOpenPosterModal(p);
               }
             }}
+            onOpenSignIn={onOpenSignIn ? onOpenSignIn : (role) => navigate('/login')}
           />
 
         </div>

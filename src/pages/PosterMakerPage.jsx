@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -22,11 +22,18 @@ export default function PosterMakerPage({
   const [selectedId, setSelectedId] = useState(id || (profiles[0]?.id || rawProfiles[0]?.id || null));
 
   // Update selected if route param changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (id) {
       setSelectedId(id);
     }
   }, [id]);
+
+  // SEO: Update page title
+  useEffect(() => {
+    const prev = document.title;
+    document.title = 'Matrimonial Poster Studio | Al-ThayyiBoon – WhatsApp & Instagram Cards';
+    return () => { document.title = prev; };
+  }, []);
 
   const activeCandidate = rawProfiles.find(p => String(p.id).toLowerCase() === String(selectedId).toLowerCase())
     || profiles.find(p => String(p.id).toLowerCase() === String(selectedId).toLowerCase())

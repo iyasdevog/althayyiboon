@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -10,6 +10,12 @@ export default function SignInPage({
 }) {
   const navigate = useNavigate();
   const { rawProfiles, totalCount, activeFilterCount, bookmarks } = useProfiles();
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = 'Sign In | Al-ThayyiBoon – Kerala & Gulf Islamic Matrimony';
+    return () => { document.title = prev; };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">

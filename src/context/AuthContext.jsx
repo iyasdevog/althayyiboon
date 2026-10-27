@@ -25,8 +25,13 @@ export const DEFAULT_PRICING = {
   campaignRewardCredits: 3, // Granted at campaign ending date (e.g. 3 contact views)
   whatsappGroupLink: 'https://chat.whatsapp.com/sample-althayyiboon-group',
   whatsappGroupName: 'Al-ThayyiBoon Matrimonial Network',
+  upiId: '', // Direct UPI ID (e.g. althayyiboon@okaxis) - 0% Commission
+  upiName: 'Al-ThayyiBoon Matrimony',
+  paymentMode: 'all', // 'all' | 'upi' | 'razorpay'
   razorpayKeyId: '',
   razorpayKeySecret: '',
+  cashfreeAppId: '',
+  cashfreeSecretKey: '',
   whatsappApiKey: '',
   statsVisibility: 'auto', // 'auto' | 'always_show' | 'always_hide'
   statsThreshold: 200 // Threshold for auto-showing profile numbers
@@ -219,6 +224,14 @@ export function AuthProvider({ children }) {
       if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
         console.info('Google sign-in popup cancelled or superseded:', err.code);
         return { success: false, error: null }; // silent, no toast needed
+      }
+      // auth/unauthorized-domain — domain not added to Firebase Console
+      if (err.code === 'auth/unauthorized-domain') {
+        console.warn('Firebase: unauthorized domain. Please add this domain to Firebase Console → Authentication → Settings → Authorized Domains.');
+        return { 
+          success: false, 
+          error: 'This site domain is not yet authorized for Google sign-in. If you are the admin, please add it in Firebase Console → Authentication → Authorized Domains. Meanwhile, use your Profile ID & Password to log in.' 
+        };
       }
       console.warn("Google Sign-In notice:", err.message);
       return { success: false, error: err.message };

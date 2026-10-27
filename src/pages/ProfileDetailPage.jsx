@@ -68,6 +68,24 @@ export default function ProfileDetailPage({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
 
+  // SEO: Update page title dynamically per profile
+  useEffect(() => {
+    const prev = document.title;
+    if (profile) {
+      const gender = profile.basicInfo?.gender || (profile.gender === 'female' ? 'Bride' : 'Groom');
+      const district = profile.locationFamily?.homeDistrict || 'Kerala';
+      const qual = Array.isArray(profile.islamicQualification) && profile.islamicQualification.length
+        ? profile.islamicQualification[0]
+        : (profile.islamicBackground?.qualification || '');
+      const edu = profile.generalEducation?.degreeName || profile.educationOccupation?.education || '';
+      const parts = [gender, qual, edu, district].filter(Boolean).join(' · ');
+      document.title = `${parts} | Al-ThayyiBoon Matrimony`;
+    } else {
+      document.title = 'Proposal | Al-ThayyiBoon Matrimony';
+    }
+    return () => { document.title = prev; };
+  }, [id, profile]);
+
   if (!profile) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
