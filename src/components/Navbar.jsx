@@ -334,41 +334,7 @@ export default function Navbar({
                         )}
                       </div>
 
-                      {/* Persona Switcher Quick Shortcuts */}
-                      <div className="pt-2 mt-2 border-t border-slate-800">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                          Quick Mode Switch:
-                        </span>
-                        <div className="grid grid-cols-3 gap-1 text-[10px] font-semibold">
-                          <button
-                            onClick={() => {
-                              switchUserPersona('groom');
-                              setIsUserMenuOpen(false);
-                            }}
-                            className="p-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-center cursor-pointer"
-                          >
-                            Groom
-                          </button>
-                          <button
-                            onClick={() => {
-                              switchUserPersona('bride');
-                              setIsUserMenuOpen(false);
-                            }}
-                            className="p-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-center cursor-pointer"
-                          >
-                            Bride
-                          </button>
-                          <button
-                            onClick={() => {
-                              switchUserPersona('parent');
-                              setIsUserMenuOpen(false);
-                            }}
-                            className="p-1 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-center cursor-pointer"
-                          >
-                            Parent
-                          </button>
-                        </div>
-                      </div>
+
 
                       {/* Sign Out */}
                       <div className="pt-2 mt-2 border-t border-slate-800">
@@ -605,41 +571,7 @@ export default function Navbar({
               )}
             </div>
 
-            {/* Persona Switcher Quick Shortcuts */}
-            <div className="px-3.5 py-3 border-t border-slate-800/80 mt-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
-                Quick Persona Switch
-              </span>
-              <div className="grid grid-cols-3 gap-1.5 text-[11px] font-semibold">
-                <button
-                  onClick={() => {
-                    switchUserPersona('groom');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="py-2 px-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-center cursor-pointer transition-colors"
-                >
-                  Groom
-                </button>
-                <button
-                  onClick={() => {
-                    switchUserPersona('bride');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="py-2 px-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-center cursor-pointer transition-colors"
-                >
-                  Bride
-                </button>
-                <button
-                  onClick={() => {
-                    switchUserPersona('parent');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="py-2 px-1 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-center cursor-pointer transition-colors"
-                >
-                  Parent
-                </button>
-              </div>
-            </div>
+
 
             {/* Sign Out (if logged in) */}
             {currentUser && (
