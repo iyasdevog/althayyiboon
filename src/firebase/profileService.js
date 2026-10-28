@@ -1,11 +1,14 @@
-import { db } from "./config";
+import { db } from "./config.js";
 import { 
   collection, 
   getDocs, 
+  getDoc,
+  setDoc,
   addDoc, 
   doc, 
   updateDoc, 
   deleteDoc, 
+  writeBatch,
   query, 
   orderBy, 
   where,
@@ -225,7 +228,7 @@ export async function updateProfileInStore(profileId, updatedFields) {
 
   try {
     const docRef = doc(db, "profiles", profileId);
-    await updateDoc(docRef, patchData);
+    await setDoc(docRef, patchData, { merge: true });
   } catch (err) {
     console.warn("Firestore update fallback to local:", err.message);
   }
@@ -251,10 +254,65 @@ export async function deleteProfileFromStore(profileId) {
   saveLocalStorageProfiles(updated);
 }
 
-export function subscribeToProfiles(onDataChange) {
+// Bulk delete using Firestore writeBatch for high throughput
+export async function bulkDeleteProfilesFromStore(profileIds = []) {
+  if (!profileIds.length) return;
+  try {
+    const batch = writeBatch(db);
+    profileIds.forEach(id => {
+      const docRef = doc(db, "profiles", id);
+      batch.delete(docRef);
+    });
+    await batch.commit();
+  } catch (err) {
+    console.warn("Firestore bulk delete fallback to individual:", err.message);
+    for (const id of profileIds) {
+      await deleteProfileFromStore(id);
+    }
+  }
+
+  const list = getLocalStorageProfiles();
+  const updated = list.filter(p => !profileIds.includes(p.id));
+  saveLocalStorageProfiles(updated);
+}
+
+// Bulk status update using Firestore writeBatch
+export async function bulkUpdateStatusInStore(profileIds = [], newStatus = "approved") {
+  if (!profileIds.length) return;
+  const patch = { status: newStatus, updatedAt: new Date().toISOString() };
+  try {
+    const batch = writeBatch(db);
+    profileIds.forEach(id => {
+      const docRef = doc(db, "profiles", id);
+      batch.set(docRef, patch, { merge: true });
+    });
+    await batch.commit();
+  } catch (err) {
+    console.warn("Firestore bulk status update fallback to individual:", err.message);
+    for (const id of profileIds) {
+      await updateProfileInStore(id, { status: newStatus });
+    }
+  }
+
+  const list = getLocalStorageProfiles();
+  const updated = list.map(p => profileIds.includes(p.id) ? { ...p, ...patch } : p);
+  saveLocalStorageProfiles(updated);
+}
+
+export function subscribeToProfiles(onDataChange, authGender = null, isAdmin = false) {
   try {
     const colRef = collection(db, "profiles");
-    const q = query(colRef, orderBy("createdAt", "desc"));
+    let q;
+
+    // Enforce Gender-Based View Lock at query level to minimize read operations
+    if (!isAdmin && authGender === 'male') {
+      q = query(colRef, where("gender", "==", "female"), orderBy("createdAt", "desc"));
+    } else if (!isAdmin && authGender === 'female') {
+      q = query(colRef, where("gender", "==", "male"), orderBy("createdAt", "desc"));
+    } else {
+      q = query(colRef, orderBy("createdAt", "desc"));
+    }
+
     return onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
         const fsProfiles = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -396,4 +454,64 @@ export async function rejectFilterRequest(requestId) {
   const reqs = getLocalFilterRequests();
   const updatedReqs = reqs.map(r => r.id === requestId ? { ...r, status: "rejected" } : r);
   saveLocalFilterRequests(updatedReqs);
+}
+
+// ---------------- APP SETTINGS / CONFIG (CLOUD PERSISTENCE) ---------------- //
+
+export async function fetchSettingsFromStore() {
+  try {
+    const docRef = doc(db, "settings", "app_config");
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      return snap.data();
+    }
+  } catch (e) {
+    console.warn("Firestore fetchSettings notice:", e.message);
+  }
+  return null;
+}
+
+export async function saveSettingsToStore(settingsData) {
+  try {
+    const docRef = doc(db, "settings", "app_config");
+    await setDoc(docRef, {
+      ...settingsData,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    return true;
+  } catch (e) {
+    console.warn("Firestore saveSettings fallback:", e.message);
+    return false;
+  }
+}
+
+export function subscribeToSettings(onSettingsChange) {
+  try {
+    const docRef = doc(db, "settings", "app_config");
+    return onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        onSettingsChange(snap.data());
+      }
+    }, (err) => {
+      console.warn("Firestore settings listener notice:", err.message);
+    });
+  } catch (e) {
+    return () => {};
+  }
+}
+
+// ---------------- HEALTH CHECK / CONNECTION VERIFICATION ---------------- //
+
+export async function checkFirestoreHealth() {
+  try {
+    const testDocRef = doc(db, "settings", "health_check");
+    await setDoc(testDocRef, {
+      lastChecked: new Date().toISOString(),
+      status: "online",
+      clientVersion: "v2.0"
+    }, { merge: true });
+    return { success: true, status: "connected", timestamp: new Date().toISOString() };
+  } catch (e) {
+    return { success: false, status: "error", error: e.message };
+  }
 }

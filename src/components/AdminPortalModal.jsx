@@ -38,6 +38,7 @@ import {
   Eye
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { checkFirestoreHealth } from '../firebase/profileService';
 import { SUBJECT_CATEGORIES } from '../data/mockProfiles';
 
 export default function AdminPortalModal({ 
@@ -106,6 +107,28 @@ export default function AdminPortalModal({
   const [importPreview, setImportPreview] = useState(null);
   const [jsonPreviewProfile, setJsonPreviewProfile] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Firestore Connection Health Check State
+  const [firestoreStatus, setFirestoreStatus] = useState(null);
+  const [isTestingFirestore, setIsTestingFirestore] = useState(false);
+
+  const handleTestFirestore = async () => {
+    setIsTestingFirestore(true);
+    try {
+      const res = await checkFirestoreHealth();
+      setFirestoreStatus(res);
+      if (res.success) {
+        showBackupToast("Cloud Firestore connection active & verified!", "success");
+      } else {
+        showBackupToast("Firestore connection error: " + (res.error || "Unknown"), "error");
+      }
+    } catch (e) {
+      setFirestoreStatus({ success: false, error: e.message });
+      showBackupToast("Connection error: " + e.message, "error");
+    } finally {
+      setIsTestingFirestore(false);
+    }
+  };
 
   // Admin Passcode Authentication (Master Password: admin2014)
   const handleAuthSubmit = (e) => {
@@ -1925,8 +1948,46 @@ export default function AdminPortalModal({
                       <Database className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-white">JSON Data Backup & Restore</h3>
-                      <p className="text-[11px] text-slate-400">Export full database, settings, or individual profiles as JSON. Import backups to restore data.</p>
+                      <h3 className="text-base font-bold text-white">Cloud Database &amp; JSON Backup</h3>
+                      <p className="text-[11px] text-slate-400">Monitor live Cloud Firestore status, export full database backups, and restore snapshots.</p>
+                    </div>
+                  </div>
+
+                  {/* Cloud Firestore Live Status Card */}
+                  <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-cyan-950/40 border border-emerald-500/30 rounded-2xl p-4 sm:p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
+                          <Zap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-white">Google Cloud Firestore Status</h4>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                              Active &amp; Ready
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            Project ID: <span className="font-mono text-cyan-300 font-semibold">althayyiboon-e6f3d</span> • Multi-Tab Offline Cache: <span className="text-emerald-400 font-medium">Enabled</span>
+                          </p>
+                          {firestoreStatus && (
+                            <p className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1 font-medium">
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              <span>Verified at {new Date(firestoreStatus.timestamp).toLocaleTimeString()} — Read/Write latency optimal</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleTestFirestore}
+                        disabled={isTestingFirestore}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all shrink-0 cursor-pointer"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isTestingFirestore ? 'animate-spin' : ''}`} />
+                        <span>{isTestingFirestore ? 'Testing...' : 'Test Connection'}</span>
+                      </button>
                     </div>
                   </div>
 

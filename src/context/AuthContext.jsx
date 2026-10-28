@@ -8,6 +8,7 @@ import {
   firebaseSignOut 
 } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
+import { saveSettingsToStore, subscribeToSettings } from '../firebase/profileService';
 
 const AuthContext = createContext();
 
@@ -111,6 +112,19 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setFbUser(user);
       setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Listen & sync cloud app settings from Firestore
+  useEffect(() => {
+    const unsubscribe = subscribeToSettings((cloudSettings) => {
+      if (cloudSettings?.pricing) {
+        setPricing(prev => ({ ...prev, ...cloudSettings.pricing }));
+      }
+      if (cloudSettings?.customTaxonomies) {
+        setCustomTaxonomies(prev => ({ ...prev, ...cloudSettings.customTaxonomies }));
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -509,7 +523,11 @@ export function AuthProvider({ children }) {
   };
 
   const updatePricingConfig = (newConfig) => {
-    setPricing((prev) => ({ ...prev, ...newConfig }));
+    setPricing((prev) => {
+      const updated = { ...prev, ...newConfig };
+      saveSettingsToStore({ pricing: updated });
+      return updated;
+    });
   };
 
   const addCustomTaxonomy = (type, value) => {
@@ -518,7 +536,9 @@ export function AuthProvider({ children }) {
     setCustomTaxonomies((prev) => {
       const existing = prev[type] || [];
       if (existing.includes(clean)) return prev;
-      return { ...prev, [type]: [...existing, clean] };
+      const updated = { ...prev, [type]: [...existing, clean] };
+      saveSettingsToStore({ customTaxonomies: updated });
+      return updated;
     });
   };
 

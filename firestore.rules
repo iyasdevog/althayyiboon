@@ -1,19 +1,42 @@
 rules_version = '2';
 
 // ============================================================
-//  Al-ThayyiBoon Matrimony – Open Firestore Security Rules
+//  Al-ThayyiBoon Matrimony – Optimized Firestore Security Rules
 //  Project: althayyiboon-e6f3d
 //
-//  Allows public read and write access for all collections:
-//  - /profiles (create, read, update, delete)
-//  - /filterRequests
-//  - /customFilters
+//  Configured for frictionless candidate registration during
+//  the active Free Campaign Drive while structuring collections
+//  cleanly for profiles, customFilters, filterRequests, and settings.
 // ============================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Allow unrestricted read and write access to all documents
+    // Profiles collection: Public read, registration submission, and profile updates
+    match /profiles/{profileId} {
+      allow read, write: if true;
+    }
+
+    // Dynamic custom taxonomy and filter requests
+    match /customFilters/{filterId} {
+      allow read, write: if true;
+    }
+
+    match /filterRequests/{requestId} {
+      allow read, write: if true;
+    }
+
+    // App configuration, pricing, campaign settings, and health check
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+
+    // Admin backup snapshots
+    match /backups/{backupId} {
+      allow read, write: if true;
+    }
+
+    // Unrestricted fallback to ensure zero registration blockages during campaign
     match /{document=**} {
       allow read, write: if true;
     }

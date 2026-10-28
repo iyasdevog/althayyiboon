@@ -1,5 +1,10 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { 
+  initializeFirestore, 
+  getFirestore,
+  persistentLocalCache, 
+  persistentMultipleTabManager 
+} from "firebase/firestore";
 import { 
   getAuth, 
   GoogleAuthProvider,
@@ -20,9 +25,27 @@ const firebaseConfig = {
   measurementId: "G-TQ43BE70ZF"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+// Initialize Firebase App (singleton pattern)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+// Initialize Firestore with Multi-Tab Persistent Offline Cache
+let db;
+try {
+  if (typeof window !== "undefined" && typeof window.indexedDB !== "undefined") {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    });
+  } else {
+    db = getFirestore(app);
+  }
+} catch {
+  // If already initialized or IndexedDB unsupported, gracefully fallback
+  db = getFirestore(app);
+}
+
+export { db };
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 

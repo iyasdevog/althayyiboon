@@ -4,6 +4,8 @@ import {
   saveProfileToStore, 
   updateProfileInStore, 
   deleteProfileFromStore,
+  bulkDeleteProfilesFromStore,
+  bulkUpdateStatusInStore,
   subscribeToProfiles,
   fetchApprovedCustomFilters,
   submitFilterRequest,
@@ -133,7 +135,7 @@ export function useProfiles() {
 
       unsubscribe = subscribeToProfiles((updatedList) => {
         setProfiles(updatedList);
-      });
+      }, userGender, isAdmin);
     }
 
     loadData();
@@ -168,18 +170,14 @@ export function useProfiles() {
     setProfiles(prev => prev.filter(p => p.id !== profileId));
   };
 
-  // Bulk Admin Operations
+  // Bulk Admin Operations (using atomic Firestore batch operations)
   const bulkDeleteProfiles = async (profileIds) => {
-    for (const id of profileIds) {
-      await deleteProfileFromStore(id);
-    }
+    await bulkDeleteProfilesFromStore(profileIds);
     setProfiles(prev => prev.filter(p => !profileIds.includes(p.id)));
   };
 
   const bulkUpdateStatus = async (profileIds, newStatus) => {
-    for (const id of profileIds) {
-      await updateProfileInStore(id, { status: newStatus });
-    }
+    await bulkUpdateStatusInStore(profileIds, newStatus);
     setProfiles(prev => prev.map(p => profileIds.includes(p.id) ? { ...p, status: newStatus } : p));
   };
 
