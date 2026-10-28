@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import ProfileCard from '../components/ProfileCard';
+import CandidateAccessGate from '../components/CandidateAccessGate';
 import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
 import { shareProfile } from '../utils/shareUtils';
@@ -51,6 +52,10 @@ export default function ProfileDetailPage({
   const navigate = useNavigate();
   const { profiles, rawProfiles, bookmarks, toggleBookmark, totalCount, activeFilterCount } = useProfiles();
   const { 
+    currentUser,
+    isAdmin,
+    switchUserPersona,
+    linkExistingProfileToAccount,
     isContactUnlocked, 
     unlockContact, 
     isParent, 
@@ -86,6 +91,90 @@ export default function ProfileDetailPage({
     }
     return () => { document.title = prev; };
   }, [id, profile]);
+
+  // Determine if current user has an active registered proposal
+  const hasRegistered = Boolean(
+    isAdmin || 
+    authIsDemo || 
+    currentUser?.hasRegisteredProfile || 
+    currentUser?.isLegacyUser || 
+    rawProfiles.some(p => 
+      (p.creatorUid && p.creatorUid === currentUser?.uid) ||
+      (currentUser?.email && (
+        (p.creatorEmail && p.creatorEmail.toLowerCase() === currentUser.email.toLowerCase()) ||
+        (p.email && p.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+        (p.contactPreferences?.email && p.contactPreferences.email.toLowerCase() === currentUser.email.toLowerCase())
+      ))
+    )
+  );
+
+  // Gate 1: unauthenticated non-demo visitor
+  if (!currentUser && !authIsDemo) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+        <Navbar
+          totalProfiles={totalCount}
+          activeFilterCount={activeFilterCount}
+          bookmarkCount={bookmarks.length}
+          onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+          onOpenPosterGenerator={() => navigate('/poster')}
+          onOpenWalletModal={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
+          onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
+          onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
+        />
+        <main className="flex-1 flex items-center justify-center py-8">
+          <CandidateAccessGate
+            isLoggedIn={false}
+            onOpenSignIn={(role, mode) => onOpenSignIn ? onOpenSignIn(role, mode) : navigate('/login')}
+            onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+            onSwitchPersona={(role) => {
+              switchUserPersona(role);
+              onShowToast?.(`Switched to ${role} demo mode!`);
+            }}
+          />
+        </main>
+        <Footer onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} />
+      </div>
+    );
+  }
+
+  // Gate 2: signed in user who has not registered their candidate details
+  if (currentUser && !hasRegistered) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+        <Navbar
+          totalProfiles={totalCount}
+          activeFilterCount={activeFilterCount}
+          bookmarkCount={bookmarks.length}
+          onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+          onOpenPosterGenerator={() => navigate('/poster')}
+          onOpenWalletModal={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
+          onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
+          onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
+        />
+        <main className="flex-1 flex items-center justify-center py-8">
+          <CandidateAccessGate
+            isLoggedIn={true}
+            userName={currentUser.name || 'Member'}
+            onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+            onLinkExistingProfile={async (identifier, pin) => {
+              const res = linkExistingProfileToAccount(identifier, pin, rawProfiles);
+              if (res.success) {
+                onShowToast?.(`Proposal (${res.profile.id}) successfully linked!`);
+                return { success: true };
+              }
+              return { success: false, error: res.error };
+            }}
+            onSwitchPersona={(role) => {
+              switchUserPersona(role);
+              onShowToast?.(`Switched to ${role} demo mode!`);
+            }}
+          />
+        </main>
+        <Footer onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} />
+      </div>
+    );
+  }
 
   if (!profile) {
     return (

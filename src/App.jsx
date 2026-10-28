@@ -44,7 +44,8 @@ export default function App() {
     isAdmin,
     switchUserPersona, 
     isCheckoutOpen, 
-    setIsCheckoutOpen
+    setIsCheckoutOpen,
+    setHasRegisteredProfile
   } = useAuth();
 
   // Modals state
@@ -53,9 +54,16 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [signInDefaultRole, setSignInDefaultRole] = useState('groom');
+  const [signInModalMode, setSignInModalMode] = useState('signin');
   const [isRequestFilterOpen, setIsRequestFilterOpen] = useState(false);
   const [posterProfile, setPosterProfile] = useState(null);
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
+
+  const handleOpenSignIn = (role = 'groom', mode = 'signin') => {
+    setSignInDefaultRole(role || 'groom');
+    setSignInModalMode(mode || 'signin');
+    setIsSignInModalOpen(true);
+  };
 
   // Global Toast Notification State
   const [toastMessage, setToastMessage] = useState("");
@@ -94,10 +102,7 @@ export default function App() {
           element={
             <HomePage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenPosterModal={(p) => {
                 setPosterProfile(p || null);
@@ -119,10 +124,7 @@ export default function App() {
           element={
             <BrowsePage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenPosterModal={(p) => {
                 setPosterProfile(p || null);
@@ -144,10 +146,7 @@ export default function App() {
           element={
             <BrowsePage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenPosterModal={(p) => {
                 setPosterProfile(p || null);
@@ -169,10 +168,7 @@ export default function App() {
           element={
             <ProfileDetailPage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenAdminPortal={() => navigate('/admin')}
               onShowToast={showToast}
@@ -185,10 +181,7 @@ export default function App() {
           element={
             <SavedProfilesPage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenAdminPortal={() => navigate('/admin')}
               onOpenEditModal={(p) => {
@@ -205,10 +198,7 @@ export default function App() {
           element={
             <SavedProfilesPage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenAdminPortal={() => navigate('/admin')}
               onOpenEditModal={(p) => {
@@ -225,10 +215,7 @@ export default function App() {
           element={
             <PosterMakerPage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenAdminPortal={() => navigate('/admin')}
               onShowToast={showToast}
@@ -241,10 +228,7 @@ export default function App() {
           element={
             <PosterMakerPage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenAdminPortal={() => navigate('/admin')}
               onShowToast={showToast}
@@ -256,10 +240,7 @@ export default function App() {
           path="/add" 
           element={
             <AddProfilePage
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenAdminPortal={() => navigate('/admin')}
               onShowToast={showToast}
@@ -271,10 +252,7 @@ export default function App() {
           path="/register" 
           element={
             <AddProfilePage
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
               onOpenAdminPortal={() => navigate('/admin')}
               onShowToast={showToast}
@@ -300,10 +278,7 @@ export default function App() {
           element={
             <WalletPage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenAdminPortal={() => navigate('/admin')}
               onShowToast={showToast}
             />
@@ -315,10 +290,7 @@ export default function App() {
           element={
             <WalletPage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onOpenAdminPortal={() => navigate('/admin')}
               onShowToast={showToast}
             />
@@ -344,10 +316,7 @@ export default function App() {
           element={
             <CampaignPage
               onOpenAddModal={() => setIsAddModalOpen(true)}
-              onOpenSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onOpenSignIn={handleOpenSignIn}
               onSwitchPersona={(role) => {
                 switchUserPersona(role);
                 showToast(`Switched to ${role} demo mode (Sample Data)!`);
@@ -362,10 +331,7 @@ export default function App() {
           path="/welcome" 
           element={
             <LandingPage
-              onSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onSignIn={handleOpenSignIn}
               onSwitchPersona={(role) => {
                 switchUserPersona(role);
                 showToast(`Switched to ${role} demo mode (Sample Data)!`);
@@ -380,10 +346,7 @@ export default function App() {
           path="/landing" 
           element={
             <LandingPage
-              onSignIn={(role) => {
-                setSignInDefaultRole(role || 'groom');
-                setIsSignInModalOpen(true);
-              }}
+              onSignIn={handleOpenSignIn}
               onSwitchPersona={(role) => {
                 switchUserPersona(role);
                 showToast(`Switched to ${role} demo mode (Sample Data)!`);
@@ -417,11 +380,16 @@ export default function App() {
           onClose={() => setIsAddModalOpen(false)}
           onSubmitProfile={async (formData) => {
             const newDoc = await addNewProfile(formData);
+            if (setHasRegisteredProfile) {
+              setHasRegisteredProfile(newDoc);
+            }
             const propType = newDoc.basicInfo?.gender === 'Bride' || newDoc.gender === 'female' ? 'Bride' : 'Groom';
-            showToast(`Proposal for ${propType} added successfully!`);
+            showToast(`Proposal for ${propType} added successfully! You can now browse all matches.`);
             setIsAddModalOpen(false);
             if (newDoc?.id) {
               navigate(`/profile/${newDoc.id}`);
+            } else {
+              navigate('/profiles');
             }
           }}
           defaultGender={selectedGender !== 'All' ? selectedGender : 'Bride'}
@@ -459,16 +427,22 @@ export default function App() {
         }}
       />
 
-      {/* Unified Sign-In Modal (when triggered via shortcut) */}
+      {/* Unified Sign-In & New Candidate Registration Modal */}
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}
-        onSuccess={() => {
+        onSuccess={(authResult) => {
           setIsSignInModalOpen(false);
-          navigate('/profiles');
+          if (authResult?.isNewRegistration) {
+            // New user registration completed -> open candidate proposal form directly!
+            setIsAddModalOpen(true);
+          } else {
+            navigate('/profiles');
+          }
         }}
         onShowToast={showToast}
         defaultRole={signInDefaultRole}
+        initialMode={signInModalMode}
         profiles={rawProfiles}
       />
 

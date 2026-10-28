@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   X, 
   ShieldCheck, 
@@ -29,7 +29,13 @@ import {
   QrCode,
   CreditCard,
   Smartphone,
-  Zap
+  Zap,
+  Database,
+  Upload,
+  FileJson,
+  AlertTriangle,
+  RefreshCw,
+  Eye
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { SUBJECT_CATEGORIES } from '../data/mockProfiles';
@@ -57,7 +63,7 @@ export default function AdminPortalModal({
   const [passcode, setPasscode] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(isAdmin);
   const [authError, setAuthError] = useState("");
-  const [activeTab, setActiveTab] = useState("proposals"); // "proposals" | "whatsapp" | "credentials" | "pricing" | "taxonomies" | "filterRequests"
+  const [activeTab, setActiveTab] = useState("proposals"); // "proposals" | "whatsapp" | "credentials" | "pricing" | "taxonomies" | "filterRequests" | "dataBackup"
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -93,6 +99,13 @@ export default function AdminPortalModal({
   const [newSubjectCategory, setNewSubjectCategory] = useState("");
   const [newDegreeName, setNewDegreeName] = useState("");
   const [taxonomyToast, setTaxonomyToast] = useState("");
+
+  // JSON Data Backup State
+  const [backupToast, setBackupToast] = useState("");
+  const [backupToastType, setBackupToastType] = useState("success"); // "success" | "error" | "warning"
+  const [importPreview, setImportPreview] = useState(null);
+  const [jsonPreviewProfile, setJsonPreviewProfile] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Admin Passcode Authentication (Master Password: admin2014)
   const handleAuthSubmit = (e) => {
@@ -332,6 +345,8 @@ export default function AdminPortalModal({
   const brideCount = profiles.filter(p => p.basicInfo?.gender === "Bride" || p.gender === "female").length;
   const groomCount = profiles.filter(p => p.basicInfo?.gender === "Groom" || p.gender === "male").length;
   const campaignCount = profiles.filter(p => p.registeredDuringCampaign).length;
+  const campaignBrideCount = profiles.filter(p => p.registeredDuringCampaign && (p.basicInfo?.gender === "Bride" || p.gender === "female")).length;
+  const campaignGroomCount = profiles.filter(p => p.registeredDuringCampaign && (p.basicInfo?.gender === "Groom" || p.gender === "male")).length;
   const whatsappCount = profiles.filter(p => p.whatsappConsent !== false).length;
   const pendingFilterReqs = filterRequests.filter(r => r.status === "pending").length;
 
@@ -390,6 +405,137 @@ export default function AdminPortalModal({
     };
     setLocalPricing(newConfig);
     updatePricingConfig(newConfig);
+  };
+
+  // ====== JSON DATA BACKUP FUNCTIONS ======
+  const showBackupToast = (message, type = 'success') => {
+    setBackupToast(message);
+    setBackupToastType(type);
+    setTimeout(() => setBackupToast(""), 4000);
+  };
+
+  const handleExportJSON = () => {
+    if (profiles.length === 0) {
+      showBackupToast('No profiles to export.', 'warning');
+      return;
+    }
+    const backupData = {
+      exportedAt: new Date().toISOString(),
+      platform: 'Al-ThayyiBoon Matrimonial Network',
+      version: '1.0',
+      totalProfiles: profiles.length,
+      settings: {
+        pricing: localPricing,
+        customTaxonomies: customTaxonomies
+      },
+      profiles: profiles
+    };
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `althayyiboon_full_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showBackupToast(`Exported ${profiles.length} profiles as JSON backup.`, 'success');
+  };
+
+  const handleExportSettingsJSON = () => {
+    const settingsData = {
+      exportedAt: new Date().toISOString(),
+      platform: 'Al-ThayyiBoon Matrimonial Network',
+      type: 'settings-only',
+      settings: {
+        pricing: localPricing,
+        customTaxonomies: customTaxonomies
+      }
+    };
+    const jsonStr = JSON.stringify(settingsData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `althayyiboon_settings_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showBackupToast('Exported settings configuration as JSON.', 'success');
+  };
+
+  const handleImportJSONFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith('.json')) {
+      showBackupToast('Invalid file type. Please select a .json file.', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.profiles && !data.settings) {
+          showBackupToast('Invalid backup file format. Missing profiles or settings data.', 'error');
+          return;
+        }
+        setImportPreview(data);
+        showBackupToast(`Loaded backup file: ${file.name}. Review below before restoring.`, 'warning');
+      } catch (err) {
+        showBackupToast('Failed to parse JSON file. Please check the file format.', 'error');
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so re-selecting same file triggers onChange
+    e.target.value = '';
+  };
+
+  const handleRestoreFromImport = () => {
+    if (!importPreview) return;
+    // Restore settings if present
+    if (importPreview.settings) {
+      if (importPreview.settings.pricing) {
+        const newPricing = { ...localPricing, ...importPreview.settings.pricing };
+        setLocalPricing(newPricing);
+        updatePricingConfig(newPricing);
+      }
+      if (importPreview.settings.customTaxonomies) {
+        const taxes = importPreview.settings.customTaxonomies;
+        if (taxes.subjectCategories?.length) {
+          taxes.subjectCategories.forEach(cat => addCustomTaxonomy('subjectCategories', cat));
+        }
+        if (taxes.degreeNames?.length) {
+          taxes.degreeNames.forEach(deg => addCustomTaxonomy('degreeNames', deg));
+        }
+      }
+    }
+    // Restore profiles if present
+    if (importPreview.profiles?.length) {
+      importPreview.profiles.forEach(profile => {
+        // Check if profile already exists
+        const existing = profiles.find(p => p.id === profile.id);
+        if (existing) {
+          onUpdateProfile(profile.id, profile);
+        }
+        // New profiles would need addProfile - not available through props
+        // Only update existing ones
+      });
+      showBackupToast(
+        `Restored settings and updated ${importPreview.profiles.filter(p => profiles.find(ep => ep.id === p.id)).length} existing profile(s). New profiles require manual re-registration.`,
+        'success'
+      );
+    } else {
+      showBackupToast('Settings restored successfully from backup.', 'success');
+    }
+    setImportPreview(null);
+  };
+
+  const handleCopyProfileJSON = (profile) => {
+    const jsonStr = JSON.stringify(profile, null, 2);
+    navigator.clipboard.writeText(jsonStr);
+    showBackupToast(`Copied JSON data for profile ${profile.id} to clipboard.`, 'success');
   };
 
   // Close modal on Escape key press
@@ -552,6 +698,18 @@ export default function AdminPortalModal({
                     </span>
                   )}
                 </button>
+
+                <button
+                  onClick={() => setActiveTab("dataBackup")}
+                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                    activeTab === "dataBackup"
+                      ? "border-emerald-500 text-emerald-300 bg-slate-900"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Database className="w-4 h-4 text-cyan-400" />
+                  <span>Data Backup</span>
+                </button>
               </div>
 
               {/* Dedicated CSV Export Button Container */}
@@ -597,6 +755,10 @@ export default function AdminPortalModal({
                     <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5">
                       <span className="text-[11px] text-amber-300 block font-semibold">Campaign Regs</span>
                       <span className="text-xl font-extrabold text-amber-300">{campaignCount}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] font-bold text-pink-300 bg-pink-500/15 px-1.5 py-0.5 rounded-md">👰 {campaignBrideCount}</span>
+                        <span className="text-[10px] font-bold text-sky-300 bg-sky-500/15 px-1.5 py-0.5 rounded-md">🤵 {campaignGroomCount}</span>
+                      </div>
                     </div>
                     <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
                       <span className="text-[11px] text-emerald-300 block font-semibold">WhatsApp Opt-Ins</span>
@@ -1175,6 +1337,14 @@ export default function AdminPortalModal({
                             {campaignCount} Registrations
                           </span>
                         </div>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-pink-300 bg-pink-500/15 px-2 py-0.5 rounded-full border border-pink-500/20">
+                            👰 Brides: {campaignBrideCount}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-300 bg-sky-500/15 px-2 py-0.5 rounded-full border border-sky-500/20">
+                            🤵 Grooms: {campaignGroomCount}
+                          </span>
+                        </div>
                         <p className="text-xs text-slate-400 mt-1 max-w-md">
                           When active, the directory is guarded behind the Campaign Launch Holding Page, registration is 100% free (₹0), and candidates earn free contact views when directory unlocks.
                         </p>
@@ -1726,6 +1896,263 @@ export default function AdminPortalModal({
                       </table>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* ========================================================= */}
+              {/* TAB 7: JSON DATA BACKUP & RESTORE                          */}
+              {/* ========================================================= */}
+              {activeTab === "dataBackup" && (
+                <div className="space-y-6">
+                  
+                  {/* Backup Toast */}
+                  {backupToast && (
+                    <div className={`p-3 rounded-2xl text-xs font-bold flex items-center gap-2 ${
+                      backupToastType === 'success' ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300' :
+                      backupToastType === 'error' ? 'bg-rose-500/20 border border-rose-500/40 text-rose-300' :
+                      'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                    }`}>
+                      {backupToastType === 'success' ? <Check className="w-4 h-4" /> :
+                       backupToastType === 'error' ? <AlertTriangle className="w-4 h-4" /> :
+                       <AlertTriangle className="w-4 h-4" />}
+                      <span>{backupToast}</span>
+                    </div>
+                  )}
+
+                  {/* Section Header */}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                      <Database className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white">JSON Data Backup & Restore</h3>
+                      <p className="text-[11px] text-slate-400">Export full database, settings, or individual profiles as JSON. Import backups to restore data.</p>
+                    </div>
+                  </div>
+
+                  {/* Export Section */}
+                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-5 space-y-4">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Download className="w-4 h-4 text-emerald-400" />
+                      Export Data
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      Download a complete snapshot of your database including all profiles, settings, pricing configuration, and custom taxonomies.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Full Backup */}
+                      <button
+                        onClick={handleExportJSON}
+                        className="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/60 to-slate-900 border border-emerald-500/30 hover:border-emerald-400/50 transition-all group text-left"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileJson className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
+                          <span className="text-sm font-bold text-white">Full Database Backup</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">All {totalCount} profiles + settings + taxonomies</p>
+                        <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-emerald-400">
+                          <Download className="w-3 h-3" />
+                          <span>Download .json</span>
+                        </div>
+                      </button>
+
+                      {/* Settings Only */}
+                      <button
+                        onClick={handleExportSettingsJSON}
+                        className="p-4 rounded-2xl bg-gradient-to-br from-amber-950/40 to-slate-900 border border-amber-500/30 hover:border-amber-400/50 transition-all group text-left"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Save className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform" />
+                          <span className="text-sm font-bold text-white">Settings Only</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">Pricing, campaign config & custom taxonomies</p>
+                        <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-amber-400">
+                          <Download className="w-3 h-3" />
+                          <span>Download .json</span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Import / Restore Section */}
+                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-5 space-y-4">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Upload className="w-4 h-4 text-cyan-400" />
+                      Import & Restore
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      Upload a previously exported JSON backup file to restore settings and update existing profiles. New profiles in the backup must be re-registered manually.
+                    </p>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".json"
+                      onChange={handleImportJSONFile}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400/50 font-bold text-xs transition-all"
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span>Select JSON Backup File</span>
+                    </button>
+
+                    {/* Import Preview */}
+                    {importPreview && (
+                      <div className="mt-3 p-4 rounded-2xl bg-slate-900 border border-amber-500/40 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-sm font-bold text-amber-300 flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" />
+                            Backup Preview
+                          </h5>
+                          <button
+                            onClick={() => setImportPreview(null)}
+                            className="text-slate-500 hover:text-slate-300 p-1 rounded-lg"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                          <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+                            <span className="text-slate-400 block text-[10px]">Platform</span>
+                            <span className="text-white font-semibold">{importPreview.platform || 'Unknown'}</span>
+                          </div>
+                          <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+                            <span className="text-slate-400 block text-[10px]">Exported At</span>
+                            <span className="text-white font-semibold">{importPreview.exportedAt ? new Date(importPreview.exportedAt).toLocaleDateString() : 'N/A'}</span>
+                          </div>
+                          <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+                            <span className="text-slate-400 block text-[10px]">Profiles</span>
+                            <span className="text-emerald-300 font-bold">{importPreview.profiles?.length || 0}</span>
+                          </div>
+                          <div className="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+                            <span className="text-slate-400 block text-[10px]">Has Settings</span>
+                            <span className={`font-bold ${importPreview.settings ? 'text-emerald-300' : 'text-slate-500'}`}>{importPreview.settings ? 'Yes' : 'No'}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            onClick={handleRestoreFromImport}
+                            className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold text-xs flex items-center gap-1.5 transition-all"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>Restore Now</span>
+                          </button>
+                          <button
+                            onClick={() => setImportPreview(null)}
+                            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Per-Profile JSON Preview */}
+                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-5 space-y-4">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-purple-400" />
+                      Individual Profile JSON
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      View or copy the raw JSON data for any individual profile.
+                    </p>
+
+                    {profiles.length === 0 ? (
+                      <div className="text-center py-6 text-slate-500 text-xs">No profiles available.</div>
+                    ) : (
+                      <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-1.5">
+                        {profiles.map(p => (
+                          <div key={p.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-colors">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-mono text-emerald-400 font-bold">{p.id}</span>
+                              <span className="text-slate-400">—</span>
+                              <span className="text-white font-medium">{p.basicInfo?.fullName || 'Unnamed'}</span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                (p.basicInfo?.gender || p.gender) === 'Bride' || (p.basicInfo?.gender || p.gender) === 'female'
+                                  ? 'bg-pink-500/20 text-pink-300' : 'bg-sky-500/20 text-sky-300'
+                              }`}>
+                                {p.basicInfo?.gender || p.gender || '?'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setJsonPreviewProfile(jsonPreviewProfile?.id === p.id ? null : p)}
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                                title="Preview JSON"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleCopyProfileJSON(p)}
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                                title="Copy JSON to clipboard"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* JSON Preview Panel */}
+                    {jsonPreviewProfile && (
+                      <div className="mt-3 p-4 rounded-2xl bg-slate-950 border border-purple-500/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-purple-300">JSON Preview: {jsonPreviewProfile.id}</span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleCopyProfileJSON(jsonPreviewProfile)}
+                              className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                            >
+                              <Copy className="w-3 h-3" />
+                              Copy
+                            </button>
+                            <button
+                              onClick={() => setJsonPreviewProfile(null)}
+                              className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <pre className="text-[11px] text-slate-300 font-mono overflow-x-auto max-h-64 overflow-y-auto custom-scrollbar bg-slate-900/60 p-3 rounded-xl border border-slate-800 leading-relaxed whitespace-pre-wrap">
+                          {JSON.stringify(jsonPreviewProfile, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Stats */}
+                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                      <div className="text-center">
+                        <span className="text-xl font-black text-white block">{totalCount}</span>
+                        <span className="text-slate-400">Total Profiles</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-xl font-black text-emerald-400 block">
+                          {(JSON.stringify(profiles).length / 1024).toFixed(1)} KB
+                        </span>
+                        <span className="text-slate-400">Data Size</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-xl font-black text-amber-400 block">{campaignCount}</span>
+                        <span className="text-slate-400">Campaign Profiles</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-xl font-black text-cyan-400 block">{hiddenCount}</span>
+                        <span className="text-slate-400">Hidden Profiles</span>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               )}
 

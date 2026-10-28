@@ -183,7 +183,28 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const loginWithGoogle = async (intendedRole = 'groom') => {
+  // Helper to find matching candidate proposal for a given user
+  const findMatchingProfile = (userObj, profileList = []) => {
+    if (!userObj || !Array.isArray(profileList) || profileList.length === 0) return null;
+    const uid = userObj.uid;
+    const email = (userObj.email || '').trim().toLowerCase();
+    const profileId = (userObj.profileId || '').trim().toLowerCase();
+
+    return profileList.find(p => {
+      if (!p) return false;
+      const pId = (p.id || '').toLowerCase();
+      const pCreatorUid = p.creatorUid;
+      const pCreatorEmail = (p.creatorEmail || '').toLowerCase();
+      const pEmail = (p.email || p.contactPreferences?.email || '').toLowerCase();
+
+      if (profileId && pId === profileId) return true;
+      if (uid && (pCreatorUid === uid || pId === uid.toLowerCase())) return true;
+      if (email && (pCreatorEmail === email || pEmail === email)) return true;
+      return false;
+    }) || null;
+  };
+
+  const loginWithGoogle = async (intendedRole = 'groom', profileList = []) => {
     // Guard: prevent a second popup while one is already open (causes auth/cancelled-popup-request)
     if (_googlePopupInProgress) {
       return { success: false, error: 'Sign-in already in progress. Please wait.' };
@@ -193,10 +214,17 @@ export function AuthProvider({ children }) {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
+      // Check if user is already an existing registered candidate
+      const existingCandidate = findMatchingProfile(user, profileList);
+
       let gender = 'male';
       let role = intendedRole || 'groom';
 
-      if (intendedRole === 'bride') {
+      if (existingCandidate) {
+        const isBrideGender = existingCandidate.basicInfo?.gender === 'Bride' || existingCandidate.gender === 'female';
+        gender = isBrideGender ? 'female' : 'male';
+        role = isBrideGender ? 'bride' : 'groom';
+      } else if (intendedRole === 'bride') {
         gender = 'female';
         role = 'bride';
       } else if (intendedRole === 'parent') {
@@ -214,12 +242,21 @@ export function AuthProvider({ children }) {
         photoURL: user.photoURL,
         gender: gender,
         role: role,
-        genderVerified: Boolean(intendedRole === 'groom' || intendedRole === 'bride'),
+        genderVerified: Boolean(existingCandidate || intendedRole === 'groom' || intendedRole === 'bride'),
+        profileId: existingCandidate?.id || null,
+        linkedProfile: existingCandidate || null,
+        hasRegisteredProfile: Boolean(existingCandidate),
         isDemo: false
       };
 
       setUserProfile(profile);
-      return { success: true, user, profile };
+      return { 
+        success: true, 
+        user, 
+        profile, 
+        isAlreadyRegistered: Boolean(existingCandidate),
+        matchedProfile: existingCandidate 
+      };
     } catch (err) {
       // auth/cancelled-popup-request is benign — another popup was opened, just ignore it
       if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
@@ -241,7 +278,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const loginWithEmailPassword = async (email, password, isSignUp = false, intendedRole = 'groom') => {
+  const loginWithEmailPassword = async (email, password, isSignUp = false, intendedRole = 'groom', profileList = [], fullName = '') => {
     try {
       let result;
       if (isSignUp) {
@@ -250,22 +287,44 @@ export function AuthProvider({ children }) {
         result = await signInWithEmailAndPassword(auth, email.trim(), password);
       }
       const user = result.user;
+
+      // Check if user is already an existing candidate
+      const existingCandidate = !isSignUp ? findMatchingProfile({ ...user, email: email.trim() }, profileList) : null;
+
       let gender = intendedRole === 'bride' ? 'female' : 'male';
       let role = intendedRole || 'groom';
-      if (intendedRole === 'parent') {
+
+      if (existingCandidate) {
+        const isBrideGender = existingCandidate.basicInfo?.gender === 'Bride' || existingCandidate.gender === 'female';
+        gender = isBrideGender ? 'female' : 'male';
+        role = isBrideGender ? 'bride' : 'groom';
+      } else if (intendedRole === 'parent') {
         gender = null;
         role = 'parent';
       }
+
+      const displayName = fullName?.trim() || user.displayName || email.split('@')[0];
+
       const profile = {
         uid: user.uid,
-        name: user.displayName || email.split('@')[0],
-        email: user.email,
+        name: displayName,
+        email: user.email || email.trim(),
         gender: gender,
         role: role,
+        genderVerified: true,
+        profileId: existingCandidate?.id || null,
+        linkedProfile: existingCandidate || null,
+        hasRegisteredProfile: Boolean(existingCandidate),
         isDemo: false
       };
       setUserProfile(profile);
-      return { success: true, user, profile };
+      return { 
+        success: true, 
+        user, 
+        profile, 
+        isAlreadyRegistered: Boolean(existingCandidate),
+        matchedProfile: existingCandidate 
+      };
     } catch (err) {
       console.warn("Email/Password Sign-In error:", err.message);
       return { success: false, error: err.message };
@@ -314,17 +373,94 @@ export function AuthProvider({ children }) {
         email: matched.email || `${matched.id.toLowerCase()}@althayyiboon.com`,
         gender: gender,
         role: role,
+        genderVerified: true,
         profileId: matched.id,
+        hasRegisteredProfile: true,
         isLegacyUser: true,
         isDemo: false,
         linkedProfile: matched
       };
 
       setUserProfile(profile);
-      return { success: true, profile };
+      return { success: true, profile, isAlreadyRegistered: true, matchedProfile: matched };
     } catch (err) {
       return { success: false, error: err.message };
     }
+  };
+
+  // Link an existing profile to the current logged-in user account
+  const linkExistingProfileToAccount = (identifier, passwordOrPin, profileList = []) => {
+    const cleanId = (identifier || '').trim().toLowerCase();
+    const cleanPass = (passwordOrPin || '').trim();
+
+    if (!cleanId || !cleanPass) {
+      return { success: false, error: 'Please enter your Profile ID / Phone and PIN.' };
+    }
+
+    const matched = profileList.find(p => {
+      const pId = (p.id || '').toLowerCase();
+      const pUser = (p.loginCredentials?.username || '').toLowerCase();
+      const pPhone = (p.contactDetails?.guardianPhone || p.contactPreferences?.phone || '').replace(/[^0-9]/g, '');
+      const cleanInputPhone = cleanId.replace(/[^0-9]/g, '');
+
+      const matchesIdentifier = (pId === cleanId) || 
+                                (pUser === cleanId) || 
+                                (cleanInputPhone && pPhone && pPhone.endsWith(cleanInputPhone));
+
+      if (!matchesIdentifier) return false;
+
+      const storedPass = p.loginCredentials?.password || p.security?.editPin || p.contactPreferences?.secretPin || `ALTB@${p.id}`;
+      return storedPass === cleanPass;
+    });
+
+    if (!matched) {
+      return { success: false, error: 'Invalid Profile ID or PIN. Please check and try again.' };
+    }
+
+    const isBrideGender = matched.basicInfo?.gender === 'Bride' || matched.gender === 'female';
+    const role = isBrideGender ? 'bride' : 'groom';
+    const gender = isBrideGender ? 'female' : 'male';
+
+    setUserProfile(prev => {
+      const updated = {
+        ...(prev || {}),
+        uid: prev?.uid || matched.id,
+        name: prev?.name || matched.basicInfo?.fullName || `Candidate (${matched.id})`,
+        gender: gender,
+        role: role,
+        genderVerified: true,
+        profileId: matched.id,
+        hasRegisteredProfile: true,
+        linkedProfile: matched
+      };
+      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    return { success: true, profile: matched };
+  };
+
+  // Mark current user as having registered their candidate profile
+  const setHasRegisteredProfile = (savedProfile) => {
+    if (!savedProfile) return;
+    const isBrideGender = savedProfile.basicInfo?.gender === 'Bride' || savedProfile.gender === 'female';
+    const role = isBrideGender ? 'bride' : 'groom';
+    const gender = isBrideGender ? 'female' : 'male';
+
+    setUserProfile(prev => {
+      const updated = {
+        ...(prev || {}),
+        name: prev?.name && prev.name !== 'Member' ? prev.name : (savedProfile.basicInfo?.fullName || 'Candidate Member'),
+        gender: gender,
+        role: role,
+        genderVerified: true,
+        profileId: savedProfile.id,
+        hasRegisteredProfile: true,
+        linkedProfile: savedProfile
+      };
+      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const logout = async () => {
@@ -467,6 +603,9 @@ export function AuthProvider({ children }) {
         loginWithGoogle,
         loginWithEmailPassword,
         loginWithLegacyCredentials,
+        linkExistingProfileToAccount,
+        setHasRegisteredProfile,
+        findMatchingProfile,
         logout,
         pricing,
         updatePricingConfig,

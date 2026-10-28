@@ -82,8 +82,14 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
               Browse Proposals
             </Link>
             <button
-              onClick={() => onSignIn && onSignIn('groom')}
-              className="px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-950/30 transition-transform active:scale-95 cursor-pointer"
+              onClick={() => onSignIn && onSignIn('groom', 'register')}
+              className="hidden sm:inline-flex px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-950/30 transition-transform active:scale-95 cursor-pointer"
+            >
+              Register (Free)
+            </button>
+            <button
+              onClick={() => onSignIn && onSignIn('groom', 'signin')}
+              className="px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 transition-colors cursor-pointer"
             >
               Sign In
             </button>
@@ -188,16 +194,22 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
 
             <div className="space-y-2 pt-2 border-t border-slate-800">
               <button
-                onClick={() => onSignIn('groom')}
+                onClick={() => onSignIn('groom', 'register')}
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
               >
-                <span>Sign In as Groom (Google)</span>
+                <span>Register as Groom (Free ₹0)</span>
                 <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onSignIn('groom', 'signin')}
+                className="w-full py-2 px-3 text-center text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+              >
+                Already Registered? Sign In →
               </button>
               {onSwitchPersona && (
                 <button
                   onClick={() => onSwitchPersona('groom')}
-                  className="w-full py-2 px-3 text-center text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold transition-colors cursor-pointer"
+                  className="w-full py-1 text-center text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold transition-colors cursor-pointer"
                 >
                   ⚡ Instant Demo: Groom Mode
                 </button>
@@ -235,16 +247,22 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
 
             <div className="space-y-2 pt-2 border-t border-slate-800">
               <button
-                onClick={() => onSignIn('bride')}
+                onClick={() => onSignIn('bride', 'register')}
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-950/40 flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
               >
-                <span>Sign In as Bride (Google)</span>
+                <span>Register as Bride (Free ₹0)</span>
                 <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onSignIn('bride', 'signin')}
+                className="w-full py-2 px-3 text-center text-xs text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer"
+              >
+                Already Registered? Sign In →
               </button>
               {onSwitchPersona && (
                 <button
                   onClick={() => onSwitchPersona('bride')}
-                  className="w-full py-2 px-3 text-center text-[11px] text-rose-400 hover:text-rose-300 font-semibold transition-colors cursor-pointer"
+                  className="w-full py-1 text-center text-[11px] text-rose-400 hover:text-rose-300 font-semibold transition-colors cursor-pointer"
                 >
                   ⚡ Instant Demo: Bride Mode
                 </button>

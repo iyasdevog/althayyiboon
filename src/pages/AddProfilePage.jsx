@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import AddProfileModal from '../components/AddProfileModal';
 import { useProfiles } from '../context/ProfilesContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function AddProfilePage({
   onOpenSignIn,
@@ -14,6 +15,7 @@ export default function AddProfilePage({
 }) {
   const navigate = useNavigate();
   const { addNewProfile, selectedGender, totalCount, activeFilterCount, bookmarks } = useProfiles();
+  const { setHasRegisteredProfile } = useAuth();
 
   const handleClose = () => {
     navigate('/profiles');
@@ -22,8 +24,11 @@ export default function AddProfilePage({
   const handleSubmit = async (formData) => {
     try {
       const newDoc = await addNewProfile(formData);
+      if (setHasRegisteredProfile) {
+        setHasRegisteredProfile(newDoc);
+      }
       const propType = newDoc.basicInfo?.gender === 'Bride' || newDoc.gender === 'female' ? 'Bride' : 'Groom';
-      onShowToast?.(`Proposal for ${propType} added successfully!`);
+      onShowToast?.(`Proposal for ${propType} added successfully! You can now browse all matching candidates.`);
       if (newDoc?.id) {
         navigate(`/profile/${newDoc.id}`);
       } else {
@@ -37,7 +42,7 @@ export default function AddProfilePage({
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
-      <DemoNoticeBanner onOpenSignIn={(role) => onOpenSignIn?.(role)} />
+      <DemoNoticeBanner onOpenSignIn={(role) => onOpenSignIn?.(role, 'signin')} />
 
       <Navbar
         totalProfiles={totalCount}
@@ -46,7 +51,7 @@ export default function AddProfilePage({
         onOpenAddModal={() => {}}
         onOpenPosterGenerator={() => navigate('/poster')}
         onOpenWalletModal={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
-        onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
+        onOpenSignIn={onOpenSignIn ? (role) => onOpenSignIn(role, 'signin') : () => navigate('/login')}
         onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
       />
 

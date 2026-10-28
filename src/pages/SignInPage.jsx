@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SignInModal from '../components/SignInModal';
@@ -9,13 +9,28 @@ export default function SignInPage({
   onShowToast
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { rawProfiles, totalCount, activeFilterCount, bookmarks } = useProfiles();
+
+  const searchParams = new URLSearchParams(location.search);
+  const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'signin';
+  const initialRole = searchParams.get('role') === 'bride' ? 'bride' : 'groom';
 
   useEffect(() => {
     const prev = document.title;
-    document.title = 'Sign In | Al-ThayyiBoon – Kerala & Gulf Islamic Matrimony';
+    document.title = initialMode === 'register'
+      ? 'Register Candidate | Al-ThayyiBoon – Kerala & Gulf Islamic Matrimony'
+      : 'Sign In | Al-ThayyiBoon – Kerala & Gulf Islamic Matrimony';
     return () => { document.title = prev; };
-  }, []);
+  }, [initialMode]);
+
+  const handleSuccess = (authResult) => {
+    if (authResult?.isNewRegistration) {
+      navigate('/add');
+    } else {
+      navigate('/profiles');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
@@ -34,8 +49,11 @@ export default function SignInPage({
         <SignInModal
           isOpen={true}
           onClose={() => navigate('/profiles')}
+          onSuccess={handleSuccess}
           onShowToast={onShowToast}
           profiles={rawProfiles}
+          initialMode={initialMode}
+          defaultRole={initialRole}
         />
       </main>
 
