@@ -179,8 +179,8 @@ export default function Navbar({
             {/* Action Buttons: Prioritized for mobile with hamburger for secondary items */}
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
 
-              {/* Only show secondary buttons (Credits, Saved, Poster Maker) when signed in */}
-              {currentUser && (
+              {/* Only show secondary buttons (Credits, Saved, Poster Maker) for fully authenticated (non-demo) users */}
+              {currentUser && !currentUser.isDemo && (
                 <>
                   {/* In-App Wallet / Credits Counter (Tablet & Desktop only) */}
                   <button
@@ -604,22 +604,24 @@ export default function Navbar({
                 )}
               </button>
 
-              {/* Poster Generator */}
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  if (onOpenPosterGenerator) onOpenPosterGenerator();
-                }}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-800/80 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <ImageIcon className="w-4 h-4 text-amber-400" />
-                  <span>Social Poster Maker</span>
-                </div>
-                <span className="text-[10px] font-medium text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">
-                  WhatsApp / Insta
-                </span>
-              </button>
+              {/* Poster Generator — only for fully authenticated (non-demo) users */}
+              {currentUser && !currentUser.isDemo && (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    if (onOpenPosterGenerator) onOpenPosterGenerator();
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-800/80 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ImageIcon className="w-4 h-4 text-amber-400" />
+                    <span>Social Poster Maker</span>
+                  </div>
+                  <span className="text-[10px] font-medium text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">
+                    WhatsApp / Insta
+                  </span>
+                </button>
+              )}
 
               {/* Filter Proposals */}
               {onToggleMobileFilter && (
