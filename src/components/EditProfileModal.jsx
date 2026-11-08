@@ -8,6 +8,7 @@ import {
   SECTS, 
   COMPLEXIONS
 } from '../data/mockProfiles';
+import { fuzzyMatchPlace } from '../utils/geoUtils';
 
 export default function EditProfileModal({ 
   profile, 
@@ -77,8 +78,21 @@ export default function EditProfileModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Resolve GPS coordinates for edited location
+      const matchedGeo = fuzzyMatchPlace(
+        formData.locationFamily?.nativePlace,
+        formData.locationFamily?.homeDistrict
+      );
+      const coordinates = matchedGeo ? { lat: matchedGeo.lat, lng: matchedGeo.lng } : null;
+
       const payload = {
         ...formData,
+        coordinates,
+        locationFamily: {
+          ...formData.locationFamily,
+          coordinates,
+          canonicalPlace: matchedGeo?.name || formData.locationFamily?.nativePlace
+        },
         profileCreatedBy: formData.profileCreatedBy || 'Parent',
         registeredBy: formData.profileCreatedBy || 'Parent',
         islamicBackground: {
@@ -427,7 +441,7 @@ export default function EditProfileModal({
                 {/* Profession & Location */}
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400">Profession &amp; District</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[11px] text-slate-400 mb-1">Profession</label>
                       <input
@@ -446,6 +460,16 @@ export default function EditProfileModal({
                       >
                         {KERALA_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Native Town / City</label>
+                      <input
+                        type="text"
+                        value={formData.locationFamily.nativePlace || ''}
+                        onChange={(e) => updateSection('locationFamily', 'nativePlace', e.target.value)}
+                        placeholder="e.g. Manjeri, Vadakara"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      />
                     </div>
                   </div>
                 </div>

@@ -41,13 +41,8 @@ function formatPostedDate(dateStr) {
   }
 }
 
-function maskPhoneNumber(phone) {
-  if (!phone) return "+91 98******12";
-  const clean = phone.trim();
-  if (clean.length < 8) return "+91 98******12";
-  const prefix = clean.slice(0, Math.min(6, clean.length - 4));
-  const suffix = clean.slice(-2);
-  return `${prefix}******${suffix}`;
+function maskPhoneNumber() {
+  return "••••••••••";
 }
 
 export default function ProfileCard({ 
@@ -86,7 +81,7 @@ export default function ProfileCard({
   const candidateDisplayName = isDemo
     ? (isBride ? 'Bride' : 'Groom')
     : isParent 
-      ? `Candidate ${isBride ? 'Bride' : 'Groom'} (${id})` 
+      ? `Candidate ${isBride ? 'Bride' : 'Groom'}` 
       : (basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal'));
 
   const islamicList = Array.isArray(islamicQualification) && islamicQualification.length > 0
@@ -128,7 +123,7 @@ export default function ProfileCard({
       : "91" + rawNumber;
 
     const text = encodeURIComponent(
-      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${candidateDisplayName}, ${basicInfo.age || ''} Yrs, ID: ${id}) listed on Al-ThayyiBoon Matrimony.`
+      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${candidateDisplayName}, ${basicInfo.age || ''} Yrs) listed on Al-ThayyiBoon Matrimony.`
     );
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
@@ -185,6 +180,12 @@ export default function ProfileCard({
               <span>{educationOccupation.profession || 'Profession N/A'}</span>
               <span>•</span>
               <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3 text-rose-400" /> {locationFamily.homeDistrict || 'Kerala'}</span>
+              {profile.distanceKm != null && (
+                <>
+                  <span>•</span>
+                  <span className="text-rose-300 font-bold bg-rose-500/10 px-1.5 py-0.2 rounded border border-rose-500/20">{profile.distanceKm < 1 ? '< 1 km' : `${Math.round(profile.distanceKm)} km away`}</span>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -337,7 +338,7 @@ export default function ProfileCard({
 
         </div>
 
-        {/* Name, ID & Basic Details */}
+        {/* Name & Basic Details */}
         <div className="mb-2.5">
           <div className="flex items-center justify-between gap-2">
             <h3 
@@ -346,9 +347,6 @@ export default function ProfileCard({
             >
               {candidateDisplayName}
             </h3>
-            <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 shrink-0">
-              {id}
-            </span>
           </div>
           <p className="text-[11px] text-slate-400 flex flex-wrap items-center gap-1 mt-0.5">
             <span>{basicInfo.maritalStatus || 'Never Married'}</span>
@@ -395,11 +393,18 @@ export default function ProfileCard({
             </span>
           </div>
 
-          <div className="flex items-start gap-2">
-            <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
-            <span className="line-clamp-1 text-slate-300">
-              {locationFamily.homeDistrict ? `${locationFamily.homeDistrict}` : 'Kerala'}, {locationFamily.nativePlace || 'Native place'}
-            </span>
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex items-start gap-2 min-w-0">
+              <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
+              <span className="line-clamp-1 text-slate-300">
+                {locationFamily.homeDistrict ? `${locationFamily.homeDistrict}` : 'Kerala'}, {locationFamily.nativePlace || 'Native place'}
+              </span>
+            </div>
+            {profile.distanceKm != null && (
+              <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 whitespace-nowrap">
+                {profile.distanceKm < 1 ? '< 1 km' : `${Math.round(profile.distanceKm)} km away`}
+              </span>
+            )}
           </div>
         </div>
 

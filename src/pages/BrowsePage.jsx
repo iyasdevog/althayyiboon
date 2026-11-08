@@ -12,6 +12,7 @@ import CandidateAccessGate from '../components/CandidateAccessGate';
 import Footer from '../components/Footer';
 import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
+import { useSeo } from '../utils/useSeo';
 
 export default function BrowsePage({
   onOpenAddModal,
@@ -76,12 +77,13 @@ export default function BrowsePage({
     )
   );
 
-  // Update page title for SEO
-  useEffect(() => {
-    const prev = document.title;
-    document.title = 'Browse Proposals | Al-ThayyiBoon Matrimony – Kerala & Gulf Islamic Directory';
-    return () => { document.title = prev; };
-  }, []);
+  // Dynamic SEO metadata for Directory Browse
+  useSeo({
+    title: 'Browse Proposals | Al-ThayyiBoon Matrimony – Kerala & Gulf Islamic Directory',
+    description: 'Explore verified Kerala Muslim matrimonial proposals. Filter by Islamic scholar credentials (Wafi, Wafiyya, Hudawi), professional degrees (MBBS, B.Tech), and district with direct guardian contact access.',
+    canonicalUrl: 'https://althayyiboon.com/browse',
+    ogType: 'website'
+  });
 
   const handleSelectProfile = (profile) => {
     if (profile?.id) {

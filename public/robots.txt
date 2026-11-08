@@ -1,17 +1,24 @@
 User-agent: *
 Allow: /
+Allow: /browse
+Allow: /profiles
+Allow: /profile/
+Allow: /register
+Allow: /add
+Allow: /poster
 
-# Block admin and internal API paths from indexing
+# Disallow private user states and admin portal
 Disallow: /admin
+Disallow: /wallet
+Disallow: /saved
+Disallow: /bookmarks
 Disallow: /api/
 Disallow: /*.json$
 
-# Allow key search query pages
+# Allow search query filters
 Allow: /?q=
 Allow: /?gender=
+Allow: /browse?*
 
 # Sitemap location
 Sitemap: https://althayyiboon.com/sitemap.xml
-
-# Crawl delay (be polite to bots)
-Crawl-delay: 5

@@ -183,7 +183,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
       const dataUrl = await generatePosterBlob();
       if (dataUrl) {
         const link = document.createElement('a');
-        link.download = `Al-ThayyiBoon_${isBride ? 'Bride' : 'Groom'}_${proposalId}.png`;
+        link.download = `Al-ThayyiBoon_${isBride ? 'Bride' : 'Groom'}_Proposal.png`;
         link.href = dataUrl;
         link.click();
         if (onShowToast) onShowToast("Poster image downloaded successfully!");
@@ -222,7 +222,7 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
     const shareUrl = `${window.location.origin}/?profile=${profile?.id || ''}`;
     const lines = [];
 
-    lines.push(`💍 *Al-ThayyiBoon Matrimony Proposal (${proposalId})*`);
+    lines.push(`💍 *Al-ThayyiBoon Matrimony Proposal*`);
     lines.push(`📍 *${isBride ? 'വധുവിന്റെ വിവരങ്ങൾ' : 'വരന്റെ വിവരങ്ങൾ'}:*`);
 
     if (basicInfo.age) lines.push(`• ${lang === 'ml' ? 'പ്രായം' : 'Age'}: ${basicInfo.age} ${lang === 'ml' ? 'വയസ്സ്' : 'Yrs'}`);
@@ -474,10 +474,10 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
                   </svg>
                 </div>
 
-                {/* ID Pill Badge */}
+                {/* Matrimonial Badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 border border-amber-400/50 shadow-inner my-1">
-                  <span className="text-xs font-black tracking-widest text-amber-200">
-                    ID: {proposalId}
+                  <span className="text-xs font-black tracking-widest text-amber-200 uppercase">
+                    Al-ThayyiBoon Verified
                   </span>
                 </div>
 

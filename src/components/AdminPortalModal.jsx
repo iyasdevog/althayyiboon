@@ -35,11 +35,14 @@ import {
   FileJson,
   AlertTriangle,
   RefreshCw,
-  Eye
+  Eye,
+  Clock,
+  RotateCcw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { checkFirestoreHealth } from '../firebase/profileService';
 import { SUBJECT_CATEGORIES } from '../data/mockProfiles';
+import { getProfileValidity, generateWhatsAppRenewalMessage } from '../utils/profileValidity';
 
 export default function AdminPortalModal({ 
   onClose, 
@@ -64,7 +67,8 @@ export default function AdminPortalModal({
   const [passcode, setPasscode] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(isAdmin);
   const [authError, setAuthError] = useState("");
-  const [activeTab, setActiveTab] = useState("proposals"); // "proposals" | "whatsapp" | "credentials" | "pricing" | "taxonomies" | "filterRequests" | "dataBackup"
+  const [activeTab, setActiveTab] = useState("proposals"); // "proposals" | "renewals" | "whatsapp" | "credentials" | "pricing" | "taxonomies" | "filterRequests" | "dataBackup"
+  const [renewalStatusFilter, setRenewalStatusFilter] = useState("all"); // "all" | "expired" | "renewal_due" | "active"
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -77,9 +81,14 @@ export default function AdminPortalModal({
   const [localPricing, setLocalPricing] = useState({
     contactUnlockFee: pricing.contactUnlockFee || 15,
     profileSubmissionFee: pricing.profileSubmissionFee || 0,
+    renewalFee: pricing.renewalFee || 199,
+    listingValidityMonths: pricing.listingValidityMonths || 3,
     campaignMode: pricing.campaignMode !== undefined ? pricing.campaignMode : true,
     campaignEndDate: pricing.campaignEndDate || '2026-11-20T23:59:00',
     campaignRewardCredits: pricing.campaignRewardCredits || 3,
+    monthlyCampaignDays: pricing.monthlyCampaignDays || [1, 2],
+    monthlyCampaignSchedule: pricing.monthlyCampaignSchedule || '1st & 2nd of Every Month',
+    monthlyCampaignActive: pricing.monthlyCampaignActive !== undefined ? pricing.monthlyCampaignActive : true,
     whatsappGroupLink: pricing.whatsappGroupLink || 'https://chat.whatsapp.com/sample-althayyiboon-group',
     whatsappGroupName: pricing.whatsappGroupName || 'Al-ThayyiBoon Official Matrimony',
     upiId: pricing.upiId || '',
@@ -373,6 +382,51 @@ export default function AdminPortalModal({
   const whatsappCount = profiles.filter(p => p.whatsappConsent !== false).length;
   const pendingFilterReqs = filterRequests.filter(r => r.status === "pending").length;
 
+  // 3-Month Renewal KPIs
+  const expiredCount = profiles.filter(p => getProfileValidity(p).isExpired).length;
+  const renewalDueCount = profiles.filter(p => getProfileValidity(p).isRenewalDue).length;
+  const activeValidCount = profiles.filter(p => { const v = getProfileValidity(p); return v.isValid && !v.isRenewalDue; }).length;
+
+  // Filtered list for renewals tab
+  const renewalProfiles = profiles.filter(p => {
+    const v = getProfileValidity(p);
+    if (renewalStatusFilter === 'expired') return v.isExpired;
+    if (renewalStatusFilter === 'renewal_due') return v.isRenewalDue;
+    if (renewalStatusFilter === 'active') return v.isValid && !v.isRenewalDue;
+    return true; // 'all'
+  });
+
+  // Send WhatsApp Renewal message to a single profile
+  const handleSendRenewalWhatsApp = (profile) => {
+    const phone = profile.contactDetails?.whatsappNumber || profile.contactDetails?.guardianPhone || profile.contactPreferences?.phone || '';
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    if (!cleanPhone) {
+      alert('No WhatsApp number found for this profile.');
+      return;
+    }
+    const msg = generateWhatsAppRenewalMessage(profile, localPricing);
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  // Bulk WhatsApp renewal blast for expired / renewal-due profiles
+  const handleBulkRenewalBlast = () => {
+    const targets = profiles.filter(p => { const v = getProfileValidity(p); return v.isExpired || v.isRenewalDue; });
+    if (targets.length === 0) { alert('No expired or renewal-due profiles found.'); return; }
+    if (!confirm(`Send WhatsApp renewal reminders to ${targets.length} profile(s)?`)) return;
+    targets.forEach((profile, idx) => {
+      setTimeout(() => {
+        const phone = profile.contactDetails?.whatsappNumber || profile.contactDetails?.guardianPhone || profile.contactPreferences?.phone || '';
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        if (cleanPhone) {
+          const msg = generateWhatsAppRenewalMessage(profile, localPricing);
+          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+      }, idx * 800);
+    });
+    setWhatsappToast(`Opening WhatsApp for ${targets.length} renewal reminder(s)...`);
+    setTimeout(() => setWhatsappToast(''), 4000);
+  };
+
   // Selection Logic
   const handleToggleSelect = (id) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -658,6 +712,23 @@ export default function AdminPortalModal({
                 </button>
 
                 <button
+                  onClick={() => setActiveTab("renewals")}
+                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                    activeTab === "renewals"
+                      ? "border-amber-500 text-amber-300 bg-slate-900"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <RotateCcw className="w-4 h-4 text-amber-400" />
+                  <span>3M Renewals</span>
+                  {(expiredCount + renewalDueCount) > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {expiredCount + renewalDueCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
                   onClick={() => setActiveTab("whatsapp")}
                   className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
                     activeTab === "whatsapp"
@@ -756,6 +827,153 @@ export default function AdminPortalModal({
                 <div className="mb-4 p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
                   <Check className="w-4 h-4" />
                   <span>{whatsappToast}</span>
+                </div>
+              )}
+
+              {/* ========================================================= */}
+              {/* TAB: 3-MONTH RENEWALS MANAGEMENT                           */}
+              {/* ========================================================= */}
+              {activeTab === "renewals" && (
+                <div className="space-y-5">
+
+                  {/* Renewal KPI Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button
+                      onClick={() => setRenewalStatusFilter('all')}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${renewalStatusFilter === 'all' ? 'bg-slate-800 border-slate-600' : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'}`}
+                    >
+                      <span className="text-[11px] text-slate-400 block">All Profiles</span>
+                      <span className="text-xl font-extrabold text-white">{totalCount}</span>
+                    </button>
+                    <button
+                      onClick={() => setRenewalStatusFilter('expired')}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${renewalStatusFilter === 'expired' ? 'bg-rose-950/60 border-rose-500' : 'bg-rose-950/20 border-rose-500/30 hover:border-rose-500/60'}`}
+                    >
+                      <span className="text-[11px] text-rose-300 block font-semibold">Expired</span>
+                      <span className="text-xl font-extrabold text-rose-300">{expiredCount}</span>
+                      <span className="text-[10px] text-rose-400/70">Renewal overdue</span>
+                    </button>
+                    <button
+                      onClick={() => setRenewalStatusFilter('renewal_due')}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${renewalStatusFilter === 'renewal_due' ? 'bg-amber-950/60 border-amber-500' : 'bg-amber-950/20 border-amber-500/30 hover:border-amber-500/60'}`}
+                    >
+                      <span className="text-[11px] text-amber-300 block font-semibold">Due Soon</span>
+                      <span className="text-xl font-extrabold text-amber-300">{renewalDueCount}</span>
+                      <span className="text-[10px] text-amber-400/70">≤15 days left</span>
+                    </button>
+                    <button
+                      onClick={() => setRenewalStatusFilter('active')}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${renewalStatusFilter === 'active' ? 'bg-emerald-950/60 border-emerald-500' : 'bg-emerald-950/20 border-emerald-500/30 hover:border-emerald-500/60'}`}
+                    >
+                      <span className="text-[11px] text-emerald-300 block font-semibold">Active Valid</span>
+                      <span className="text-xl font-extrabold text-emerald-300">{activeValidCount}</span>
+                      <span className="text-[10px] text-emerald-400/70">&gt;15 days left</span>
+                    </button>
+                  </div>
+
+                  {/* Bulk Renewal Blast */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/50 via-slate-950 to-rose-950/40 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
+                        <RotateCcw className="w-4 h-4 text-amber-400" />
+                        <span>WhatsApp Renewal Blast</span>
+                        <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold border border-rose-500/30">
+                          {expiredCount + renewalDueCount} profiles need renewal
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-snug">
+                        Send a 3-month renewal reminder to all expired and renewal-due profiles via WhatsApp. Each message includes renewal fee (₹{localPricing.renewalFee || 199}) and options to renew, pause, or archive.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleBulkRenewalBlast}
+                      disabled={expiredCount + renewalDueCount === 0}
+                      className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-extrabold text-xs flex items-center gap-2 shrink-0 shadow-md shadow-amber-500/20 transition-all cursor-pointer"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Send Renewal Blast ({expiredCount + renewalDueCount})</span>
+                    </button>
+                  </div>
+
+                  {/* Individual Profile Renewals List */}
+                  <div className="rounded-2xl border border-slate-800 overflow-hidden">
+                    <div className="p-3 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
+                      <p className="text-xs font-semibold text-slate-300">
+                        Showing {renewalProfiles.length} profile(s)
+                        {renewalStatusFilter !== 'all' && <span className="ml-1 text-amber-300">— filtered by: {renewalStatusFilter === 'expired' ? 'Expired' : renewalStatusFilter === 'renewal_due' ? 'Due Soon' : 'Active Valid'}</span>}
+                      </p>
+                      <span className="text-[10px] text-slate-500">Click row to send renewal WhatsApp</span>
+                    </div>
+
+                    {renewalProfiles.length === 0 ? (
+                      <div className="p-8 text-center text-slate-400 text-sm">
+                        <Clock className="w-10 h-10 mx-auto mb-2 text-slate-600" />
+                        <p>No profiles match the selected filter.</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead className="bg-slate-950">
+                            <tr className="text-left text-slate-500">
+                              <th className="p-3 font-semibold">Candidate</th>
+                              <th className="p-3 font-semibold">Gender</th>
+                              <th className="p-3 font-semibold">Validity</th>
+                              <th className="p-3 font-semibold">Expires</th>
+                              <th className="p-3 font-semibold text-right">Renew</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/60">
+                            {renewalProfiles.map(p => {
+                              const validity = getProfileValidity(p);
+                              const name = p.basicInfo?.fullName || p.id;
+                              const gender = p.basicInfo?.gender || (p.gender === 'female' ? 'Bride' : 'Groom');
+                              return (
+                                <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
+                                  <td className="p-3">
+                                    <div>
+                                      <p className="font-semibold text-white truncate max-w-[140px]">{name}</p>
+                                      <p className="text-[10px] text-slate-500 font-mono">{p.id}</p>
+                                    </div>
+                                  </td>
+                                  <td className="p-3">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                      gender === 'Bride' ? 'bg-pink-500/10 text-pink-300 border-pink-500/30' : 'bg-sky-500/10 text-sky-300 border-sky-500/30'
+                                    }`}>
+                                      {gender === 'Bride' ? '👰' : '🤵'} {gender}
+                                    </span>
+                                  </td>
+                                  <td className="p-3">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${validity.statusBadge.color}`}>
+                                      {validity.statusBadge.label}
+                                    </span>
+                                  </td>
+                                  <td className="p-3 text-slate-400">
+                                    {validity.expiryDateFormatted}
+                                  </td>
+                                  <td className="p-3 text-right">
+                                    <button
+                                      onClick={() => handleSendRenewalWhatsApp(p)}
+                                      className={`px-3 py-1.5 rounded-xl font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer transition-colors ${
+                                        validity.isExpired
+                                          ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/30'
+                                          : validity.isRenewalDue
+                                          ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30'
+                                          : 'bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/20'
+                                      }`}
+                                    >
+                                      <MessageSquare className="w-3 h-3" />
+                                      <span>WhatsApp</span>
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
                 </div>
               )}
 
@@ -1465,6 +1683,61 @@ export default function AdminPortalModal({
                         <p className="text-[10px] text-slate-500 mt-1">
                           {localPricing.campaignMode ? 'Currently overridden to ₹0 by Campaign Mode' : 'Default: ₹15'}
                         </p>
+                      </div>
+                    </div>
+
+                    {/* 3-Month Renewal Fee & Monthly Campaign Schedule */}
+                    <div className="pt-4 border-t border-slate-800 space-y-3">
+                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <RotateCcw className="w-4 h-4 text-amber-400" />
+                        <span>3-Month Validity &amp; Monthly Data Collection Campaign</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">
+                            Discounted 3-Month Renewal Fee (₹)
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3.5 top-2.5 text-xs text-slate-500">₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={localPricing.renewalFee || 199}
+                              onChange={(e) => setLocalPricing(prev => ({ ...prev, renewalFee: Number(e.target.value) || 199 }))}
+                              className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs border border-amber-500/40 focus:outline-none focus:border-amber-500"
+                            />
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-1">Sent in WhatsApp renewal reminders. Typically ~60% discount vs standard fee. Default: ₹199</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">
+                            Monthly Campaign Days (comma-separated)
+                          </label>
+                          <input
+                            type="text"
+                            value={(localPricing.monthlyCampaignDays || [1, 2]).join(', ')}
+                            onChange={(e) => {
+                              const days = e.target.value.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d >= 1 && d <= 31);
+                              setLocalPricing(prev => ({ ...prev, monthlyCampaignDays: days }));
+                            }}
+                            placeholder="e.g. 1, 2"
+                            className="w-full px-3 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs border border-amber-500/40 focus:outline-none focus:border-amber-500"
+                          />
+                          <p className="text-[10px] text-slate-500 mt-1">Days of each month for free data collection drive. E.g. 1, 2 = 1st &amp; 2nd of every month.</p>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">
+                          Monthly Campaign Schedule Label (Display Text)
+                        </label>
+                        <input
+                          type="text"
+                          value={localPricing.monthlyCampaignSchedule || '1st & 2nd of Every Month'}
+                          onChange={(e) => setLocalPricing(prev => ({ ...prev, monthlyCampaignSchedule: e.target.value }))}
+                          placeholder="e.g. 1st & 2nd of Every Month"
+                          className="w-full px-3 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs border border-amber-500/40 focus:outline-none focus:border-amber-500"
+                        />
+                        <p className="text-[10px] text-slate-500 mt-1">This label appears in the 3-Month Validity &amp; Campaign Policy popup shown to users.</p>
                       </div>
                     </div>
 

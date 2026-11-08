@@ -27,13 +27,8 @@ import {
 import { shareProfile } from '../utils/shareUtils';
 import { useAuth } from '../context/AuthContext';
 
-function maskPhoneNumber(phone) {
-  if (!phone) return "+91 98******12";
-  const clean = phone.trim();
-  if (clean.length < 8) return "+91 98******12";
-  const prefix = clean.slice(0, Math.min(6, clean.length - 4));
-  const suffix = clean.slice(-2);
-  return `${prefix}******${suffix}`;
+function maskPhoneNumber() {
+  return "••••••••••";
 }
 
 export default function ProfileDetailModal({ 
@@ -91,7 +86,7 @@ export default function ProfileDetailModal({
   const candidateDisplayName = isDemo
     ? (isBride ? 'Bride' : 'Groom')
     : isParent 
-      ? `Candidate ${isBride ? 'Bride' : 'Groom'} (${id})` 
+      ? `Candidate ${isBride ? 'Bride' : 'Groom'}` 
       : (basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal'));
 
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
@@ -134,7 +129,7 @@ export default function ProfileDetailModal({
       : "91" + rawNumber;
 
     const text = encodeURIComponent(
-      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${candidateDisplayName}, ID: ${id}) found on Al-ThayyiBoon Matrimony.`
+      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${candidateDisplayName}) found on Al-ThayyiBoon Matrimony.`
     );
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
@@ -149,7 +144,7 @@ export default function ProfileDetailModal({
 
   const handleCopyBioData = () => {
     const text = `*Al-ThayyiBoon Matrimonial Proposal*\n\n` +
-      `👤 *Candidate:* ${candidateDisplayName} (ID: ${id})\n` +
+      `👤 *Candidate:* ${candidateDisplayName}\n` +
       `💍 *Gender & Age:* ${isBride ? 'Bride' : 'Groom'}, ${basicInfo.age} Yrs (${basicInfo.maritalStatus || 'Never Married'})\n` +
       `📏 *Height:* ${basicInfo.height || 'N/A'}\n` +
       `📖 *Islamic Degree:* ${islamicList.join(', ') || 'General'}\n` +
@@ -308,9 +303,7 @@ export default function ProfileDetailModal({
                 </span>
               )}
 
-              <span className="text-xs font-mono text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full border border-slate-800">
-                {id}
-              </span>
+
 
               <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-teal-300 border border-teal-500/30">
                 <Users className="w-3 h-3" />
@@ -327,6 +320,14 @@ export default function ProfileDetailModal({
               <span>{locationFamily.homeDistrict ? `${locationFamily.homeDistrict}, Kerala` : 'Kerala'}</span>
               <span>•</span>
               <span>{locationFamily.nativePlace || 'Native Place'}</span>
+              {profile.distanceKm != null && (
+                <>
+                  <span>•</span>
+                  <span className="text-rose-300 font-bold bg-rose-500/15 px-2 py-0.5 rounded-full border border-rose-500/30">
+                    {profile.distanceKm < 1 ? '< 1 km away' : `${Math.round(profile.distanceKm)} km away`}
+                  </span>
+                </>
+              )}
               {isParent && (
                 <>
                   <span>•</span>

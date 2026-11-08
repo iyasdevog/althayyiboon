@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   User,
@@ -19,7 +19,9 @@ import {
   Copy,
   Gift,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  Clock,
+  MessageSquare
 } from 'lucide-react';
 import {
   KERALA_DISTRICTS,
@@ -34,6 +36,8 @@ import {
   WORK_LOCATIONS
 } from '../data/mockProfiles';
 import { useAuth } from '../context/AuthContext';
+import { calculateListingExpiry } from '../utils/profileValidity';
+import { fuzzyMatchPlace, searchKeralaTowns } from '../utils/geoUtils';
 
 const inputCls =
   'w-full px-4 py-3 rounded-xl bg-slate-950 text-white border border-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-colors text-xs sm:text-sm';
@@ -141,6 +145,19 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
     security: { editPin: '' },
   });
 
+  const [isPlaceSuggestOpen, setIsPlaceSuggestOpen] = useState(false);
+  const placeDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (placeDropdownRef.current && !placeDropdownRef.current.contains(e.target)) {
+        setIsPlaceSuggestOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, []);
+
   const updateSection = (section, field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -217,8 +234,21 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
       const phone = formData.contactDetails.guardianPhone.trim() || formData.contactPreferences.phone.trim();
       const whatsapp = formData.contactDetails.whatsappNumber.trim() || formData.contactPreferences.whatsapp.trim() || phone;
 
+      // Automatically resolve GPS coordinates (handles any spelling variant, typos, or district fallback)
+      const matchedGeo = fuzzyMatchPlace(
+        formData.locationFamily.nativePlace,
+        formData.locationFamily.homeDistrict
+      );
+      const coordinates = matchedGeo ? { lat: matchedGeo.lat, lng: matchedGeo.lng } : null;
+
       const payload = {
         ...formData,
+        coordinates,
+        locationFamily: {
+          ...formData.locationFamily,
+          coordinates,
+          canonicalPlace: matchedGeo?.name || formData.locationFamily.nativePlace
+        },
         profileCreatedBy: formData.profileCreatedBy || 'Parent',
         registeredBy: formData.profileCreatedBy || 'Parent',
         gender: formData.basicInfo.gender === 'Bride' ? 'female' : 'male',
@@ -251,6 +281,10 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
         whatsappConsent: formData.whatsappConsent !== false,
         whatsappGroupNumber: formData.whatsappGroupNumber || whatsapp || phone,
         registeredDuringCampaign: Boolean(pricing?.campaignMode),
+        listingDurationMonths: 3,
+        listingStatus: 'active',
+        expiresAt: calculateListingExpiry(new Date(), 3).toISOString(),
+        whatsappRenewalNotified: false,
         paymentStatus: pricing?.campaignMode ? 'free_campaign' : (paymentRef ? 'paid' : 'pending_payment'),
         submissionFee: pricing?.campaignMode ? 0 : (pricing?.profileSubmissionFee || 499),
         paymentRef: paymentRef.trim() || null,
@@ -527,13 +561,57 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
           <div className="flex-1 overflow-y-auto custom-scrollbar px-5 py-4 space-y-4">
 
             {success ? (
-              <div className="py-8 text-center space-y-5">
+              <div className="py-6 text-center space-y-4">
                 <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/30">
                   <CheckCircle className="w-8 h-8" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">Proposal Successfully Listed!</h3>
-                  <p className="text-xs text-slate-400 mt-1">Your profile is now live in the directory.</p>
+                  <p className="text-xs text-slate-400 mt-1">Your profile is now verified and active in the directory.</p>
+                </div>
+
+                {/* 3-Month Validity & WhatsApp Renewal Notification Card */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-teal-950/50 border border-emerald-500/40 text-xs text-slate-200 text-left space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-emerald-300 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-emerald-400" />
+                      <span>3-Month Active Listing Period</span>
+                    </span>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      Active
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    To keep the directory 100% genuine and free of outdated profiles, your proposal is listed for <strong>3 months (until {calculateListingExpiry(new Date(), 3).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })})</strong>.
+                  </p>
+                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] flex items-start gap-2">
+                    <MessageSquare className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
+                    <span className="text-slate-300">
+                      <strong>WhatsApp Renewal Alert:</strong> We will notify you via WhatsApp at the end of 3 months to confirm if you are still looking and renew with another payment to stay in the listing.
+                    </span>
+                  </div>
+                </div>
+
+                {/* 'We'll contact you shortly' Identity Verification Notice */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-950/60 via-slate-900 to-emerald-950/50 border border-teal-500/40 text-xs text-left space-y-2 animate-fade-in">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center shrink-0">
+                      <MessageSquare className="w-4 h-4 text-teal-400" />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-teal-200 text-sm">What Happens Next?</p>
+                      <p className="text-[10px] text-teal-400/80 font-medium">Identity Verification via WhatsApp</p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    Our admin team will <strong className="text-white">connect you shortly via WhatsApp</strong> to verify your identity and confirm the listing details before making the proposal active in the directory.
+                  </p>
+                  <div className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                    <span className="text-teal-400 shrink-0 mt-0.5">📞</span>
+                    <p className="text-[11px] text-slate-300 leading-snug">
+                      Please keep your <strong>WhatsApp number active</strong> and respond promptly. Listings are only published after successful identity verification.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-xs text-amber-200 space-y-2 text-left">
@@ -541,7 +619,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                     <Key className="w-4 h-4" />
                     <span>Secret Edit PIN: <span className="font-mono text-base text-white underline">{submittedPin}</span></span>
                   </div>
-                  <p className="leading-relaxed text-center">
+                  <p className="leading-relaxed text-center text-[11px]">
                     Please remember this PIN! You will need it whenever you want to update or remove this proposal.
                   </p>
                 </div>
@@ -549,21 +627,37 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all"
+                  className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
                 >
                   Return to Directory
                 </button>
               </div>
             ) : (
               <>
+                {/* 3-Month Listing Validity & WhatsApp Renewal Notification Banner */}
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-emerald-500/30 text-xs text-slate-300 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-emerald-300 flex items-center gap-1.5 text-xs">
+                      <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>3-Month Listing Validity Policy</span>
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/30">
+                      WhatsApp Renewal
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-snug">
+                    Each registration is valid for <strong>3 months (90 days)</strong> to keep our matrimonial directory fresh and verified. After 3 months, you will receive a WhatsApp message asking if your search is ongoing and to renew with another payment to stay listed.
+                  </p>
+                </div>
+
                 {/* Campaign Mode Free Notice Banner */}
                 {pricing?.campaignMode && (
-                  <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-xs text-emerald-200 flex items-center gap-2.5">
-                    <span className="p-1 rounded-lg bg-emerald-500/20 text-emerald-300 shrink-0 font-bold">
-                      FREE (₹0)
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-amber-950/40 border border-emerald-500/40 text-xs text-emerald-200 flex items-center gap-2.5">
+                    <span className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 shrink-0 font-extrabold text-[10px] uppercase border border-emerald-500/30">
+                      Free ₹0
                     </span>
-                    <span className="leading-snug">
-                      <strong>Launch Campaign Active:</strong> Proposal registration is 100% free! You will not be prompted for payment and will receive <strong>{pricing.campaignRewardCredits || 3} complimentary contact views</strong> when the directory opens.
+                    <span className="leading-snug text-[11px]">
+                      <strong>Monthly Data Collection Campaign Active:</strong> Proposal registration is 100% free! You will not be prompted for payment and will receive <strong>{pricing.campaignRewardCredits || 3} complimentary contact views</strong> when the directory opens.
                     </span>
                   </div>
                 )}
@@ -767,15 +861,52 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                           {KERALA_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                       </div>
-                      <div>
+                      <div className="relative">
                         <label className={labelCls}>Native City / Town</label>
                         <input
                           type="text"
                           value={formData.locationFamily.nativePlace}
-                          onChange={e => updateSection('locationFamily', 'nativePlace', e.target.value)}
+                          onChange={e => {
+                            updateSection('locationFamily', 'nativePlace', e.target.value);
+                            setIsPlaceSuggestOpen(true);
+                          }}
+                          onFocus={() => setIsPlaceSuggestOpen(true)}
                           placeholder="e.g. Manjeri, Feroke, Vadakara"
                           className={inputCls}
                         />
+                        {isPlaceSuggestOpen && formData.locationFamily.nativePlace?.trim().length > 1 && (
+                          <div className="absolute z-30 left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-1 custom-scrollbar">
+                            {searchKeralaTowns(formData.locationFamily.nativePlace, 5).map(town => (
+                              <button
+                                key={`${town.name}-${town.district}`}
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    locationFamily: {
+                                      ...prev.locationFamily,
+                                      nativePlace: town.name,
+                                      homeDistrict: town.district,
+                                      coordinates: { lat: town.lat, lng: town.lng }
+                                    }
+                                  }));
+                                  setIsPlaceSuggestOpen(false);
+                                }}
+                                className="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-800 flex items-center justify-between text-slate-200 transition-colors cursor-pointer"
+                              >
+                                <div>
+                                  <span className="font-semibold text-emerald-300">{town.name}</span>
+                                  <span className="text-[10px] text-slate-400 ml-1.5">({town.district})</span>
+                                </div>
+                                {town.aliases?.length > 0 && (
+                                  <span className="text-[10px] text-slate-500 italic max-w-[100px] truncate">
+                                    aka {town.aliases[0]}
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 

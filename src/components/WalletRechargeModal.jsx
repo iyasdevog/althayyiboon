@@ -46,6 +46,7 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState(null); // { credits, price, utr } when payment confirmed
 
   // Close on Escape key press
   React.useEffect(() => {
@@ -81,24 +82,15 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
       addCredits(packCredits);
       setIsProcessing(false);
       setUtrNumber('');
-      
-      const utrMsg = utr ? ` (Ref: ${utr})` : '';
-      if (onShowToast) {
-        onShowToast(`Payment of ₹${packPrice}${utrMsg} recorded! Added ${packCredits} Credits.`);
-      }
 
       // If user was trying to unlock a specific candidate
       if (pendingUnlockProfile) {
         unlockContact(pendingUnlockProfile);
-        if (onShowToast) {
-          setTimeout(() => {
-            onShowToast(`Unlocked contact for ${pendingUnlockProfile.basicInfo?.fullName || 'Candidate'}!`);
-          }, 800);
-        }
         setPendingUnlockProfile(null);
       }
 
-      onClose();
+      // Show success screen with verification notice
+      setPaymentSuccess({ credits: packCredits, price: packPrice, utr: utr || '' });
     }, 850);
   };
 
@@ -239,6 +231,77 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
           </div>
         </div>
 
+        {/* ===== PAYMENT SUCCESS SCREEN ===== */}
+        {paymentSuccess ? (
+          <div className="p-6 sm:p-8 space-y-5 text-center animate-fade-in">
+
+            {/* Success Icon */}
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-950/40">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+
+            {/* Headline */}
+            <div>
+              <h3 className="text-lg font-extrabold text-white">Payment Received!</h3>
+              <p className="text-xs text-slate-400 mt-1">
+                ₹{paymentSuccess.price} • {paymentSuccess.credits} Credit{paymentSuccess.credits !== 1 ? 's' : ''} Added
+                {paymentSuccess.utr && <span className="ml-1 font-mono text-emerald-400">(Ref: {paymentSuccess.utr})</span>}
+              </p>
+            </div>
+
+            {/* 'We'll contact you shortly' Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-950/60 via-slate-900 to-emerald-950/50 border border-teal-500/40 text-xs text-left space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-4 h-4 text-teal-400" />
+                </div>
+                <div>
+                  <p className="font-extrabold text-teal-200 text-sm leading-tight">We will connect you shortly</p>
+                  <p className="text-[10px] text-teal-400/80 font-medium">via WhatsApp to verify your identity</p>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Our admin team will <strong className="text-white">contact you via WhatsApp</strong> to verify your payment and identity before activating your credits and contact access.
+              </p>
+
+              <div className="space-y-1.5">
+                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                  <span className="text-emerald-400 text-sm shrink-0">✅</span>
+                  <p className="text-[11px] text-slate-300 leading-snug">
+                    <strong>Keep your WhatsApp open</strong> — we'll message you on the number linked to your account.
+                  </p>
+                </div>
+                <div className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                  <span className="text-amber-400 text-sm shrink-0">⏱️</span>
+                  <p className="text-[11px] text-slate-300 leading-snug">
+                    Verification typically completes within <strong>a few hours</strong> on business days.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Updated Balance Display */}
+            <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+              <Coins className="w-4 h-4 text-amber-400" />
+              <span className="text-sm font-extrabold text-amber-300">{credits} Credits</span>
+              <span className="text-xs text-slate-400">available in your wallet</span>
+            </div>
+
+            {/* Done Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setPaymentSuccess(null);
+                onClose();
+              }}
+              className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+            >
+              Done — Return to Directory
+            </button>
+          </div>
+        ) : (
+          <>
         {/* Tab Switcher */}
         <div className="flex border-b border-slate-800">
           <button
@@ -268,6 +331,7 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
 
           {/* TAB 1: RECHARGE CREDITS */}
           {activeTab === 'recharge' && (
+
             <>
               {pendingUnlockProfile && (
                 <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3">
@@ -275,7 +339,7 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
                   <div className="text-xs text-slate-200">
                     <span className="font-semibold text-white">Unlock Request:</span> Unlock guardian phone & WhatsApp for{' '}
                     <span className="text-amber-300 font-bold">
-                      {pendingUnlockProfile.basicInfo?.fullName || pendingUnlockProfile.id}
+                      {pendingUnlockProfile.basicInfo?.fullName || 'Candidate Proposal'}
                     </span>.
                   </div>
                 </div>
@@ -611,7 +675,7 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
                       className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3 text-xs"
                     >
                       <div>
-                        <span className="font-mono font-bold text-emerald-300">{pid}</span>
+                        <span className="font-bold text-emerald-300">Verified Proposal Access</span>
                         <p className="text-[10px] text-slate-400">Permanent guardian contact access unlocked</p>
                       </div>
                       <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
@@ -635,6 +699,8 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
 
 
         </div>
+          </>
+        )}
 
       </div>
     </div>

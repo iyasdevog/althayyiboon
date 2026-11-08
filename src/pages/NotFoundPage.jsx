@@ -3,10 +3,17 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useProfiles } from '../context/ProfilesContext';
+import { useSeo } from '../utils/useSeo';
 import { Home, Compass, UserPlus, ShieldAlert } from 'lucide-react';
 
 export default function NotFoundPage() {
   const { totalCount, activeFilterCount, bookmarks } = useProfiles();
+
+  useSeo({
+    title: '404 - Page Not Found | Al-ThayyiBoon Matrimony',
+    description: 'The requested matrimonial page does not exist. Browse active verified proposals on Al-ThayyiBoon.',
+    canonicalUrl: 'https://althayyiboon.com/404'
+  });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">

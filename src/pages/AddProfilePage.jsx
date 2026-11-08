@@ -6,6 +6,7 @@ import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import AddProfileModal from '../components/AddProfileModal';
 import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
+import { useSeo } from '../utils/useSeo';
 
 export default function AddProfilePage({
   onOpenSignIn,
@@ -16,6 +17,13 @@ export default function AddProfilePage({
   const navigate = useNavigate();
   const { addNewProfile, selectedGender, totalCount, activeFilterCount, bookmarks } = useProfiles();
   const { setHasRegisteredProfile } = useAuth();
+
+  useSeo({
+    title: 'Register Matrimonial Proposal | Al-ThayyiBoon – 100% Verified Nikah Directory',
+    description: 'Submit your Islamic & Academic matrimonial profile on Al-ThayyiBoon. 3-month verified listing, zero public phone exposure without guardian consent, free monthly campaign drives.',
+    canonicalUrl: 'https://althayyiboon.com/register',
+    ogType: 'website'
+  });
 
   const handleClose = () => {
     navigate('/profiles');

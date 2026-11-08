@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Filter, 
   RotateCcw, 
@@ -16,7 +16,10 @@ import {
   ChevronDown,
   ChevronUp,
   Lock,
-  Search
+  Search,
+  Navigation,
+  LocateFixed,
+  Loader2
 } from 'lucide-react';
 import { 
   KERALA_DISTRICTS, 
@@ -27,6 +30,11 @@ import {
   COMMON_PROFESSIONS 
 } from '../data/mockProfiles';
 import { useAuth } from '../context/AuthContext';
+import { 
+  searchKeralaTowns, 
+  fuzzyMatchPlace, 
+  getUserCurrentLocation 
+} from '../utils/geoUtils';
 
 // Primary Islamic Qualifications
 const PRIMARY_ISLAMIC_QUALIFICATIONS = [
@@ -59,6 +67,74 @@ export default function FilterSidebar({
   const [islamicSearch, setIslamicSearch] = useState('');
   const [subjectSearch, setSubjectSearch] = useState('');
   const [professionSearch, setProfessionSearch] = useState('');
+
+  // Distance & Location State
+  const [typedTown, setTypedTown] = useState('');
+  const [isTownDropdownOpen, setIsTownDropdownOpen] = useState(false);
+  const [isLocatingGPS, setIsLocatingGPS] = useState(false);
+  const [geoError, setGeoError] = useState('');
+  const townDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (townDropdownRef.current && !townDropdownRef.current.contains(e.target)) {
+        setIsTownDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const townSearchQuery = typedTown !== '' ? typedTown : (filters.distanceOrigin?.name || '');
+
+  const suggestedTowns = useMemo(() => {
+    return searchKeralaTowns(townSearchQuery, 6);
+  }, [townSearchQuery]);
+
+  const handleUseGPS = async () => {
+    setGeoError('');
+    setIsLocatingGPS(true);
+    try {
+      const loc = await getUserCurrentLocation();
+      setFilters(prev => ({
+        ...prev,
+        distanceOrigin: loc,
+        distanceRadius: prev.distanceRadius > 0 ? prev.distanceRadius : 25
+      }));
+      setTypedTown('');
+      setIsTownDropdownOpen(false);
+    } catch (err) {
+      setGeoError(err.message || 'Could not access GPS location.');
+    } finally {
+      setIsLocatingGPS(false);
+    }
+  };
+
+  const handleSelectTown = (town) => {
+    setFilters(prev => ({
+      ...prev,
+      distanceOrigin: {
+        name: town.name,
+        district: town.district,
+        lat: town.lat,
+        lng: town.lng
+      },
+      distanceRadius: prev.distanceRadius > 0 ? prev.distanceRadius : 25
+    }));
+    setTypedTown('');
+    setIsTownDropdownOpen(false);
+    setGeoError('');
+  };
+
+  const handleCustomTownSubmit = (query) => {
+    if (!query || !query.trim()) return;
+    const matched = fuzzyMatchPlace(query);
+    if (matched) {
+      handleSelectTown(matched);
+    } else {
+      setGeoError(`Could not resolve "${query}". Please choose from suggested towns or use GPS.`);
+    }
+  };
 
   // Close mobile filter drawer on Escape
   useEffect(() => {
@@ -155,6 +231,12 @@ export default function FilterSidebar({
 
   // Collect all active filter badges for quick 1-click removal
   const activeChips = [];
+  if (filters.distanceRadius > 0 && filters.distanceOrigin) {
+    activeChips.push({
+      label: `Within ${filters.distanceRadius}km (${filters.distanceOrigin.name})`,
+      remove: () => setFilters(p => ({ ...p, distanceRadius: 0 }))
+    });
+  }
   if (filters.district) {
     activeChips.push({ label: `District: ${filters.district}`, remove: () => setFilters(p => ({ ...p, district: '' })) });
   }
@@ -597,7 +679,210 @@ export default function FilterSidebar({
         </div>
       </div>
 
-      {/* 6. District Selector */}
+      {/* 6. Distance Range Filter (e.g. 10 km, 20 km, 50 km) */}
+      <div className="space-y-3 p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <Navigation className="w-3.5 h-3.5 text-rose-400" /> Distance Range (KM)
+          </label>
+          {(filters.distanceRadius > 0 || filters.distanceOrigin) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFilters(p => ({ ...p, distanceRadius: 0, distanceOrigin: null }));
+                setTypedTown('');
+                setGeoError('');
+              }}
+              className="text-[10px] text-rose-400 hover:text-rose-300 underline cursor-pointer"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+
+        {/* Origin Choice: GPS or Place Search */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleUseGPS}
+              disabled={isLocatingGPS}
+              className={`flex-1 py-1.5 px-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                filters.distanceOrigin?.isGPS
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-sm'
+                  : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+              }`}
+              title="Detect GPS location from your browser"
+            >
+              {isLocatingGPS ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-400" />
+                  <span>Locating GPS...</span>
+                </>
+              ) : (
+                <>
+                  <LocateFixed className="w-3.5 h-3.5 text-rose-400" />
+                  <span>{filters.distanceOrigin?.isGPS ? 'GPS Active' : 'Use Current GPS'}</span>
+                </>
+              )}
+            </button>
+
+            {filters.distanceOrigin && (
+              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg truncate max-w-[120px]" title={filters.distanceOrigin.name}>
+                📍 {filters.distanceOrigin.name}
+              </span>
+            )}
+          </div>
+
+          {/* Place Search with Fuzzy Spelling Matcher */}
+          <div className="relative" ref={townDropdownRef}>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-500" />
+              <input
+                type="text"
+                value={townSearchQuery}
+                onChange={(e) => {
+                  setTypedTown(e.target.value);
+                  setIsTownDropdownOpen(true);
+                  setGeoError('');
+                }}
+                onFocus={() => setIsTownDropdownOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleCustomTownSubmit(townSearchQuery);
+                  }
+                }}
+                placeholder="Or type town (e.g. Manjeri, Calicut, Badagara)..."
+                className="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-950 rounded-xl border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+              />
+              {townSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTypedTown('');
+                    setFilters(p => ({ ...p, distanceOrigin: null }));
+                    setIsTownDropdownOpen(false);
+                  }}
+                  className="absolute right-2 top-2 text-slate-500 hover:text-white cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Autocomplete Dropdown */}
+            {isTownDropdownOpen && suggestedTowns.length > 0 && (
+              <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-slate-950 border border-slate-800 rounded-xl shadow-2xl py-1 custom-scrollbar">
+                {suggestedTowns.map((town) => (
+                  <button
+                    key={`${town.name}-${town.district}`}
+                    type="button"
+                    onClick={() => handleSelectTown(town)}
+                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-800 flex items-center justify-between text-slate-200 transition-colors cursor-pointer"
+                  >
+                    <div>
+                      <span className="font-semibold text-white">{town.name}</span>
+                      <span className="text-[10px] text-slate-400 ml-1.5">({town.district})</span>
+                    </div>
+                    {town.aliases?.length > 0 && (
+                      <span className="text-[10px] text-slate-500 italic max-w-[100px] truncate">
+                        {town.aliases[0]}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {geoError && (
+            <p className="text-[11px] text-rose-400 bg-rose-500/10 px-2 py-1 rounded-lg border border-rose-500/20">
+              {geoError}
+            </p>
+          )}
+        </div>
+
+        {/* Distance Range Slider */}
+        <div className="space-y-2 pt-1 border-t border-slate-800/80">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-400">Within Range:</span>
+            <span className="font-mono font-bold text-rose-300">
+              {filters.distanceRadius > 0 ? `${filters.distanceRadius} km` : 'Any Distance'}
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="5"
+            value={filters.distanceRadius || 0}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              if (val > 0 && !filters.distanceOrigin) {
+                const defaultOrigin = { name: "Manjeri", district: "Malappuram", lat: 11.1202, lng: 76.1206 };
+                setFilters(p => ({ ...p, distanceRadius: val, distanceOrigin: defaultOrigin }));
+                setTypedTown("");
+              } else {
+                setFilters(p => ({ ...p, distanceRadius: val }));
+              }
+            }}
+            className="w-full accent-rose-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
+          />
+
+          {/* Quick Preset Distance Buttons */}
+          <div className="flex items-center gap-1 pt-0.5">
+            {[10, 20, 30, 50, 100].map(km => {
+              const isActive = filters.distanceRadius === km;
+              return (
+                <button
+                  key={km}
+                  type="button"
+                  onClick={() => {
+                    if (!filters.distanceOrigin) {
+                      const defaultOrigin = { name: "Manjeri", district: "Malappuram", lat: 11.1202, lng: 76.1206 };
+                      setFilters(p => ({ ...p, distanceRadius: km, distanceOrigin: defaultOrigin }));
+                      setTypedTown("");
+                    } else {
+                      setFilters(p => ({ ...p, distanceRadius: km }));
+                    }
+                  }}
+                  className={`flex-1 min-h-[32px] py-1.5 rounded-lg text-[11px] font-bold transition-all border cursor-pointer ${
+                    isActive
+                      ? 'bg-rose-500 text-white border-rose-400 shadow-sm'
+                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+                  }`}
+                >
+                  {km}km
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => setFilters(p => ({ ...p, distanceRadius: 0 }))}
+              className={`min-h-[32px] py-1.5 px-2.5 rounded-lg text-[11px] font-medium transition-all border cursor-pointer ${
+                !filters.distanceRadius || filters.distanceRadius === 0
+                  ? 'bg-slate-800 text-slate-200 border-slate-700'
+                  : 'bg-slate-950 text-slate-500 border-slate-800 hover:text-slate-300'
+              }`}
+            >
+              Any
+            </button>
+          </div>
+
+          {filters.distanceRadius > 0 && filters.distanceOrigin && (
+            <p className="text-[10px] text-slate-400 flex items-center gap-1 pt-0.5 leading-tight">
+              <span>Proposals within</span>
+              <strong className="text-rose-300">{filters.distanceRadius} km</strong>
+              <span>of</span>
+              <span className="text-white font-medium truncate max-w-[100px]">{filters.distanceOrigin.name}</span>
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* 7. District Selector */}
       <div className="space-y-2">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5 text-rose-400" /> Home District (Kerala)

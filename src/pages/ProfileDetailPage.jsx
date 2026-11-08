@@ -8,6 +8,7 @@ import CandidateAccessGate from '../components/CandidateAccessGate';
 import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
 import { shareProfile } from '../utils/shareUtils';
+import { useSeo } from '../utils/useSeo';
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -32,13 +33,8 @@ import {
   Users
 } from 'lucide-react';
 
-function maskPhoneNumber(phone) {
-  if (!phone) return "+91 98******12";
-  const clean = phone.trim();
-  if (clean.length < 8) return "+91 98******12";
-  const prefix = clean.slice(0, Math.min(6, clean.length - 4));
-  const suffix = clean.slice(-2);
-  return `${prefix}******${suffix}`;
+function maskPhoneNumber() {
+  return "••••••••••";
 }
 
 export default function ProfileDetailPage({
@@ -74,23 +70,51 @@ export default function ProfileDetailPage({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
 
-  // SEO: Update page title dynamically per profile
-  useEffect(() => {
-    const prev = document.title;
-    if (profile) {
-      const gender = profile.basicInfo?.gender || (profile.gender === 'female' ? 'Bride' : 'Groom');
-      const district = profile.locationFamily?.homeDistrict || 'Kerala';
-      const qual = Array.isArray(profile.islamicQualification) && profile.islamicQualification.length
-        ? profile.islamicQualification[0]
-        : (profile.islamicBackground?.qualification || '');
-      const edu = profile.generalEducation?.degreeName || profile.educationOccupation?.education || '';
-      const parts = [gender, qual, edu, district].filter(Boolean).join(' · ');
-      document.title = `${parts} | Al-ThayyiBoon Matrimony`;
-    } else {
-      document.title = 'Proposal | Al-ThayyiBoon Matrimony';
+  // SEO: Dynamic metadata, Open Graph tags & Schema.org JSON-LD structured data per candidate
+  const gender = profile?.basicInfo?.gender || (profile?.gender === 'female' ? 'Bride' : 'Groom');
+  const district = profile?.locationFamily?.homeDistrict || 'Kerala';
+  const qual = Array.isArray(profile?.islamicQualification) && profile?.islamicQualification.length
+    ? profile.islamicQualification.join(', ')
+    : (profile?.islamicBackground?.qualification || '');
+  const edu = profile?.generalEducation?.degreeName || profile?.educationOccupation?.education || '';
+  const job = profile?.educationOccupation?.occupation || profile?.careerWorkingStatus || '';
+  const age = profile?.basicInfo?.age || '';
+  const profileParts = [gender, qual, edu, district].filter(Boolean).join(' · ');
+  const seoTitle = profile ? `${profileParts} | Al-ThayyiBoon Matrimony` : 'Matrimonial Proposal | Al-ThayyiBoon';
+  const seoDesc = profile 
+    ? `Verified Islamic & Academic proposal for ${gender} (${age ? `${age} yrs, ` : ''}${district}, Kerala). Qualifications: ${[qual, edu, job].filter(Boolean).join(', ')}. Direct guardian contact verified on Al-ThayyiBoon.`
+    : 'Discover verified Islamic & Academic proposals for Kerala Muslims and Gulf diaspora on Al-ThayyiBoon.';
+
+  const profileJsonLd = profile ? {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    "mainEntity": {
+      "@type": "Person",
+      "name": `${gender} Proposal #${profile.id || id}`,
+      "gender": gender === 'Bride' ? 'Female' : 'Male',
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": district,
+        "addressCountry": "IN"
+      },
+      ...(job ? { "jobTitle": job } : {}),
+      ...(qual ? {
+        "hasCredential": {
+          "@type": "EducationalOccupationalCredential",
+          "credentialCategory": "Islamic Degree",
+          "name": qual
+        }
+      } : {})
     }
-    return () => { document.title = prev; };
-  }, [id, profile]);
+  } : null;
+
+  useSeo({
+    title: seoTitle,
+    description: seoDesc,
+    canonicalUrl: `https://althayyiboon.com/profile/${id}`,
+    ogType: 'article',
+    jsonLd: profileJsonLd
+  });
 
   // Determine if current user has an active registered proposal
   const hasRegistered = Boolean(
@@ -195,7 +219,7 @@ export default function ProfileDetailPage({
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Proposal Not Found</h1>
           <p className="text-sm text-slate-400 mb-6 max-w-md">
-            The proposal ID "{id}" could not be located or may have been removed or updated.
+            The requested proposal could not be located or may have been removed or updated.
           </p>
           <div className="flex gap-3">
             <Link
@@ -231,7 +255,7 @@ export default function ProfileDetailPage({
   const candidateDisplayName = isDemo
     ? (isBride ? 'Bride' : 'Groom')
     : isParent 
-      ? `Candidate ${isBride ? 'Bride' : 'Groom'} (${profile.id})` 
+      ? `Candidate ${isBride ? 'Bride' : 'Groom'}` 
       : (basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal'));
 
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
@@ -278,7 +302,7 @@ export default function ProfileDetailPage({
       : "91" + rawNumber;
 
     const text = encodeURIComponent(
-      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${candidateDisplayName}, ID: ${profile.id}) found on Al-ThayyiBoon Matrimony.`
+      `Assalamu Alaikum. I am contacting regarding proposal for ${isBride ? 'Bride' : 'Groom'} (${candidateDisplayName}) found on Al-ThayyiBoon Matrimony.`
     );
     return `https://wa.me/${formattedNum}?text=${text}`;
   };
@@ -293,7 +317,7 @@ export default function ProfileDetailPage({
 
   const handleCopyBioData = () => {
     const text = `*Al-ThayyiBoon Matrimonial Proposal*\n\n` +
-      `👤 *Candidate:* ${candidateDisplayName} (ID: ${profile.id})\n` +
+      `👤 *Candidate:* ${candidateDisplayName}\n` +
       `💍 *Gender & Age:* ${isBride ? 'Bride' : 'Groom'}, ${basicInfo.age} Yrs (${basicInfo.maritalStatus || 'Never Married'})\n` +
       `📏 *Height:* ${basicInfo.height || 'N/A'}\n` +
       `📖 *Islamic Degree:* ${islamicList.join(', ') || 'General'}\n` +
@@ -346,7 +370,7 @@ export default function ProfileDetailPage({
               <button
                 onClick={() => navigate(`/profile/${prevProfile.id}`)}
                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium transition-colors cursor-pointer"
-                title={`Previous: ${prevProfile.id}`}
+                title="Previous Proposal"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Prev</span>
@@ -356,7 +380,7 @@ export default function ProfileDetailPage({
               <button
                 onClick={() => navigate(`/profile/${nextProfile.id}`)}
                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium transition-colors cursor-pointer"
-                title={`Next: ${nextProfile.id}`}
+                title="Next Proposal"
               >
                 <span className="hidden sm:inline">Next</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -394,9 +418,6 @@ export default function ProfileDetailPage({
                         : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
                     }`}>
                       {isBride ? 'Bride Proposal' : 'Groom Proposal'}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-mono font-bold">
-                      ID: {profile.id}
                     </span>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold flex items-center gap-1">
                       <ShieldCheck className="w-3 h-3" /> Verified
@@ -571,9 +592,16 @@ export default function ProfileDetailPage({
                       <MapPin className="w-4 h-4" />
                       <span>District & Native</span>
                     </div>
-                    <p className="text-sm sm:text-base font-bold text-white">
-                      {locationFamily.homeDistrict || 'Kerala'}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm sm:text-base font-bold text-white">
+                        {locationFamily.homeDistrict || 'Kerala'}
+                      </p>
+                      {profile.distanceKm != null && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                          {profile.distanceKm < 1 ? '< 1 km' : `${Math.round(profile.distanceKm)} km away`}
+                        </span>
+                      )}
+                    </div>
                     {locationFamily.nativePlace && (
                       <p className="text-xs text-slate-400 mt-1">{locationFamily.nativePlace}</p>
                     )}

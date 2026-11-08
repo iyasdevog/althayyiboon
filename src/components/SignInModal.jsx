@@ -76,8 +76,7 @@ export default function SignInModal({
     if (res.success) {
       if (res.isAlreadyRegistered) {
         const candidateName = res.matchedProfile?.basicInfo?.fullName || res.profile?.name || 'Candidate';
-        const pId = res.matchedProfile?.id ? ` (${res.matchedProfile.id})` : '';
-        if (onShowToast) onShowToast(`Welcome back, ${candidateName}${pId}!`);
+        if (onShowToast) onShowToast(`Welcome back, ${candidateName}!`);
         if (onSuccess) onSuccess({ isNewRegistration: false, profile: res.profile, matchedProfile: res.matchedProfile });
         else onClose();
       } else {
@@ -140,8 +139,7 @@ export default function SignInModal({
     if (res.success) {
       if (res.isAlreadyRegistered) {
         const candidateName = res.matchedProfile?.basicInfo?.fullName || res.profile?.name || 'Candidate';
-        const pId = res.matchedProfile?.id ? ` (${res.matchedProfile.id})` : '';
-        if (onShowToast) onShowToast(`Welcome back, ${candidateName}${pId}!`);
+        if (onShowToast) onShowToast(`Welcome back, ${candidateName}!`);
         if (onSuccess) onSuccess({ isNewRegistration: false, profile: res.profile, matchedProfile: res.matchedProfile });
         else onClose();
       } else {
@@ -169,8 +167,7 @@ export default function SignInModal({
 
     if (res.success) {
       const candidateName = res.matchedProfile?.basicInfo?.fullName || res.profile?.name || 'Candidate';
-      const pId = res.profile?.profileId ? ` (${res.profile.profileId})` : '';
-      if (onShowToast) onShowToast(`Welcome back, ${candidateName}${pId}! Proposal verified.`);
+      if (onShowToast) onShowToast(`Welcome back, ${candidateName}! Proposal verified.`);
       if (onSuccess) onSuccess({ isNewRegistration: false, profile: res.profile, matchedProfile: res.matchedProfile });
       else onClose();
     } else {

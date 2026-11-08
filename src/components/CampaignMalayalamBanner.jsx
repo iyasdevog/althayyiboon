@@ -79,11 +79,6 @@ export default function CampaignMalayalamBanner({ onOpenAddModal }) {
             <h2 className="text-base sm:text-lg font-black text-white leading-snug tracking-tight">
               പ്രൊപ്പോസൽ ഡാറ്റാ ശേഖരണം നടക്കുന്നു — നിലവിൽ എല്ലാ പ്രൊഫൈലുകളും രഹസ്യമായി സൂക്ഷിച്ചിരിക്കുന്നു
             </h2>
-
-            {/* Malayalam Explanation */}
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-4xl font-normal">
-              അൽ-ത്വയ്യിബൂൻ പ്ലാറ്റ്‌ഫോം പൊതുജനങ്ങൾക്കായി ഔദ്യോഗികമായി തുറക്കുമ്പോൾ ഉടൻ അറിയാനും, <strong className="text-amber-300 font-semibold">{rewardCredits} സൗജന്യ കോൺടാക്റ്റ് അൺലോക്ക് ക്രെഡിറ്റുകൾ</strong> ആസ്വദിക്കാനും ഞങ്ങളുടെ ഔദ്യോഗിക വാട്സാപ്പ് ഗ്രൂപ്പിൽ ഇപ്പോൾ തന്നെ ചേരുക! ലോഞ്ച് തിയതി വരെ വധൂവരന്മാരുടെ സ്വകാര്യത ഉറപ്പാക്കാൻ എല്ലാ പ്രൊഫൈലുകളും താല്ക്കാലികമായി സുരക്ഷിതമാക്കി വെച്ചിരിക്കുകയാണ്.
-            </p>
           </div>
         </div>
 

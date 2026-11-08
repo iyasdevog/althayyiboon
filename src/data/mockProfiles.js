@@ -147,6 +147,7 @@ export const DEMO_PROFILES = [
     loginCredentials: {
       username: "DEMO-BRIDE-101",
       password: "demo-password-101"
+
     },
     basicInfo: {
       fullName: "Fathima Zahra (Demo Sample)",
@@ -182,6 +183,7 @@ export const DEMO_PROFILES = [
     locationFamily: {
       homeDistrict: "Malappuram",
       nativePlace: "Manjeri",
+      coordinates: { lat: 11.1202, lng: 76.1206 },
       fatherName: "K.V. Abdul Latheef",
       motherName: "Suhara Latheef",
       siblings: "1 Brother (Engineer), 1 Sister"
@@ -247,6 +249,7 @@ export const DEMO_PROFILES = [
     locationFamily: {
       homeDistrict: "Kozhikode",
       nativePlace: "Vadakara",
+      coordinates: { lat: 11.6033, lng: 75.5898 },
       fatherName: "Dr. P. Muhammed Ali",
       motherName: "Khadeeja Ali",
       siblings: "2 Sisters"
@@ -312,6 +315,7 @@ export const DEMO_PROFILES = [
     locationFamily: {
       homeDistrict: "Kannur",
       nativePlace: "Taliparamba",
+      coordinates: { lat: 12.0437, lng: 75.3587 },
       fatherName: "C.K. Musthafa",
       motherName: "Maimoona",
       siblings: "1 Younger Brother"
@@ -377,6 +381,7 @@ export const DEMO_PROFILES = [
     locationFamily: {
       homeDistrict: "Thrissur",
       nativePlace: "Chavakkad",
+      coordinates: { lat: 10.5898, lng: 76.0244 },
       fatherName: "T. Ibrahim",
       motherName: "Sainaba",
       siblings: "2 Brothers"
@@ -442,6 +447,7 @@ export const DEMO_PROFILES = [
     locationFamily: {
       homeDistrict: "Malappuram",
       nativePlace: "Perinthalmanna",
+      coordinates: { lat: 10.9760, lng: 76.2254 },
       fatherName: "Haji K. Usman",
       motherName: "Rabiya",
       siblings: "1 Sister (Married)"
@@ -505,8 +511,9 @@ export const DEMO_PROFILES = [
       workCountry: "India (Kerala)"
     },
     locationFamily: {
-      homeDistrict: "Kozhikode",
+      homeDistrict: "Malappuram",
       nativePlace: "Kottakkal",
+      coordinates: { lat: 11.0006, lng: 75.9961 },
       fatherName: "Prof. Shamsudheen",
       motherName: "Amina Shamsudheen",
       siblings: "1 Brother (Doctor), 1 Sister"
@@ -572,6 +579,7 @@ export const DEMO_PROFILES = [
     locationFamily: {
       homeDistrict: "Kannur",
       nativePlace: "Payyanur",
+      coordinates: { lat: 12.1009, lng: 75.2017 },
       fatherName: "K.V. Abdul Khader",
       motherName: "Suhra Khader",
       siblings: "2 Brothers (Engineers)"
@@ -637,6 +645,7 @@ export const DEMO_PROFILES = [
     locationFamily: {
       homeDistrict: "Malappuram",
       nativePlace: "Tirur",
+      coordinates: { lat: 10.9146, lng: 75.9228 },
       fatherName: "P. Hamza Moulavi",
       motherName: "Khadeeja",
       siblings: "1 Brother, 2 Sisters"

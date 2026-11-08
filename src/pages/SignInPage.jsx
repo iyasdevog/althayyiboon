@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SignInModal from '../components/SignInModal';
 import { useProfiles } from '../context/ProfilesContext';
+import { useSeo } from '../utils/useSeo';
 
 export default function SignInPage({
   onShowToast
@@ -16,13 +17,14 @@ export default function SignInPage({
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'signin';
   const initialRole = searchParams.get('role') === 'bride' ? 'bride' : 'groom';
 
-  useEffect(() => {
-    const prev = document.title;
-    document.title = initialMode === 'register'
+  useSeo({
+    title: initialMode === 'register'
       ? 'Register Candidate | Al-ThayyiBoon – Kerala & Gulf Islamic Matrimony'
-      : 'Sign In | Al-ThayyiBoon – Kerala & Gulf Islamic Matrimony';
-    return () => { document.title = prev; };
-  }, [initialMode]);
+      : 'Sign In | Al-ThayyiBoon – Kerala & Gulf Islamic Matrimony',
+    description: 'Sign in to access verified Kerala Muslim matrimonial proposals and direct guardian contacts.',
+    canonicalUrl: `https://althayyiboon.com/signin?mode=${initialMode}`,
+    ogType: 'website'
+  });
 
   const handleSuccess = (authResult) => {
     if (authResult?.isNewRegistration) {

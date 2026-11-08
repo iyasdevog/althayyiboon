@@ -1,4 +1,5 @@
 import { db } from "./config.js";
+import { calculateListingExpiry } from "../utils/profileValidity.js";
 import { 
   collection, 
   getDocs, 
@@ -168,24 +169,31 @@ export async function saveProfileToStore(newProfileData) {
     whatsappNumber: newProfileData.contactPreferences?.whatsapp || ""
   };
   
-  const docPayload = {
-    ...newProfileData,
-    gender: normalizedGender,
-    islamicQualification: normalizedIslamicQual,
-    generalEducation: generalEdu,
-    contactDetails: contactDetails,
-    contactPreferences: {
-      ...newProfileData.contactPreferences,
-      secretPin
-    },
-    security: {
-      ...newProfileData.security,
-      editPin: secretPin
-    },
-    status: "approved",
-    createdAt: new Date().toISOString(),
-    searchKeywords
-  };
+    const now = new Date();
+    const expiresAt = calculateListingExpiry(now, 3).toISOString();
+
+    const docPayload = {
+      ...newProfileData,
+      gender: normalizedGender,
+      islamicQualification: normalizedIslamicQual,
+      generalEducation: generalEdu,
+      contactDetails: contactDetails,
+      contactPreferences: {
+        ...newProfileData.contactPreferences,
+        secretPin
+      },
+      security: {
+        ...newProfileData.security,
+        editPin: secretPin
+      },
+      status: "approved",
+      listingStatus: "active",
+      listingDurationMonths: 3,
+      createdAt: now.toISOString(),
+      expiresAt: expiresAt,
+      whatsappRenewalNotified: false,
+      searchKeywords
+    };
 
   let savedId = "prof_" + Date.now();
 

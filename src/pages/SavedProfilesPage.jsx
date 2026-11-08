@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import ProfileCard from '../components/ProfileCard';
 import { useProfiles } from '../context/ProfilesContext';
+import { useSeo } from '../utils/useSeo';
 import { Heart, ArrowLeft, ArrowRight, Sparkles, Filter, Trash2 } from 'lucide-react';
 
 export default function SavedProfilesPage({
@@ -19,11 +20,12 @@ export default function SavedProfilesPage({
   const { profiles, rawProfiles, bookmarks, toggleBookmark, totalCount, activeFilterCount } = useProfiles();
   const [selectedGender, setSelectedGender] = useState('All');
 
-  useEffect(() => {
-    const prev = document.title;
-    document.title = 'Saved Proposals | Al-ThayyiBoon – Your Bookmarked Matrimonial Profiles';
-    return () => { document.title = prev; };
-  }, []);
+  useSeo({
+    title: 'Saved Proposals | Al-ThayyiBoon – Your Bookmarked Matrimonial Profiles',
+    description: 'Review and manage your shortlisted Kerala Muslim matrimonial profiles. Contact verified guardians directly.',
+    canonicalUrl: 'https://althayyiboon.com/saved',
+    ogType: 'website'
+  });
 
   // Filter bookmarked profiles
   const bookmarkedProfiles = rawProfiles.filter(p => bookmarks.includes(p.id));

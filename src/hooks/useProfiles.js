@@ -15,6 +15,7 @@ import {
 } from '../firebase/profileService';
 import { useAuth } from '../context/AuthContext';
 import { DEMO_PROFILES } from '../data/mockProfiles';
+import { calculateHaversineDistance, resolveProfileCoordinates } from '../utils/geoUtils';
 
 const BOOKMARKS_KEY = "althayyiboon_bookmarks_v1";
 
@@ -86,7 +87,9 @@ export function useProfiles() {
     workLocation: "",
     maritalStatus: "",
     sect: "",
-    postedWithin: "" // "" = all, "1" = today, "7" = last 7d, "30" = last 30d, "90" = last 90d
+    postedWithin: "", // "" = all, "1" = today, "7" = last 7d, "30" = last 30d, "90" = last 90d
+    distanceRadius: 0, // 0 = any distance / off. e.g. 10, 20, 50 km
+    distanceOrigin: null // { name, district, lat, lng, isGPS?: boolean }
   }), [userGender, isAdmin]);
 
   const [filters, setFilters] = useState(defaultFilters);
@@ -229,6 +232,7 @@ export function useProfiles() {
     if (filters.maritalStatus) count++;
     if (filters.sect) count++;
     if (filters.postedWithin) count++;
+    if (filters.distanceRadius > 0 && filters.distanceOrigin?.lat) count++;
     return count;
   }, [filters, showFavoritesOnly]);
 
@@ -413,7 +417,37 @@ export function useProfiles() {
       }
 
       return true;
+    }).map(profile => {
+      let distanceKm = null;
+      if (filters.distanceOrigin?.lat && filters.distanceOrigin?.lng) {
+        const coords = resolveProfileCoordinates(profile);
+        if (coords?.lat && coords?.lng) {
+          distanceKm = calculateHaversineDistance(
+            filters.distanceOrigin.lat,
+            filters.distanceOrigin.lng,
+            coords.lat,
+            coords.lng
+          );
+        }
+      }
+      return distanceKm != null ? { ...profile, distanceKm } : profile;
+    }).filter(profile => {
+      // Distance Radius Filter
+      if (filters.distanceRadius > 0 && filters.distanceOrigin?.lat) {
+        if (profile.distanceKm == null) {
+          return false;
+        }
+        if (profile.distanceKm > filters.distanceRadius) {
+          return false;
+        }
+      }
+      return true;
     }).sort((a, b) => {
+      if (sortBy === "nearest") {
+        const distA = a.distanceKm != null ? a.distanceKm : 999999;
+        const distB = b.distanceKm != null ? b.distanceKm : 999999;
+        if (distA !== distB) return distA - distB;
+      }
       if (sortBy === "ageAsc") {
         return (a.basicInfo?.age || 0) - (b.basicInfo?.age || 0);
       }

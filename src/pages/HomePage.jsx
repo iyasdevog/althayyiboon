@@ -4,6 +4,7 @@ import LandingPage from '../components/LandingPage';
 import CampaignPage from '../components/CampaignPage';
 import BrowsePage from './BrowsePage';
 import { useAuth } from '../context/AuthContext';
+import { useSeo } from '../utils/useSeo';
 
 export default function HomePage({
   onOpenAddModal,
@@ -17,6 +18,13 @@ export default function HomePage({
 }) {
   const navigate = useNavigate();
   const { currentUser, switchUserPersona, pricing, isAdmin } = useAuth();
+
+  useSeo({
+    title: 'Al-ThayyiBoon | Kerala & Gulf Islamic Matrimony – Islamic & Academic Directory',
+    description: "Kerala's premier Islamic & Academic matrimony directory for Kerala Muslims and the Gulf diaspora. Discover Wafi, Wafiyya, Hudawi scholars, Doctors, Engineers, Post-Graduates, and Professionals with verified direct guardian contacts.",
+    canonicalUrl: 'https://althayyiboon.com/',
+    ogType: 'website'
+  });
 
   // Condition 1: Guest Visitor (Not Authenticated)
   if (!currentUser) {

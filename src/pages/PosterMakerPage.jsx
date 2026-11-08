@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import SharePosterModal from '../components/SharePosterModal';
 import { useProfiles } from '../context/ProfilesContext';
+import { useSeo } from '../utils/useSeo';
 import { Image as ImageIcon, ArrowLeft, Users, Sparkles } from 'lucide-react';
 
 export default function PosterMakerPage({
@@ -28,12 +29,13 @@ export default function PosterMakerPage({
     }
   }, [id]);
 
-  // SEO: Update page title
-  useEffect(() => {
-    const prev = document.title;
-    document.title = 'Matrimonial Poster Studio | Al-ThayyiBoon – WhatsApp & Instagram Cards';
-    return () => { document.title = prev; };
-  }, []);
+  // SEO Metadata
+  useSeo({
+    title: 'Matrimonial Poster Studio | Al-ThayyiBoon – WhatsApp & Instagram Cards',
+    description: 'Create and download beautiful, shareable matrimonial proposal posters for WhatsApp groups, Status, and Instagram stories on Al-ThayyiBoon.',
+    canonicalUrl: id ? `https://althayyiboon.com/poster/${id}` : 'https://althayyiboon.com/poster',
+    ogType: 'website'
+  });
 
   const activeCandidate = rawProfiles.find(p => String(p.id).toLowerCase() === String(selectedId).toLowerCase())
     || profiles.find(p => String(p.id).toLowerCase() === String(selectedId).toLowerCase())
@@ -103,7 +105,7 @@ export default function PosterMakerPage({
                 const job = p.educationOccupation?.profession || '';
                 return (
                   <option key={p.id} value={p.id}>
-                    {p.id} - {isBride ? '👰 Bride' : '🤵 Groom'} ({age}) {job ? `• ${job}` : ''}
+                    {name} - {isBride ? '👰 Bride' : '🤵 Groom'} {age ? `(${age})` : ''} {job ? `• ${job}` : ''}
                   </option>
                 );
               })}

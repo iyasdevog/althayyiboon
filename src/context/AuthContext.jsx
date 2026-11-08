@@ -24,6 +24,11 @@ export const DEFAULT_PRICING = {
   campaignMode: true, // When true, submissions are free and campaign holding page is displayed
   campaignEndDate: '2026-11-20T23:59:00', // End date & time defined by admin
   campaignRewardCredits: 3, // Granted at campaign ending date (e.g. 3 contact views)
+  listingValidityMonths: 3, // Each registration is valid for 3 months
+  renewalFee: 199, // Discounted renewal fee after 3 months
+  monthlyCampaignSchedule: '1st & 2nd of Every Month',
+  monthlyCampaignDays: [1, 2],
+  monthlyCampaignActive: true,
   whatsappGroupLink: 'https://chat.whatsapp.com/sample-althayyiboon-group',
   whatsappGroupName: 'Al-ThayyiBoon Matrimonial Network',
   upiId: '', // Direct UPI ID (e.g. althayyiboon@okaxis) - 0% Commission
@@ -383,7 +388,7 @@ export function AuthProvider({ children }) {
 
       const profile = {
         uid: matched.id,
-        name: matched.basicInfo?.fullName || `Candidate (${matched.id})`,
+        name: matched.basicInfo?.fullName || (isBrideGender ? 'Bride Candidate' : 'Groom Candidate'),
         email: matched.email || `${matched.id.toLowerCase()}@althayyiboon.com`,
         gender: gender,
         role: role,
@@ -439,7 +444,7 @@ export function AuthProvider({ children }) {
       const updated = {
         ...(prev || {}),
         uid: prev?.uid || matched.id,
-        name: prev?.name || matched.basicInfo?.fullName || `Candidate (${matched.id})`,
+        name: prev?.name || matched.basicInfo?.fullName || (isBrideGender ? 'Bride Candidate' : 'Groom Candidate'),
         gender: gender,
         role: role,
         genderVerified: true,

@@ -6,6 +6,7 @@ import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import WalletRechargeModal from '../components/WalletRechargeModal';
 import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
+import { useSeo } from '../utils/useSeo';
 import { Coins, ArrowLeft, ShieldCheck, Zap, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function WalletPage({
@@ -17,6 +18,12 @@ export default function WalletPage({
   const navigate = useNavigate();
   const { totalCount, activeFilterCount, bookmarks } = useProfiles();
   const { credits, pricing } = useAuth();
+
+  useSeo({
+    title: 'Wallet & Contact Credits | Al-ThayyiBoon Matrimony',
+    description: 'Manage credits and verified candidate contact access on Al-ThayyiBoon.',
+    canonicalUrl: 'https://althayyiboon.com/wallet'
+  });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">

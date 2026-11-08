@@ -168,6 +168,7 @@ export default function ProfileGrid({
               aria-label="Sort proposals"
             >
               <option value="newest">Newest First</option>
+              <option value="nearest">Nearest Distance</option>
               <option value="ageAsc">Youngest</option>
               <option value="ageDesc">Eldest</option>
             </select>
@@ -331,8 +332,7 @@ export default function ProfileGrid({
                     <th className="p-3 text-slate-400 font-bold uppercase tracking-wider w-1/4">Criteria</th>
                     {comparedProfiles.map(p => (
                       <th key={p.id} className="p-3 text-white font-bold text-sm">
-                        <div className="truncate">{p.basicInfo?.fullName || p.id}</div>
-                        <div className="text-[10px] text-emerald-400 font-mono font-normal">ID: {p.id}</div>
+                        <div className="truncate">{p.basicInfo?.fullName || 'Candidate Proposal'}</div>
                       </th>
                     ))}
                   </tr>

@@ -10,167 +10,219 @@
   <!-- ==========================================
        Al-ThayyiBoon – XML Sitemap
        Site    : https://althayyiboon.com
-       Updated : 2026-09-15
+       Updated : 2026-11-08
        ========================================== -->
 
-  <!-- ── Main Directory (Highest priority) ── -->
+  <!-- ── Main Landing & Directory (Highest priority) ── -->
   <url>
     <loc>https://althayyiboon.com/</loc>
-    <lastmod>2026-09-15</lastmod>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://althayyiboon.com/og-banner.png</image:loc>
-      <image:title>Al-ThayyiBoon – Free Islamic Matrimony Directory Kerala</image:title>
-      <image:caption>Browse bride and groom proposals from Kerala and Gulf diaspora</image:caption>
+      <image:title>Al-ThayyiBoon – Islamic &amp; Academic Matrimony Directory Kerala</image:title>
+      <image:caption>Browse verified bride and groom proposals from Kerala and Gulf diaspora</image:caption>
     </image:image>
+  </url>
+
+  <!-- ── Browse Directory Page ── -->
+  <url>
+    <loc>https://althayyiboon.com/browse</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- ── Register Matrimonial Proposal Page ── -->
+  <url>
+    <loc>https://althayyiboon.com/register</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://althayyiboon.com/add</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- ── Matrimonial Poster Studio ── -->
+  <url>
+    <loc>https://althayyiboon.com/poster</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
   </url>
 
   <!-- ── Bride Listings Filter View ── -->
   <url>
-    <loc>https://althayyiboon.com/?gender=Bride</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?gender=Bride</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- ── Groom Listings Filter View ── -->
   <url>
-    <loc>https://althayyiboon.com/?gender=Groom</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?gender=Groom</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- ── Islamic Graduation (Wafi / Hudawi) Search ── -->
+  <!-- ── Islamic Graduation (Wafi / Hudawi / Wafiyya / Zahravi) ── -->
   <url>
-    <loc>https://althayyiboon.com/?q=wafi</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=wafi</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://althayyiboon.com/browse?q=hudawi</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://althayyiboon.com/browse?q=wafiyya</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://althayyiboon.com/browse?q=zahravi</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=hudawi</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=baqavi</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://althayyiboon.com/?q=wafiyya</loc>
-    <lastmod>2026-09-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://althayyiboon.com/?q=zahravi</loc>
-    <lastmod>2026-09-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
 
   <!-- ── Sayyid / Thangal Family Proposals ── -->
   <url>
-    <loc>https://althayyiboon.com/?q=sayyid</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=sayyid</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- ── Gulf Diaspora Professionals ── -->
+  <url>
+    <loc>https://althayyiboon.com/browse?q=uae</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- ── Gulf / Abroad Professionals ── -->
   <url>
-    <loc>https://althayyiboon.com/?q=uae</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=saudi</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=saudi</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=qatar</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
 
   <!-- ── Kerala District Searches ── -->
   <url>
-    <loc>https://althayyiboon.com/?q=malappuram</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=malappuram</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://althayyiboon.com/browse?q=kozhikode</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://althayyiboon.com/browse?q=kannur</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=kozhikode</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=kasaragod</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=kannur</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=palakkad</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=kasaragod</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=thrissur</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=palakkad</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=ernakulam</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ── Academic / Profession Searches ── -->
+  <url>
+    <loc>https://althayyiboon.com/browse?q=doctor</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=thrissur</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=engineer</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=ernakulam</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=mbbs</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
-  </url>
-
-  <!-- ── Profession Searches ── -->
-  <url>
-    <loc>https://althayyiboon.com/?q=doctor</loc>
-    <lastmod>2026-09-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=engineer</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=nurse</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://althayyiboon.com/?q=nurse</loc>
-    <lastmod>2026-09-15</lastmod>
+    <loc>https://althayyiboon.com/browse?q=teacher</loc>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://althayyiboon.com/?q=teacher</loc>
-    <lastmod>2026-09-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
 
 </urlset>
