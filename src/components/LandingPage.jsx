@@ -60,9 +60,9 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
           <div className="flex items-center gap-2.5 sm:gap-3">
             <img 
-              src="/favicon.svg" 
+              src="/logo.png" 
               alt="Al-ThayyiBoon Matrimony" 
-              className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl shadow-lg shadow-emerald-950/40"
+              className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl shadow-lg shadow-emerald-950/40 object-contain"
             />
             <div>
               <span className="text-base sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight">

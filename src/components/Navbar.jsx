@@ -156,9 +156,9 @@ export default function Navbar({
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
               <Link to="/" aria-label="Al-ThayyiBoon Matrimony Home" className="flex items-center gap-1.5 sm:gap-3 group">
                 <img 
-                  src="/favicon.svg" 
+                  src="/logo.png" 
                   alt="Al-ThayyiBoon Logo" 
-                  className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-emerald-950/50 shrink-0 group-hover:scale-105 transition-transform"
+                  className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-emerald-950/50 shrink-0 group-hover:scale-105 transition-transform object-contain"
                 />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 sm:gap-2">
@@ -428,9 +428,9 @@ export default function Navbar({
             <div className="flex items-center justify-between p-4 border-b border-slate-800/80 bg-slate-900/60">
               <div className="flex items-center gap-2.5">
                 <img 
-                  src="/favicon.svg" 
+                  src="/logo.png" 
                   alt="Al-ThayyiBoon Logo" 
-                  className="w-7 h-7 rounded-lg shadow-sm shrink-0" 
+                  className="w-7 h-7 rounded-lg shadow-sm shrink-0 object-contain" 
                 />
                 <div>
                   <span className="font-extrabold text-sm text-white block leading-tight">Al-ThayyiBoon</span>
