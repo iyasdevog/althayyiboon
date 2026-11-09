@@ -153,25 +153,25 @@ export default function Navbar({
           <div className="flex items-center justify-between h-14 sm:h-20 gap-1.5 sm:gap-4">
             
             {/* Logo & Branding */}
-            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
-              <Link to="/" aria-label="Al-ThayyiBoon Matrimony Home" className="flex items-center gap-1.5 sm:gap-3 group">
-                <img 
-                  src="/logo.png" 
-                  alt="Al-ThayyiBoon Logo" 
-                  className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-emerald-950/50 shrink-0 group-hover:scale-105 transition-transform object-contain"
+            <div className="flex items-center shrink-0 min-w-0">
+              <Link to="/" aria-label="Al-ThayyiBoon Matrimony Home" className="flex items-center gap-2 sm:gap-3 group">
+                <img
+                  src="/brand-icon.png"
+                  alt="Al-ThayyiBoon Emblem"
+                  className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl object-cover shadow-md shadow-emerald-950/40 ring-1 ring-emerald-500/20 group-hover:scale-105 transition-all shrink-0"
                 />
-                <div className="min-w-0">
+                <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="text-sm xs:text-base sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight whitespace-nowrap">
+                    <span className="text-base sm:text-xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight whitespace-nowrap">
                       Al-ThayyiBoon
                     </span>
-                    <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                    <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                       <ShieldCheck className="w-3 h-3" /> Islamic &amp; Academic
                     </span>
                   </div>
-                  <p className="text-[10px] sm:text-xs text-slate-400 font-medium hidden sm:block">
-                    Kerala &amp; Gulf Matrimony • <span className="text-emerald-400 font-bold">Verified Direct Contacts</span>
-                  </p>
+                  <span className="text-[10px] sm:text-xs text-amber-400 font-semibold tracking-wider uppercase -mt-0.5 whitespace-nowrap">
+                    Matrimonial
+                  </span>
                 </div>
               </Link>
             </div>
@@ -428,9 +428,9 @@ export default function Navbar({
             <div className="flex items-center justify-between p-4 border-b border-slate-800/80 bg-slate-900/60">
               <div className="flex items-center gap-2.5">
                 <img 
-                  src="/logo.png" 
+                  src="/brand-icon.png" 
                   alt="Al-ThayyiBoon Logo" 
-                  className="w-7 h-7 rounded-lg shadow-sm shrink-0 object-contain" 
+                  className="w-8 h-8 rounded-lg shadow-sm shrink-0 object-cover ring-1 ring-emerald-500/20" 
                 />
                 <div>
                   <span className="font-extrabold text-sm text-white block leading-tight">Al-ThayyiBoon</span>

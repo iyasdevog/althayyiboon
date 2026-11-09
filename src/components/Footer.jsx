@@ -12,9 +12,9 @@ export default function Footer({ onOpenAdminPortal }) {
           <div className="space-y-3.5 md:col-span-2">
             <div className="flex items-center gap-2.5">
               <img 
-                src="/logo.png" 
+                src="/brand-icon.png" 
                 alt="Al-ThayyiBoon Logo" 
-                className="w-9 h-9 rounded-xl shrink-0 shadow-lg shadow-emerald-950/50 object-contain"
+                className="w-10 h-10 rounded-xl shrink-0 shadow-lg shadow-emerald-950/50 object-cover ring-1 ring-emerald-500/20"
               />
               <div>
                 <span className="text-base sm:text-lg font-bold text-white tracking-tight">Al-ThayyiBoon Matrimony</span>

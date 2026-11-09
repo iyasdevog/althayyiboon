@@ -191,16 +191,16 @@ export default function CampaignPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
           <div className="flex items-center gap-2.5 sm:gap-3">
             <img 
-              src="/logo.png" 
+              src="/brand-icon.png" 
               alt="Al-ThayyiBoon Matrimony" 
-              className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl shadow-lg shadow-emerald-950/40 object-contain"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-lg shadow-emerald-950/40 object-cover ring-1 ring-emerald-500/20"
             />
             <div>
-              <span className="text-base sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight">
+              <span className="text-lg sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight">
                 Al-ThayyiBoon
               </span>
-              <p className="text-[10px] sm:text-xs text-slate-400 font-medium hidden xs:block">
-                Islamic &amp; Academic Matrimonial Network
+              <p className="text-[10px] sm:text-xs text-amber-400 font-semibold uppercase tracking-wider hidden xs:block">
+                Matrimonial • Islamic &amp; Academic
               </p>
             </div>
           </div>
