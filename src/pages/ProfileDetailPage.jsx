@@ -281,7 +281,8 @@ export default function ProfileDetailPage({
 
   const handleUnlock = () => {
     if (isDemo) {
-      onShowToast?.("Contact details are hidden in Demo View. Sign in to access real proposals.");
+      onShowToast?.("This is sample demo data. Please sign in to view real verified proposals.");
+      navigate('/signin?reason=demo');
       return;
     }
     if (isParent) {
@@ -291,6 +292,8 @@ export default function ProfileDetailPage({
     const res = unlockContact(profile);
     if (res.success && onShowToast) {
       onShowToast("Guardian contact unlocked successfully! (-1 Credit)");
+    } else if (res?.reason === 'insufficient_credits') {
+      navigate('/wallet');
     }
   };
 
@@ -872,14 +875,18 @@ export default function ProfileDetailPage({
                         <div className="flex items-center gap-2">
                           <Lock className="w-4 h-4 text-amber-400" />
                           <span className="text-sm font-mono text-slate-300">
-                            {isDemo ? 'Hidden in Demo View' : maskPhoneNumber(rawPhone)}
+                            {isDemo ? '•••••••••• (Sample Data)' : maskPhoneNumber(rawPhone)}
                           </span>
                         </div>
-                        <span className="text-xs text-slate-500">Contact Protected</span>
+                        <span className="text-xs text-slate-500">
+                          {isDemo ? 'Demo Mode' : 'Contact Protected'}
+                        </span>
                       </div>
 
                       <p className="text-xs text-slate-400 leading-relaxed">
-                        To protect the modest privacy of Muslim candidates and prevent spam, guardian numbers are accessible through pay-per-view credits (1 Credit).
+                        {isDemo
+                          ? 'This candidate profile is demonstration data. To browse and unlock verified proposals and direct guardian contacts, sign in or register.'
+                          : 'To protect the modest privacy of Muslim candidates and prevent spam, guardian numbers are accessible through pay-per-view credits (1 Credit).'}
                       </p>
 
                       <div className="pt-2 flex flex-wrap gap-2">
@@ -888,7 +895,7 @@ export default function ProfileDetailPage({
                           className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
                         >
                           <Unlock className="w-4 h-4" />
-                          <span>Unlock Guardian Contact (-1 Credit)</span>
+                          <span>{isDemo ? 'Unlock Real Proposals (Sign In)' : 'Unlock Guardian Contact (-1 Credit)'}</span>
                         </button>
 
                         <button
@@ -896,7 +903,7 @@ export default function ProfileDetailPage({
                           className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <Coins className="w-3.5 h-3.5" />
-                          <span>Get Credits</span>
+                          <span>{isDemo ? 'View Pricing' : 'Get Credits'}</span>
                         </button>
                       </div>
                     </div>

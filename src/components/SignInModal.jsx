@@ -24,9 +24,11 @@ export default function SignInModal({
   onShowToast, 
   defaultRole = 'groom', 
   profiles = [],
-  initialMode = 'signin' // 'signin' | 'register'
+  initialMode = 'signin', // 'signin' | 'register'
+  prompt = '',
+  demoNotice = false
 }) {
-  const { loginWithGoogle, loginWithEmailPassword, loginWithLegacyCredentials, pricing } = useAuth();
+  const { loginWithGoogle, loginWithEmailPassword, loginWithLegacyCredentials, pricing, signInModalPrompt } = useAuth();
 
   // Top level auth mode: 'register' (New Candidate) vs 'signin' (Already Registered)
   const [authMode, setAuthMode] = useState(initialMode);
@@ -212,6 +214,23 @@ export default function SignInModal({
               : 'Sign in with your registered account, Google, or Profile ID & Password.'}
           </p>
         </div>
+
+        {/* Sample Demonstration Data Notice */}
+        {(demoNotice || prompt || signInModalPrompt) && (
+          <div className="mb-5 p-3.5 sm:p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs sm:text-sm flex items-start gap-3 shadow-lg">
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="font-bold text-amber-300 text-xs sm:text-sm">
+                Sample Demonstration Data Notice
+              </p>
+              <p className="text-amber-200/90 leading-relaxed mt-1 text-xs sm:text-sm">
+                {prompt || signInModalPrompt || "The profile you viewed is sample demonstration data. Please sign in or register below to browse authentic, verified candidate proposals and unlock genuine guardian contacts."}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Top Mode Switcher: [ New Candidate Registration ] vs [ Sign In (Already Registered) ] */}
         <div className="p-1 rounded-2xl bg-slate-950 border border-slate-800 flex gap-1 mb-5">

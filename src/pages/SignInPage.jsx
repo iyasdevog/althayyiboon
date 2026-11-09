@@ -16,6 +16,8 @@ export default function SignInPage({
   const searchParams = new URLSearchParams(location.search);
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'signin';
   const initialRole = searchParams.get('role') === 'bride' ? 'bride' : 'groom';
+  const reason = searchParams.get('reason');
+  const isDemoRedirect = reason === 'demo';
 
   useSeo({
     title: initialMode === 'register'
@@ -56,6 +58,7 @@ export default function SignInPage({
           profiles={rawProfiles}
           initialMode={initialMode}
           defaultRole={initialRole}
+          demoNotice={isDemoRedirect}
         />
       </main>
 

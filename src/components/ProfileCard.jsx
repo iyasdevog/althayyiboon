@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   User, 
   MapPin, 
@@ -58,6 +59,7 @@ export default function ProfileCard({
   viewMode = 'grid'
 }) {
   const { isContactUnlocked, unlockContact, pricing, isParent, isDemo: authIsDemo } = useAuth();
+  const navigate = useNavigate();
   const isDemo = Boolean(authIsDemo || profile.isFakeData || profile.id?.startsWith('DEMO-'));
 
   const {
@@ -99,8 +101,9 @@ export default function ProfileCard({
     e.stopPropagation();
     if (isDemo) {
       if (onShowToast) {
-        onShowToast("Contact details are hidden in Demo View. Sign in for real verified proposals.");
+        onShowToast("This is sample demo data. Please sign in to view real verified proposals.");
       }
+      navigate('/signin?reason=demo');
       return;
     }
     if (isParent) {
@@ -112,6 +115,8 @@ export default function ProfileCard({
     const result = unlockContact(profile);
     if (result.success && onShowToast) {
       onShowToast(`Guardian contact unlocked successfully! (-1 Credit)`);
+    } else if (result?.reason === 'insufficient_credits') {
+      navigate('/wallet');
     }
   };
 
@@ -426,7 +431,7 @@ export default function ProfileCard({
             </div>
             <div className="text-xs font-mono font-bold text-slate-200 mt-0.5">
               {isDemo
-                ? "Hidden in Demo Mode"
+                ? "•••••••••• (Sample Data)"
                 : isParent 
                   ? "Protected for Parent View"
                   : (isUnlocked ? rawPhone || "Contact provided" : maskPhoneNumber(rawPhone))}
@@ -435,10 +440,14 @@ export default function ProfileCard({
 
           {/* Pay-Per-View Unlock CTA Button */}
           {isDemo ? (
-            <span className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[11px] font-semibold flex items-center gap-1 shrink-0">
-              <Lock className="w-3.5 h-3.5 text-amber-400" />
-              <span>Hidden</span>
-            </span>
+            <button
+              onClick={handleUnlockClick}
+              className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-[11px] shadow-sm flex items-center gap-1 transition-all active:scale-95 shrink-0 cursor-pointer"
+              title="Unlock Real Guardian Contact (Sign In)"
+            >
+              <Coins className="w-3.5 h-3.5" />
+              <span>Unlock (₹{fee})</span>
+            </button>
           ) : isParent ? (
             <span className="px-2.5 py-1.5 rounded-lg bg-teal-500/10 text-teal-300 border border-teal-500/20 text-[11px] font-semibold flex items-center gap-1 shrink-0">
               <Lock className="w-3.5 h-3.5 text-teal-400" />
@@ -509,15 +518,12 @@ export default function ProfileCard({
         {/* WhatsApp Direct / Unlock Chat */}
         {isDemo ? (
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onShowToast) onShowToast("Contact details are hidden in Demo View. Sign in for real verified proposals.");
-            }}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 text-slate-500 border border-slate-700/60 transition-colors touch-target opacity-70 cursor-pointer"
-            title="Contact details hidden in Demo Mode"
-            aria-label="Contact details hidden in Demo Mode"
+            onClick={handleUnlockClick}
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 transition-colors touch-target cursor-pointer"
+            title="Unlock Contact to Chat on WhatsApp"
+            aria-label="Unlock contact to chat on WhatsApp"
           >
-            <Lock className="w-4 h-4 text-slate-400" />
+            <Lock className="w-4 h-4 text-amber-400" />
           </button>
         ) : isParent ? (
           <button

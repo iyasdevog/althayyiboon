@@ -45,6 +45,9 @@ export default function App() {
     switchUserPersona, 
     isCheckoutOpen, 
     setIsCheckoutOpen,
+    isSignInModalOpen,
+    setIsSignInModalOpen,
+    signInModalPrompt,
     setHasRegisteredProfile
   } = useAuth();
 
@@ -52,7 +55,6 @@ export default function App() {
   const [editingProfile, setEditingProfile] = useState(null);
   const [isAdminOverrideEdit, setIsAdminOverrideEdit] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [signInDefaultRole, setSignInDefaultRole] = useState('groom');
   const [signInModalMode, setSignInModalMode] = useState('signin');
   const [isRequestFilterOpen, setIsRequestFilterOpen] = useState(false);
@@ -443,6 +445,7 @@ export default function App() {
         onShowToast={showToast}
         defaultRole={signInDefaultRole}
         initialMode={signInModalMode}
+        prompt={signInModalPrompt}
         profiles={rawProfiles}
       />
 

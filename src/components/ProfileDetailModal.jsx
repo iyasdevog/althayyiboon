@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   X, 
   ArrowLeft,
@@ -44,6 +45,7 @@ export default function ProfileDetailModal({
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'islamic' | 'family' | 'contact'
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const navigate = useNavigate();
   const { isContactUnlocked, unlockContact, pricing, isParent, isDemo: authIsDemo } = useAuth();
   const isDemo = Boolean(authIsDemo || profile?.isFakeData || profile?.id?.startsWith('DEMO-'));
 
@@ -108,7 +110,9 @@ export default function ProfileDetailModal({
 
   const handleUnlock = () => {
     if (isDemo) {
-      if (onShowToast) onShowToast("Contact details are hidden in Demo View. Sign in to access real proposals.");
+      if (onShowToast) onShowToast("This is sample demo data. Please sign in to view real verified proposals.");
+      if (onClose) onClose();
+      navigate('/signin?reason=demo');
       return;
     }
     if (isParent) {
@@ -118,6 +122,9 @@ export default function ProfileDetailModal({
     const res = unlockContact(profile);
     if (res.success && onShowToast) {
       onShowToast("Guardian contact unlocked successfully! (-1 Credit)");
+    } else if (res?.reason === 'insufficient_credits') {
+      if (onClose) onClose();
+      navigate('/wallet');
     }
   };
 
@@ -579,7 +586,7 @@ export default function ProfileDetailModal({
                     </span>
                     <span className="font-mono font-bold text-white text-xs">
                       {isDemo
-                        ? 'Hidden in Demo View'
+                        ? '•••••••••• (Sample Data)'
                         : isParent 
                           ? 'Protected for Parent View' 
                           : (isUnlocked ? rawPhone || 'Available' : maskPhoneNumber(rawPhone))}
@@ -592,7 +599,7 @@ export default function ProfileDetailModal({
                     </span>
                     <span className="font-mono font-bold text-emerald-300 text-xs">
                       {isDemo
-                        ? 'Hidden in Demo View'
+                        ? '•••••••••• (Sample Data)'
                         : isParent 
                           ? 'Protected for Parent View' 
                           : (isUnlocked ? rawWhatsApp || 'Available' : maskPhoneNumber(rawWhatsApp))}
@@ -602,11 +609,23 @@ export default function ProfileDetailModal({
 
                 {/* Notice Banner or Unlock Button */}
                 {isDemo ? (
-                  <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-center gap-3 mt-2">
-                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                    <p className="text-[11px] text-amber-200/90 leading-relaxed">
-                      <span className="font-bold text-amber-300">Demo View Active:</span> Candidate personal names and contact details are hidden in demo mode. To initiate contact with verified candidates and walis, please sign in.
-                    </p>
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/40 via-slate-900 to-amber-950/40 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 mt-2">
+                    <div className="text-xs text-slate-300 text-center sm:text-left">
+                      <p className="font-bold text-amber-300 flex items-center justify-center sm:justify-start gap-1">
+                        <Lock className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Demo Mode (Sample Data)</span>
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        This candidate is preview data. Click unlock to sign in and view real verified proposals.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleUnlock}
+                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-900/40 flex items-center justify-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
+                    >
+                      <Coins className="w-4 h-4" />
+                      <span>Unlock (₹{fee})</span>
+                    </button>
                   </div>
                 ) : isParent ? (
                   <div className="p-3 rounded-xl bg-teal-950/30 border border-teal-500/30 flex items-center gap-3 mt-2">
@@ -652,10 +671,13 @@ export default function ProfileDetailModal({
           </button>
 
           {isDemo ? (
-            <div className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-slate-900 border border-amber-500/30 text-amber-300 font-semibold text-xs text-center flex items-center justify-center gap-2">
-              <Lock className="w-4 h-4 text-amber-400" />
-              <span>Contact Details Hidden in Demo View</span>
-            </div>
+            <button
+              onClick={handleUnlock}
+              className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-amber-900/30 transition-all cursor-pointer"
+            >
+              <Coins className="w-4 h-4" />
+              <span>Unlock Guardian Contact (₹{fee})</span>
+            </button>
           ) : isParent ? (
             <div className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-slate-900 border border-teal-500/30 text-teal-300 font-semibold text-xs text-center flex items-center justify-center gap-2">
               <Lock className="w-4 h-4 text-teal-400" />

@@ -119,6 +119,18 @@ export function AuthProvider({ children }) {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [pendingUnlockProfile, setPendingUnlockProfile] = useState(null);
 
+  // Global Sign-In Modal State for Demo / Guest prompts
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
+  const [signInModalPrompt, setSignInModalPrompt] = useState('');
+  const openSignInModal = (prompt = '') => {
+    setSignInModalPrompt(prompt);
+    setIsSignInModalOpen(true);
+  };
+  const closeSignInModal = () => {
+    setIsSignInModalOpen(false);
+    setSignInModalPrompt('');
+  };
+
   // Listen to Firebase Auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -652,6 +664,11 @@ export function AuthProvider({ children }) {
         setIsCheckoutOpen,
         pendingUnlockProfile,
         setPendingUnlockProfile,
+        isSignInModalOpen,
+        setIsSignInModalOpen,
+        signInModalPrompt,
+        openSignInModal,
+        closeSignInModal,
         authLoading
       }}
     >
