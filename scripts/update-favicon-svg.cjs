@@ -13,3 +13,4 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
 
 fs.writeFileSync(path.join(__dirname, '../public/favicon.svg'), svg.trim());
 console.log('✓ favicon.svg successfully updated with new brand emblem!');
+
