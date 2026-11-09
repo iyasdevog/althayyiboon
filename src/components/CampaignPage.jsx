@@ -420,18 +420,6 @@ export default function CampaignPage({
           </div>
         </div>
 
-        {/* Admin Link at Bottom */}
-        <div className="pt-6 border-t border-slate-800/80 w-full flex items-center justify-center gap-4 text-xs text-slate-500">
-          <span style={textStyle}>{t.adminLabel}</span>
-          <button
-            onClick={onOpenAdminPortal}
-            className="text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-4 flex items-center gap-1 cursor-pointer"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span style={textStyle}>{t.adminLink}</span>
-          </button>
-        </div>
-
       </main>
 
       {/* Footer */}

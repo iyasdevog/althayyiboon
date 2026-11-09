@@ -18,6 +18,13 @@ const DEMO_USER_KEY = 'althayyiboon_demo_user_v2';
 const PRICING_STORAGE_KEY = 'althayyiboon_pricing_config_v2';
 const TAXONOMY_STORAGE_KEY = 'althayyiboon_custom_taxonomies_v2';
 
+// Authorized Admin Google Accounts / Emails
+export const ADMIN_EMAILS = [
+  'admin@althayyiboon.com',
+  'althayyiboon@gmail.com',
+  'iyasdevog@gmail.com'
+];
+
 export const DEFAULT_PRICING = {
   contactUnlockFee: 15, // in INR (1 Credit)
   profileSubmissionFee: 0, // ₹0 during campaign
@@ -236,10 +243,14 @@ export function AuthProvider({ children }) {
       // Check if user is already an existing registered candidate
       const existingCandidate = findMatchingProfile(user, profileList);
 
-      let gender = 'male';
-      let role = intendedRole || 'groom';
+      const isAuthorizedAdmin = user.email && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
 
-      if (existingCandidate) {
+      let gender = 'male';
+      let role = isAuthorizedAdmin ? 'admin' : (intendedRole || 'groom');
+
+      if (isAuthorizedAdmin) {
+        gender = 'all';
+      } else if (existingCandidate) {
         const isBrideGender = existingCandidate.basicInfo?.gender === 'Bride' || existingCandidate.gender === 'female';
         gender = isBrideGender ? 'female' : 'male';
         role = isBrideGender ? 'bride' : 'groom';
@@ -578,12 +589,12 @@ export function AuthProvider({ children }) {
     name: fbUser.displayName || 'Member',
     email: fbUser.email,
     photoURL: fbUser.photoURL,
-    gender: null,
-    role: 'user',
-    genderVerified: false
+    gender: (fbUser.email && ADMIN_EMAILS.some(e => e.toLowerCase() === fbUser.email.toLowerCase())) ? 'all' : null,
+    role: (fbUser.email && ADMIN_EMAILS.some(e => e.toLowerCase() === fbUser.email.toLowerCase())) ? 'admin' : 'user',
+    genderVerified: Boolean(fbUser.email && ADMIN_EMAILS.some(e => e.toLowerCase() === fbUser.email.toLowerCase()))
   } : null);
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === 'admin' || Boolean(currentUser?.email && ADMIN_EMAILS.some(e => e.toLowerCase() === currentUser.email.toLowerCase()));
   const isParent = currentUser?.role === 'parent';
   const isGroom = currentUser?.role === 'groom' || (!isParent && !isAdmin && currentUser?.gender === 'male');
   const isBride = currentUser?.role === 'bride' || (!isParent && !isAdmin && currentUser?.gender === 'female');

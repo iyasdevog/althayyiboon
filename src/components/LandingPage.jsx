@@ -396,16 +396,8 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-6 px-4 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-3">
           <p>© {new Date().getFullYear()} Al-ThayyiBoon Matrimony. Built for the Muslim Community of Kerala &amp; Diaspora.</p>
-          {onOpenAdminPortal && (
-            <button
-              onClick={onOpenAdminPortal}
-              className="text-slate-600 hover:text-amber-400 transition-colors text-[11px] cursor-pointer"
-            >
-              Admin Portal
-            </button>
-          )}
         </div>
       </footer>
 

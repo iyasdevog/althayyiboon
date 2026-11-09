@@ -89,19 +89,6 @@ export default function Footer({ onOpenAdminPortal }) {
           <div className="flex items-center gap-3 sm:gap-4 text-slate-400 flex-wrap justify-center">
             <span>Community Matrimony</span>
             <span>•</span>
-            {onOpenAdminPortal && (
-              <>
-                <button
-                  onClick={onOpenAdminPortal}
-                  className="inline-flex items-center gap-1 text-slate-400 hover:text-amber-400 transition-colors font-medium cursor-pointer"
-                  aria-label="Open Admin Portal"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Admin Portal</span>
-                </button>
-                <span>•</span>
-              </>
-            )}
             <span>© {new Date().getFullYear()} Al-ThayyiBoon. All rights reserved.</span>
           </div>
         </div>
