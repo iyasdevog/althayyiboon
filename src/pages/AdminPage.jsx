@@ -9,12 +9,12 @@ export default function AdminPage({
 }) {
   const navigate = useNavigate();
   const {
-    rawProfiles,
+    rawProfiles = [],
     deleteProfile,
     updateProfile,
     bulkDeleteProfiles,
     bulkUpdateStatus,
-    filterRequests,
+    filterRequests = [],
     handleApproveFilterRequest,
     handleRejectFilterRequest
   } = useProfiles();
