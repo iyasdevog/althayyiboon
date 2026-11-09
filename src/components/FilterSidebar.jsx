@@ -680,10 +680,13 @@ export default function FilterSidebar({
       </div>
 
       {/* 6. Distance Range Filter (e.g. 10 km, 20 km, 50 km) */}
-      <div className="space-y-3 p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
+      <div className="space-y-3 p-3.5 rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/80 border border-slate-800/90 shadow-sm">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <Navigation className="w-3.5 h-3.5 text-rose-400" /> Distance Range (KM)
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+            <div className="w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+              <Navigation className="w-3 h-3 text-emerald-400" />
+            </div>
+            <span>Distance Range</span>
           </label>
           {(filters.distanceRadius > 0 || filters.distanceOrigin) && (
             <button
@@ -693,7 +696,7 @@ export default function FilterSidebar({
                 setTypedTown('');
                 setGeoError('');
               }}
-              className="text-[10px] text-rose-400 hover:text-rose-300 underline cursor-pointer"
+              className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
             >
               Reset
             </button>
@@ -707,29 +710,30 @@ export default function FilterSidebar({
               type="button"
               onClick={handleUseGPS}
               disabled={isLocatingGPS}
-              className={`flex-1 py-1.5 px-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border transition-all cursor-pointer ${
                 filters.distanceOrigin?.isGPS
-                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-sm'
-                  : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-sm ring-1 ring-emerald-500/20'
+                  : 'bg-slate-900 hover:bg-slate-800/90 text-slate-200 border-slate-700/80 hover:border-slate-600'
               }`}
               title="Detect GPS location from your browser"
             >
               {isLocatingGPS ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-400" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
                   <span>Locating GPS...</span>
                 </>
               ) : (
                 <>
-                  <LocateFixed className="w-3.5 h-3.5 text-rose-400" />
-                  <span>{filters.distanceOrigin?.isGPS ? 'GPS Active' : 'Use Current GPS'}</span>
+                  <LocateFixed className={`w-3.5 h-3.5 ${filters.distanceOrigin?.isGPS ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  <span>{filters.distanceOrigin?.isGPS ? 'Current GPS Active' : 'Use Current Location'}</span>
                 </>
               )}
             </button>
 
             {filters.distanceOrigin && (
-              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg truncate max-w-[120px]" title={filters.distanceOrigin.name}>
-                📍 {filters.distanceOrigin.name}
+              <span className="text-[11px] font-medium text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1.5 rounded-xl truncate max-w-[130px] flex items-center gap-1 shrink-0" title={filters.distanceOrigin.name}>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="truncate">{filters.distanceOrigin.name}</span>
               </span>
             )}
           </div>
@@ -737,7 +741,7 @@ export default function FilterSidebar({
           {/* Place Search with Fuzzy Spelling Matcher */}
           <div className="relative" ref={townDropdownRef}>
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-500" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 value={townSearchQuery}
@@ -753,8 +757,8 @@ export default function FilterSidebar({
                     handleCustomTownSubmit(townSearchQuery);
                   }
                 }}
-                placeholder="Or type town (e.g. Manjeri, Calicut, Badagara)..."
-                className="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-950 rounded-xl border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                placeholder="Or search city / town (e.g. Manjeri, Calicut)..."
+                className="w-full pl-9 pr-8 py-2 text-xs bg-slate-950 rounded-xl border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/30 transition-all"
               />
               {townSearchQuery && (
                 <button
@@ -764,7 +768,8 @@ export default function FilterSidebar({
                     setFilters(p => ({ ...p, distanceOrigin: null }));
                     setIsTownDropdownOpen(false);
                   }}
-                  className="absolute right-2 top-2 text-slate-500 hover:text-white cursor-pointer"
+                  className="absolute right-2.5 top-2.5 text-slate-500 hover:text-slate-200 transition-colors cursor-pointer"
+                  aria-label="Clear location search"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -773,20 +778,20 @@ export default function FilterSidebar({
 
             {/* Autocomplete Dropdown */}
             {isTownDropdownOpen && suggestedTowns.length > 0 && (
-              <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-slate-950 border border-slate-800 rounded-xl shadow-2xl py-1 custom-scrollbar">
+              <div className="absolute z-30 left-0 right-0 mt-1.5 max-h-52 overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl py-1 divide-y divide-slate-800/60 custom-scrollbar">
                 {suggestedTowns.map((town) => (
                   <button
                     key={`${town.name}-${town.district}`}
                     type="button"
                     onClick={() => handleSelectTown(town)}
-                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-800 flex items-center justify-between text-slate-200 transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-slate-800/90 flex items-center justify-between text-slate-200 transition-colors cursor-pointer group"
                   >
                     <div>
-                      <span className="font-semibold text-white">{town.name}</span>
+                      <span className="font-medium text-white group-hover:text-emerald-300 transition-colors">{town.name}</span>
                       <span className="text-[10px] text-slate-400 ml-1.5">({town.district})</span>
                     </div>
                     {town.aliases?.length > 0 && (
-                      <span className="text-[10px] text-slate-500 italic max-w-[100px] truncate">
+                      <span className="text-[10px] text-slate-500 group-hover:text-slate-400 italic max-w-[100px] truncate">
                         {town.aliases[0]}
                       </span>
                     )}
@@ -797,17 +802,21 @@ export default function FilterSidebar({
           </div>
 
           {geoError && (
-            <p className="text-[11px] text-rose-400 bg-rose-500/10 px-2 py-1 rounded-lg border border-rose-500/20">
+            <p className="text-[11px] text-rose-300 bg-rose-500/10 px-2.5 py-1.5 rounded-xl border border-rose-500/20 leading-snug">
               {geoError}
             </p>
           )}
         </div>
 
         {/* Distance Range Slider */}
-        <div className="space-y-2 pt-1 border-t border-slate-800/80">
+        <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400">Within Range:</span>
-            <span className="font-mono font-bold text-rose-300">
+            <span className="text-slate-400 font-medium">Radius:</span>
+            <span className={`font-mono font-bold text-xs px-2 py-0.5 rounded-md ${
+              filters.distanceRadius > 0 
+                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' 
+                : 'text-slate-400 bg-slate-800/60'
+            }`}>
               {filters.distanceRadius > 0 ? `${filters.distanceRadius} km` : 'Any Distance'}
             </span>
           </div>
@@ -828,11 +837,11 @@ export default function FilterSidebar({
                 setFilters(p => ({ ...p, distanceRadius: val }));
               }
             }}
-            className="w-full accent-rose-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
+            className="w-full accent-emerald-500 bg-slate-800 h-2 rounded-lg cursor-pointer transition-all"
           />
 
           {/* Quick Preset Distance Buttons */}
-          <div className="flex items-center gap-1 pt-0.5">
+          <div className="grid grid-cols-6 gap-1 pt-0.5">
             {[10, 20, 30, 50, 100].map(km => {
               const isActive = filters.distanceRadius === km;
               return (
@@ -848,23 +857,23 @@ export default function FilterSidebar({
                       setFilters(p => ({ ...p, distanceRadius: km }));
                     }
                   }}
-                  className={`flex-1 min-h-[32px] py-1.5 rounded-lg text-[11px] font-bold transition-all border cursor-pointer ${
+                  className={`min-h-[30px] py-1 rounded-lg text-[11px] font-semibold transition-all border cursor-pointer text-center ${
                     isActive
-                      ? 'bg-rose-500 text-white border-rose-400 shadow-sm'
-                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+                      ? 'bg-emerald-500 text-slate-950 font-bold border-emerald-400 shadow-sm shadow-emerald-500/20'
+                      : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:text-white hover:bg-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  {km}km
+                  {km}k
                 </button>
               );
             })}
             <button
               type="button"
               onClick={() => setFilters(p => ({ ...p, distanceRadius: 0 }))}
-              className={`min-h-[32px] py-1.5 px-2.5 rounded-lg text-[11px] font-medium transition-all border cursor-pointer ${
+              className={`min-h-[30px] py-1 rounded-lg text-[11px] font-medium transition-all border cursor-pointer text-center ${
                 !filters.distanceRadius || filters.distanceRadius === 0
-                  ? 'bg-slate-800 text-slate-200 border-slate-700'
-                  : 'bg-slate-950 text-slate-500 border-slate-800 hover:text-slate-300'
+                  ? 'bg-slate-800 text-white border-slate-600 font-semibold'
+                  : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-slate-800'
               }`}
             >
               Any
@@ -872,11 +881,11 @@ export default function FilterSidebar({
           </div>
 
           {filters.distanceRadius > 0 && filters.distanceOrigin && (
-            <p className="text-[10px] text-slate-400 flex items-center gap-1 pt-0.5 leading-tight">
-              <span>Proposals within</span>
-              <strong className="text-rose-300">{filters.distanceRadius} km</strong>
-              <span>of</span>
-              <span className="text-white font-medium truncate max-w-[100px]">{filters.distanceOrigin.name}</span>
+            <p className="text-[11px] text-slate-300 bg-slate-950/70 p-2 rounded-xl border border-slate-800/80 flex items-center gap-1.5 leading-snug">
+              <span className="text-slate-400">Showing proposals within</span>
+              <strong className="text-emerald-300 font-bold">{filters.distanceRadius} km</strong>
+              <span className="text-slate-400">of</span>
+              <span className="text-white font-semibold truncate">{filters.distanceOrigin.name}</span>
             </p>
           )}
         </div>
