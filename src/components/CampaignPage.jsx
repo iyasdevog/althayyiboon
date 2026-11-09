@@ -16,6 +16,14 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+const InstagramIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+  </svg>
+);
+
 export default function CampaignPage({ 
   onOpenAddModal, 
   onOpenSignIn, 
@@ -363,29 +371,59 @@ export default function CampaignPage({
           )}
         </div>
 
-        {/* WhatsApp Group Community Feature */}
-        {whatsappGroupLink && (
-          <div className="w-full max-w-2xl bg-slate-900/60 border border-slate-800 rounded-2xl p-4 sm:p-5 mb-14 flex items-center justify-between gap-4 text-left">
+        {/* Social Community: WhatsApp Group & Instagram */}
+        <div className="w-full max-w-2xl mb-14 space-y-3">
+          {whatsappGroupLink && (
+            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 text-left">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white" style={textStyle}>{t.whatsappTitle}</h4>
+                  <p className="text-xs text-slate-400" style={textStyle}>{t.whatsappDesc}</p>
+                </div>
+              </div>
+              <a
+                href={whatsappGroupLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <span style={textStyle}>{t.joinGroup}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          )}
+
+          {/* Official Instagram Channel Link */}
+          <div className="bg-slate-900/60 border border-pink-500/20 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 text-left">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                <MessageSquare className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-pink-950/40">
+                <InstagramIcon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white" style={textStyle}>{t.whatsappTitle}</h4>
-                <p className="text-xs text-slate-400" style={textStyle}>{t.whatsappDesc}</p>
+                <h4 className="text-sm font-bold text-white">
+                  {lang === 'ml' ? 'ഇൻസ്റ്റാഗ്രാമിൽ ഫോളോ ചെയ്യൂ' : 'Follow on Instagram'}
+                </h4>
+                <p className="text-xs text-slate-400">
+                  {lang === 'ml' 
+                    ? 'പുതിയ ആലോചനകളും അപ്‌ഡേറ്റുകളും അറിയാൻ @althayyiboon ഫോളോ ചെയ്യുക.'
+                    : 'Get daily verified proposal updates & announcements @althayyiboon.'}
+                </p>
               </div>
             </div>
             <a
-              href={whatsappGroupLink}
+              href="https://www.instagram.com/althayyiboon/"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shrink-0 flex items-center gap-1.5 transition-colors"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-bold text-xs shrink-0 flex items-center gap-1.5 transition-all shadow-md shadow-pink-900/30 cursor-pointer"
             >
-              <span style={textStyle}>{t.joinGroup}</span>
+              <span>Follow</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
-        )}
+        </div>
 
         {/* 3 Pillar Value Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full text-left mb-12">

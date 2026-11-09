@@ -1,5 +1,13 @@
 import React from 'react';
-import { ShieldCheck, BookOpen, Heart, Lock } from 'lucide-react';
+import { ShieldCheck, BookOpen, Heart, Lock, ExternalLink } from 'lucide-react';
+
+const InstagramIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+  </svg>
+);
 
 export default function Footer({ onOpenAdminPortal }) {
   return (
@@ -75,6 +83,23 @@ export default function Footer({ onOpenAdminPortal }) {
               <Lock className="w-3 h-3 text-teal-400" />
               <span>100% Shariah &amp; Gender Segregated Views</span>
             </div>
+
+            {/* Official Instagram Badge */}
+            <div className="pt-2">
+              <a
+                href="https://www.instagram.com/althayyiboon/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/15 via-pink-500/15 to-amber-500/15 hover:from-purple-500/25 hover:via-pink-500/25 hover:to-amber-500/25 border border-pink-500/30 text-pink-300 text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 shadow-sm group"
+                title="Follow Al-ThayyiBoon on Instagram"
+              >
+                <div className="p-1 rounded-lg bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-600 text-white shrink-0">
+                  <InstagramIcon className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span>Follow @althayyiboon</span>
+                <ExternalLink className="w-3 h-3 text-pink-400/80 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+            </div>
           </div>
 
         </div>
@@ -87,6 +112,17 @@ export default function Footer({ onOpenAdminPortal }) {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4 text-slate-400 flex-wrap justify-center">
+            <a
+              href="https://www.instagram.com/althayyiboon/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-pink-400/90 hover:text-pink-300 transition-colors flex items-center gap-1.5 font-semibold"
+              title="Official Instagram @althayyiboon"
+            >
+              <InstagramIcon className="w-3.5 h-3.5 text-pink-400" />
+              <span>@althayyiboon</span>
+            </a>
+            <span>•</span>
             <span>Community Matrimony</span>
             <span>•</span>
             <span>© {new Date().getFullYear()} Al-ThayyiBoon. All rights reserved.</span>
