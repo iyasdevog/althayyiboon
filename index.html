@@ -200,6 +200,90 @@
       ]
     }
     </script>
+
+    <!-- ===== JSON-LD: SiteNavigationElement (Google Sitelinks) ===== -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Al-ThayyiBoon Matrimony – Site Navigation",
+      "description": "Key pages of Al-ThayyiBoon Islamic Matrimony Directory",
+      "url": "https://althayyiboon.com",
+      "itemListElement": [
+        {
+          "@type": "SiteLinksSearchBox",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://althayyiboon.com/browse?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      ]
+    }
+    </script>
+
+    <!-- ===== JSON-LD: SiteNavigationElement Links ===== -->
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "name": "Sign In",
+        "description": "Sign in to access verified matrimonial proposals on Al-ThayyiBoon",
+        "url": "https://althayyiboon.com/signin"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "name": "Register Free",
+        "description": "Register your matrimonial proposal for free on Al-ThayyiBoon",
+        "url": "https://althayyiboon.com/register"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "name": "Browse Proposals",
+        "description": "Browse verified bride and groom matrimonial proposals from Kerala and Gulf",
+        "url": "https://althayyiboon.com/browse"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "name": "Bride Proposals",
+        "description": "Browse verified bride matrimonial proposals – Kerala Muslim brides",
+        "url": "https://althayyiboon.com/browse?gender=Bride"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "name": "Groom Proposals",
+        "description": "Browse verified groom matrimonial proposals – Kerala Muslim grooms",
+        "url": "https://althayyiboon.com/browse?gender=Groom"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "name": "Post a Proposal",
+        "description": "Submit your matrimonial proposal to the Al-ThayyiBoon directory",
+        "url": "https://althayyiboon.com/add"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "name": "Wafi Matrimony",
+        "description": "Matrimonial proposals for Wafi and Islamic graduates in Kerala",
+        "url": "https://althayyiboon.com/browse?q=wafi"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "name": "Hudawi Matrimony",
+        "description": "Matrimonial proposals for Hudawi scholars in Kerala",
+        "url": "https://althayyiboon.com/browse?q=hudawi"
+      }
+    ]
+    </script>
+
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950">
     <div id="root"></div>
