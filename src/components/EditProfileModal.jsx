@@ -78,9 +78,10 @@ export default function EditProfileModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // Resolve GPS coordinates for edited location
+      // Resolve GPS coordinates for edited location (prioritizing nearestTown, then nativePlace, fallback to district)
+      const locTarget = (formData.locationFamily?.nearestTown || '').trim() || (formData.locationFamily?.nativePlace || '').trim();
       const matchedGeo = fuzzyMatchPlace(
-        formData.locationFamily?.nativePlace,
+        locTarget,
         formData.locationFamily?.homeDistrict
       );
       const coordinates = matchedGeo ? { lat: matchedGeo.lat, lng: matchedGeo.lng } : null;
@@ -90,6 +91,7 @@ export default function EditProfileModal({
         coordinates,
         locationFamily: {
           ...formData.locationFamily,
+          nearestTown: formData.locationFamily?.nearestTown || matchedGeo?.name || '',
           coordinates,
           canonicalPlace: matchedGeo?.name || formData.locationFamily?.nativePlace
         },
@@ -462,12 +464,22 @@ export default function EditProfileModal({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Native Town / City</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">Nearest Major Town (For GPS Distance)</label>
+                      <input
+                        type="text"
+                        value={formData.locationFamily.nearestTown || ''}
+                        onChange={(e) => updateSection('locationFamily', 'nearestTown', e.target.value)}
+                        placeholder="e.g. Mavoor, Feroke, Manjeri, Kozhikode"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Native Place / Village / Mahallu</label>
                       <input
                         type="text"
                         value={formData.locationFamily.nativePlace || ''}
                         onChange={(e) => updateSection('locationFamily', 'nativePlace', e.target.value)}
-                        placeholder="e.g. Manjeri, Vadakara"
+                        placeholder="e.g. Koolimadu, Chanthakkunnu, Pazhoor Mahallu"
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
                       />
                     </div>

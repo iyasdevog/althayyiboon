@@ -123,6 +123,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
     },
     locationFamily: {
       homeDistrict: 'Malappuram',
+      nearestTown: '',
       nativePlace: '',
       fatherName: '',
       motherName: '',
@@ -234,9 +235,10 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
       const phone = formData.contactDetails.guardianPhone.trim() || formData.contactPreferences.phone.trim();
       const whatsapp = formData.contactDetails.whatsappNumber.trim() || formData.contactPreferences.whatsapp.trim() || phone;
 
-      // Automatically resolve GPS coordinates (handles any spelling variant, typos, or district fallback)
+      // Automatically resolve GPS coordinates (prioritizes nearestTown, then nativePlace, falls back to district)
+      const locTarget = (formData.locationFamily.nearestTown || '').trim() || (formData.locationFamily.nativePlace || '').trim();
       const matchedGeo = fuzzyMatchPlace(
-        formData.locationFamily.nativePlace,
+        locTarget,
         formData.locationFamily.homeDistrict
       );
       const coordinates = matchedGeo ? { lat: matchedGeo.lat, lng: matchedGeo.lng } : null;
@@ -246,6 +248,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
         coordinates,
         locationFamily: {
           ...formData.locationFamily,
+          nearestTown: formData.locationFamily.nearestTown || matchedGeo?.name || '',
+          nativePlace: formData.locationFamily.nativePlace || formData.locationFamily.nearestTown || matchedGeo?.name || '',
           coordinates,
           canonicalPlace: matchedGeo?.name || formData.locationFamily.nativePlace
         },
@@ -850,7 +854,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className={labelCls}>Home District (Kerala) *</label>
                         <select
@@ -861,22 +865,25 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                           {KERALA_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                       </div>
-                      <div className="relative">
-                        <label className={labelCls}>Native City / Town</label>
+                      <div className="relative" ref={placeDropdownRef}>
+                        <label className={labelCls}>
+                          <span>Nearest Town / City</span>
+                          <span className="text-[10px] text-emerald-400 font-normal ml-1.5">(For GPS Search)</span>
+                        </label>
                         <input
                           type="text"
-                          value={formData.locationFamily.nativePlace}
+                          value={formData.locationFamily.nearestTown || ''}
                           onChange={e => {
-                            updateSection('locationFamily', 'nativePlace', e.target.value);
+                            updateSection('locationFamily', 'nearestTown', e.target.value);
                             setIsPlaceSuggestOpen(true);
                           }}
                           onFocus={() => setIsPlaceSuggestOpen(true)}
-                          placeholder="e.g. Manjeri, Feroke, Vadakara"
+                          placeholder="e.g. Mavoor, Feroke, Manjeri, Kozhikode"
                           className={inputCls}
                         />
-                        {isPlaceSuggestOpen && formData.locationFamily.nativePlace?.trim().length > 1 && (
-                          <div className="absolute z-30 left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-1 custom-scrollbar">
-                            {searchKeralaTowns(formData.locationFamily.nativePlace, 5).map(town => (
+                        {isPlaceSuggestOpen && (formData.locationFamily.nearestTown?.trim().length || 0) > 1 && (
+                          <div className="absolute z-30 left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-1 custom-scrollbar">
+                            {searchKeralaTowns(formData.locationFamily.nearestTown, 6).map(town => (
                               <button
                                 key={`${town.name}-${town.district}`}
                                 type="button"
@@ -885,8 +892,9 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                                     ...prev,
                                     locationFamily: {
                                       ...prev.locationFamily,
-                                      nativePlace: town.name,
+                                      nearestTown: town.name,
                                       homeDistrict: town.district,
+                                      nativePlace: prev.locationFamily.nativePlace || town.name,
                                       coordinates: { lat: town.lat, lng: town.lng }
                                     }
                                   }));
@@ -908,6 +916,23 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                           </div>
                         )}
                       </div>
+                    </div>
+
+                    <div>
+                      <label className={labelCls}>
+                        <span>Native Place / Village / Mahallu</span>
+                        <span className="text-[10px] text-slate-400 font-normal ml-1.5">(Displayed on Profile)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.locationFamily.nativePlace || ''}
+                        onChange={e => updateSection('locationFamily', 'nativePlace', e.target.value)}
+                        placeholder="e.g. Koolimadu, Chanthakkunnu, Pazhoor Mahallu..."
+                        className={inputCls}
+                      />
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        Specific local village, ward, or mahallu name for visitors to identify your location.
+                      </p>
                     </div>
 
                     <div>

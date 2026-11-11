@@ -326,7 +326,7 @@ export default function ProfileDetailModal({
               <MapPin className="w-3.5 h-3.5 text-emerald-400" />
               <span>{locationFamily.homeDistrict ? `${locationFamily.homeDistrict}, Kerala` : 'Kerala'}</span>
               <span>•</span>
-              <span>{locationFamily.nativePlace || 'Native Place'}</span>
+              <span>{locationFamily.nativePlace || locationFamily.nearestTown || 'Native Place'}{locationFamily.nearestTown && locationFamily.nativePlace && locationFamily.nearestTown.toLowerCase() !== locationFamily.nativePlace.toLowerCase() ? ` (nr. ${locationFamily.nearestTown})` : ''}</span>
               {profile.distanceKm != null && (
                 <>
                   <span>•</span>
@@ -497,8 +497,11 @@ export default function ProfileDetailModal({
                   <span className="font-semibold text-white">{locationFamily.homeDistrict || 'Kerala'}</span>
                 </div>
                 <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                  <span className="text-slate-400 block text-[11px]">Native Place</span>
+                  <span className="text-slate-400 block text-[11px]">Native Place / Mahallu</span>
                   <span className="font-semibold text-white">{locationFamily.nativePlace || 'N/A'}</span>
+                  {locationFamily.nearestTown && locationFamily.nativePlace && locationFamily.nearestTown.toLowerCase() !== locationFamily.nativePlace.toLowerCase() && (
+                    <span className="text-[10px] text-emerald-400 block mt-0.5">Near {locationFamily.nearestTown}</span>
+                  )}
                 </div>
                 <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
                   <span className="text-slate-400 block text-[11px]">Family Type</span>

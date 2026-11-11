@@ -402,7 +402,7 @@ export default function ProfileCard({
             <div className="flex items-start gap-2 min-w-0">
               <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
               <span className="line-clamp-1 text-slate-300">
-                {locationFamily.homeDistrict ? `${locationFamily.homeDistrict}` : 'Kerala'}, {locationFamily.nativePlace || 'Native place'}
+                {locationFamily.homeDistrict ? `${locationFamily.homeDistrict}` : 'Kerala'}, {locationFamily.nativePlace || locationFamily.nearestTown || 'Native place'}{locationFamily.nearestTown && locationFamily.nativePlace && locationFamily.nearestTown.toLowerCase() !== locationFamily.nativePlace.toLowerCase() ? ` (nr. ${locationFamily.nearestTown})` : ''}
               </span>
             </div>
             {profile.distanceKm != null && (

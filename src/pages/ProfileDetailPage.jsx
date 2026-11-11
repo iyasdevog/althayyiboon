@@ -606,7 +606,12 @@ export default function ProfileDetailPage({
                       )}
                     </div>
                     {locationFamily.nativePlace && (
-                      <p className="text-xs text-slate-400 mt-1">{locationFamily.nativePlace}</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {locationFamily.nativePlace}
+                        {locationFamily.nearestTown && locationFamily.nearestTown.toLowerCase() !== locationFamily.nativePlace.toLowerCase() && (
+                          <span className="text-emerald-400 font-medium ml-1">(Near {locationFamily.nearestTown})</span>
+                        )}
+                      </p>
                     )}
                   </div>
 
@@ -774,8 +779,13 @@ export default function ProfileDetailPage({
                     </div>
 
                     <div>
-                      <span className="text-slate-400 block mb-1">Native Place / Locality:</span>
-                      <p className="font-semibold text-white">{locationFamily.nativePlace || 'Not Specified'}</p>
+                      <span className="text-slate-400 block mb-1">Native Place / Mahallu:</span>
+                      <p className="font-semibold text-white">
+                        {locationFamily.nativePlace || 'Not Specified'}
+                        {locationFamily.nearestTown && locationFamily.nearestTown.toLowerCase() !== (locationFamily.nativePlace || '').toLowerCase() && (
+                          <span className="text-emerald-400 text-xs font-normal ml-1.5">(Near {locationFamily.nearestTown})</span>
+                        )}
+                      </p>
                     </div>
 
                     <div>

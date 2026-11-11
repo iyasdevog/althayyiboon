@@ -81,6 +81,8 @@ export const KERALA_TOWNS = [
   { name: "Vettichira", district: "Malappuram", lat: 10.9167, lng: 76.0333, aliases: ["vettichira town", "punnathala vettichira"] },
   { name: "Moonniyur", district: "Malappuram", lat: 11.0667, lng: 75.9000, aliases: ["mooniyur", "thalappara", "chelari"] },
   { name: "Cheekode", district: "Malappuram", lat: 11.2333, lng: 76.0000, aliases: ["cheekkode", "parannur"] },
+  { name: "Edavannappara", district: "Malappuram", lat: 11.2272, lng: 75.9650, aliases: ["edavannapara", "chaliyar edavannappara", "elamaram bridge area"] },
+  { name: "Vazhayur", district: "Malappuram", lat: 11.2167, lng: 75.9000, aliases: ["vazhayoor", "kakkov", "sa-afi college"] },
 
   // ==========================================
   // KOZHIKODE DISTRICT (Calicut / Malabar)
@@ -125,6 +127,9 @@ export const KERALA_TOWNS = [
   { name: "Kodenchery", district: "Kozhikode", lat: 11.4500, lng: 76.0167, aliases: ["kodencheri", "thusharagiri"] },
   { name: "Villiappally", district: "Kozhikode", lat: 11.6167, lng: 75.6333, aliases: ["villiappalli", "villiappally town"] },
   { name: "Onchiam", district: "Kozhikode", lat: 11.6333, lng: 75.5833, aliases: ["onchiyam", "vallikkad"] },
+  { name: "Koolimadu", district: "Kozhikode", lat: 11.2675, lng: 75.9610, aliases: ["koolimad", "koolimadu bridge", "chaliyar koolimadu", "koolimadu town"] },
+  { name: "Cheruppa", district: "Kozhikode", lat: 11.2720, lng: 75.9280, aliases: ["cherupa", "cheruppa hospital town"] },
+  { name: "Pazhoor", district: "Kozhikode", lat: 11.2850, lng: 75.9620, aliases: ["pazhur", "pazhoor mahallu"] },
 
   // ==========================================
   // KANNUR DISTRICT (North Malabar)
@@ -455,11 +460,13 @@ export function resolveProfileCoordinates(profile) {
     return { lat: Number(profile.locationFamily.coordinates.lat), lng: Number(profile.locationFamily.coordinates.lng) };
   }
 
-  // 2. Fuzzy match nativePlace + homeDistrict
+  // 2. Fuzzy match nearestTown or nativePlace + homeDistrict
+  const nearestTown = profile.locationFamily?.nearestTown || '';
   const nativePlace = profile.locationFamily?.nativePlace || '';
   const homeDistrict = profile.locationFamily?.homeDistrict || '';
   
-  const matched = fuzzyMatchPlace(nativePlace, homeDistrict);
+  // Prioritize nearestTown for GPS accuracy, fallback to nativePlace, fallback to district
+  const matched = (nearestTown ? fuzzyMatchPlace(nearestTown, homeDistrict) : null) || fuzzyMatchPlace(nativePlace, homeDistrict);
   if (matched?.lat && matched?.lng) {
     return { lat: matched.lat, lng: matched.lng, matchedPlaceName: matched.name, district: matched.district };
   }
