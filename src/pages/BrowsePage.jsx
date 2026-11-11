@@ -22,6 +22,7 @@ export default function BrowsePage({
   onOpenEditModal,
   onOpenAdminPortal,
   onRequestFilterModal,
+  onOpenChatbot,
   onShowToast
 }) {
   const navigate = useNavigate();
@@ -120,6 +121,7 @@ export default function BrowsePage({
         onOpenPosterGenerator={onOpenPosterModal ? onOpenPosterModal : () => navigate('/poster')}
         onOpenWalletModal={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
         onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
+        onOpenChatbot={onOpenChatbot}
       />
 
       {/* Unsubmitted Profile Registration & Payment Prompt (for logged in members who can see directory) */}
@@ -223,7 +225,10 @@ export default function BrowsePage({
       )}
 
       {/* Footer */}
-      <Footer onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} />
+      <Footer 
+        onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} 
+        onOpenChatbot={onOpenChatbot}
+      />
     </div>
   );
 }

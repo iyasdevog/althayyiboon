@@ -36,7 +36,8 @@ export default function Navbar({
   onToggleShowFavorites,
   onOpenPosterGenerator,
   onOpenWalletModal,
-  onOpenSignIn
+  onOpenSignIn,
+  onOpenChatbot
 }) {
   const { credits, currentUser, userGender, isAdmin, isParent, isBride, isGroom, switchUserPersona, logout, pricing } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -230,6 +231,19 @@ export default function Navbar({
                     <ImageIcon className="w-4 h-4 text-amber-400" />
                     <span>Poster Maker</span>
                   </button>
+
+                  {/* Help & FAQ Chatbot Button (Desktop) */}
+                  {onOpenChatbot && (
+                    <button
+                      onClick={onOpenChatbot}
+                      className="hidden xl:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all touch-target shrink-0 cursor-pointer"
+                      title="FAQ & Suggestions Chatbot"
+                      aria-label="FAQ & Suggestions Chatbot"
+                    >
+                      <HelpCircle className="w-4 h-4 text-emerald-400" />
+                      <span>FAQ &amp; Help</span>
+                    </button>
+                  )}
                 </>
               )}
 
@@ -642,6 +656,25 @@ export default function Navbar({
                       {activeFilterCount} Active
                     </span>
                   )}
+                </button>
+              )}
+
+              {/* FAQ & Suggestions Chatbot */}
+              {onOpenChatbot && (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenChatbot();
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-emerald-300 hover:bg-slate-800/80 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <HelpCircle className="w-4 h-4 text-emerald-400" />
+                    <span>FAQ &amp; Suggestions Assistant</span>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                    Live
+                  </span>
                 </button>
               )}
 

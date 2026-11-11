@@ -20,10 +20,11 @@ import WalletRechargeModal from './components/WalletRechargeModal';
 import SignInModal from './components/SignInModal';
 import AddProfileModal from './components/AddProfileModal';
 import GenderVerificationModal from './components/GenderVerificationModal';
+import FaqChatbot from './components/FaqChatbot';
 
 import { useProfiles } from './context/ProfilesContext';
 import { useAuth } from './context/AuthContext';
-import { Check } from 'lucide-react';
+import { Check, MessageCircle } from 'lucide-react';
 
 export default function App() {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ export default function App() {
   const [isRequestFilterOpen, setIsRequestFilterOpen] = useState(false);
   const [posterProfile, setPosterProfile] = useState(null);
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   const handleOpenSignIn = (role = 'groom', mode = 'signin') => {
     setSignInDefaultRole(role || 'groom');
@@ -116,6 +118,7 @@ export default function App() {
               }}
               onOpenAdminPortal={() => navigate('/admin')}
               onRequestFilterModal={() => setIsRequestFilterOpen(true)}
+              onOpenChatbot={() => setIsChatbotOpen(true)}
               onShowToast={showToast}
             />
           } 
@@ -138,6 +141,7 @@ export default function App() {
               }}
               onOpenAdminPortal={() => navigate('/admin')}
               onRequestFilterModal={() => setIsRequestFilterOpen(true)}
+              onOpenChatbot={() => setIsChatbotOpen(true)}
               onShowToast={showToast}
             />
           } 
@@ -160,6 +164,7 @@ export default function App() {
               }}
               onOpenAdminPortal={() => navigate('/admin')}
               onRequestFilterModal={() => setIsRequestFilterOpen(true)}
+              onOpenChatbot={() => setIsChatbotOpen(true)}
               onShowToast={showToast}
             />
           } 
@@ -456,6 +461,35 @@ export default function App() {
         onVerified={(gender, role) => {
           showToast(`Modesty lock set to ${role === 'bride' ? 'Bride (Sister)' : 'Groom (Brother)'}`);
         }}
+      />
+
+      {/* Floating FAQ & Improvement Feedback Chatbot Trigger */}
+      {!isChatbotOpen && (
+        <button
+          onClick={() => setIsChatbotOpen(true)}
+          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-2 py-2.5 px-3 sm:px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-xl shadow-emerald-950/70 border border-emerald-400/40 group active:scale-95 transition-all cursor-pointer ring-2 ring-emerald-500/20"
+          title="FAQ Assistant & Improvement Suggestions"
+          aria-label="Open FAQ Assistant & Suggestions"
+        >
+          <div className="relative">
+            <MessageCircle className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400"></span>
+          </div>
+          <span className="hidden sm:inline font-bold tracking-tight">FAQ &amp; Suggestions</span>
+          <span className="sm:hidden font-bold">Help</span>
+        </button>
+      )}
+
+      {/* Interactive FAQ & Community Feedback Chatbot */}
+      <FaqChatbot
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+        onOpenAddModal={() => setIsAddModalOpen(true)}
+        onOpenWalletModal={() => setIsCheckoutOpen(true)}
+        onOpenFilterSidebar={() => navigate('/profiles')}
+        onOpenValidityModal={() => navigate('/profiles')}
+        onShowToast={showToast}
       />
 
     </div>

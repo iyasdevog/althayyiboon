@@ -9,7 +9,7 @@ const InstagramIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
-export default function Footer({ onOpenAdminPortal }) {
+export default function Footer({ onOpenAdminPortal, onOpenChatbot }) {
   return (
     <footer className="mt-auto bg-slate-950 border-t border-slate-800/80 pt-10 sm:pt-14 pb-8 text-xs text-slate-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,6 +123,18 @@ export default function Footer({ onOpenAdminPortal }) {
               <span>@althayyiboon</span>
             </a>
             <span>•</span>
+            {onOpenChatbot && (
+              <>
+                <button
+                  type="button"
+                  onClick={onOpenChatbot}
+                  className="hover:text-emerald-300 text-slate-300 transition-colors cursor-pointer font-medium"
+                >
+                  FAQ &amp; Feedback
+                </button>
+                <span>•</span>
+              </>
+            )}
             <span>Community Matrimony</span>
             <span>•</span>
             <span>© {new Date().getFullYear()} Al-ThayyiBoon. All rights reserved.</span>

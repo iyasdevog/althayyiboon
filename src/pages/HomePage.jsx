@@ -14,6 +14,7 @@ export default function HomePage({
   onOpenEditModal,
   onOpenAdminPortal,
   onRequestFilterModal,
+  onOpenChatbot,
   onShowToast
 }) {
   const navigate = useNavigate();
@@ -66,6 +67,7 @@ export default function HomePage({
       onOpenEditModal={onOpenEditModal}
       onOpenAdminPortal={onOpenAdminPortal}
       onRequestFilterModal={onRequestFilterModal}
+      onOpenChatbot={onOpenChatbot}
       onShowToast={onShowToast}
     />
   );
