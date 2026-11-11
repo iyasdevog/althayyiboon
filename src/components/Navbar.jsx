@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ValidityPolicyModal from './ValidityPolicyModal';
+import MobileBottomNav from './MobileBottomNav';
 
 export default function Navbar({ 
   onOpenAddModal, 
@@ -679,7 +680,7 @@ export default function Navbar({
 
             {/* Sign Out (if logged in) */}
             {currentUser && (
-              <div className="p-3.5 border-t border-slate-800/80 mt-auto">
+              <div className="p-3.5 border-t border-slate-800/80 mt-auto pb-safe">
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
@@ -702,6 +703,17 @@ export default function Navbar({
         isOpen={showValidityModal}
         onClose={() => setShowValidityModal(false)}
         onOpenAddModal={onOpenAddModal}
+      />
+
+      {/* Mobile Ergonomic Sticky Bottom Dock */}
+      <MobileBottomNav
+        activeFilterCount={activeFilterCount}
+        bookmarkCount={bookmarkCount}
+        showFavoritesOnly={showFavoritesOnly}
+        onToggleMobileFilter={onToggleMobileFilter}
+        onToggleShowFavorites={onToggleShowFavorites}
+        onOpenAddModal={onOpenAddModal}
+        onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
       />
 
     </header>

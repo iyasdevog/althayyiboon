@@ -352,7 +352,7 @@ export default function ProfileDetailPage({
         onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
       />
 
-      <main className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 w-full">
+      <main className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 w-full pb-24 sm:pb-6">
         
         {/* Navigation & Breadcrumb Bar */}
         <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6 text-xs sm:text-sm">

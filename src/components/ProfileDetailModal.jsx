@@ -173,7 +173,7 @@ export default function ProfileDetailModal({
       role="dialog" 
       aria-modal="true" 
       aria-labelledby="profile-detail-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden"
     >
       {/* Backdrop */}
       <div 
@@ -184,10 +184,10 @@ export default function ProfileDetailModal({
       {/* Modal Card */}
       <div className={`relative w-full ${
         isFullscreen ? 'max-w-6xl min-h-[92vh]' : 'max-w-2xl'
-      } bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden z-10 my-6 animate-fade-in transition-all duration-300`}>
+      } bg-slate-900 border-0 sm:border border-slate-700/80 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[92vh] animate-fade-in transition-all duration-300`}>
         
         {/* Top Header Banner */}
-        <div className={`p-4 sm:p-6 border-b border-slate-800 ${
+        <div className={`p-4 sm:p-6 border-b border-slate-800 shrink-0 ${
           isBride ? 'bg-gradient-to-r from-slate-900 via-rose-950/30 to-slate-900' : 'bg-gradient-to-r from-slate-900 via-emerald-950/30 to-slate-900'
         }`}>
           {/* Top Bar: Back Button, Prev/Next & Quick Actions */}
@@ -369,7 +369,7 @@ export default function ProfileDetailModal({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-5 sm:p-6 space-y-6 max-h-[calc(85vh-15rem)] overflow-y-auto custom-scrollbar">
+        <div className="flex-1 overflow-y-auto custom-scrollbar mobile-scroll-container p-4 sm:p-6 space-y-5 sm:space-y-6">
           
           {/* TAB 1: OVERVIEW & PERSONAL */}
           {(activeTab === 'overview' || isFullscreen) && (
@@ -661,7 +661,7 @@ export default function ProfileDetailModal({
         </div>
 
         {/* Modal Bottom Action Footer */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center gap-2.5">
+        <div className="p-3.5 sm:p-5 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 shrink-0 pb-safe">
           <button
             onClick={onClose}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-xs sm:text-sm border border-slate-700 transition-colors cursor-pointer"

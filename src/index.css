@@ -134,8 +134,41 @@
   animation: slideLeft 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Touch friendly minimum sizing */
+/* Touch friendly minimum sizing and mobile ergonomics */
 .touch-target {
-  min-height: 42px;
-  min-width: 42px;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Eliminate 300ms tap delay on mobile browsers */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* iOS Safe Area Utilities */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+.bottom-safe {
+  bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Mobile modal scroll containment */
+.mobile-scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Custom subtle scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

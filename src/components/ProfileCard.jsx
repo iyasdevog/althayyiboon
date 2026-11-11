@@ -415,21 +415,21 @@ export default function ProfileCard({
 
         {/* Guardian Contact Info / Masked State */}
         <div className="mb-3 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-2">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-              <Phone className="w-3 h-3 text-slate-400" />
-              <span>Guardian Phone</span>
+              <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+              <span className="truncate">Guardian Phone</span>
               {isDemo ? (
-                <span className="text-[9px] text-amber-400 font-extrabold uppercase bg-amber-500/10 px-1 rounded">Demo View</span>
+                <span className="text-[9px] text-amber-400 font-extrabold uppercase bg-amber-500/10 px-1 rounded shrink-0">Demo</span>
               ) : isParent ? (
-                <span className="text-[9px] text-teal-400 font-extrabold uppercase bg-teal-500/10 px-1 rounded">Parent View</span>
+                <span className="text-[9px] text-teal-400 font-extrabold uppercase bg-teal-500/10 px-1 rounded shrink-0">Parent</span>
               ) : isUnlocked ? (
-                <span className="text-[9px] text-emerald-400 font-extrabold uppercase bg-emerald-500/10 px-1 rounded">Unlocked</span>
+                <span className="text-[9px] text-emerald-400 font-extrabold uppercase bg-emerald-500/10 px-1 rounded shrink-0">Unlocked</span>
               ) : (
-                <span className="text-[9px] text-amber-400 font-extrabold uppercase bg-amber-500/10 px-1 rounded">Protected</span>
+                <span className="text-[9px] text-amber-400 font-extrabold uppercase bg-amber-500/10 px-1 rounded shrink-0">Protected</span>
               )}
             </div>
-            <div className="text-xs font-mono font-bold text-slate-200 mt-0.5">
+            <div className="text-xs font-mono font-bold text-slate-200 mt-0.5 truncate">
               {isDemo
                 ? "•••••••••• (Sample Data)"
                 : isParent 
@@ -481,14 +481,14 @@ export default function ProfileCard({
       )}
 
       {/* Action Footer */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 pt-1 border-t border-slate-800/60">
         <button
           onClick={() => onSelectProfile(profile)}
-          className="flex-1 inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 active:bg-slate-600/90 text-white font-semibold text-xs border border-slate-700/70 transition-colors touch-target cursor-pointer"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600/90 to-teal-600/90 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] text-white font-bold text-xs shadow-md border border-emerald-500/40 transition-all touch-target cursor-pointer"
           aria-label={`View full details of proposal ${id}`}
         >
           <span>View Profile</span>
-          <ChevronRight className="w-3.5 h-3.5 text-emerald-400" />
+          <ChevronRight className="w-4 h-4 text-emerald-200" />
         </button>
 
         <button
@@ -496,7 +496,7 @@ export default function ProfileCard({
             e.stopPropagation();
             if (onOpenPosterModal) onOpenPosterModal(profile);
           }}
-          className="inline-flex items-center justify-center p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors touch-target cursor-pointer"
+          className="inline-flex items-center justify-center p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-300 border border-amber-500/30 transition-all touch-target cursor-pointer"
           title="Generate Social Poster Photo"
           aria-label={`Generate social poster card for proposal ${id}`}
         >
@@ -508,7 +508,7 @@ export default function ProfileCard({
             e.stopPropagation();
             shareProfile(profile, onShowToast);
           }}
-          className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors touch-target cursor-pointer"
+          className="inline-flex items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 border border-slate-700 transition-all touch-target cursor-pointer"
           title="Share Proposal Link"
           aria-label={`Share link for proposal ${id}`}
         >
@@ -519,7 +519,7 @@ export default function ProfileCard({
         {isDemo ? (
           <button
             onClick={handleUnlockClick}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 transition-colors touch-target cursor-pointer"
+            className="inline-flex items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-amber-400 border border-amber-500/30 transition-all touch-target cursor-pointer"
             title="Unlock Contact to Chat on WhatsApp"
             aria-label="Unlock contact to chat on WhatsApp"
           >
@@ -531,7 +531,7 @@ export default function ProfileCard({
               e.stopPropagation();
               if (onShowToast) onShowToast("Direct WhatsApp contact numbers are protected in Parent View.");
             }}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 text-slate-500 border border-slate-700/60 transition-colors touch-target opacity-70 cursor-pointer"
+            className="inline-flex items-center justify-center p-2.5 rounded-xl bg-slate-800 text-slate-500 border border-slate-700/60 transition-colors touch-target opacity-70 cursor-pointer"
             title="Contact numbers protected in Parent View"
             aria-label="Contact numbers protected in Parent View"
           >
@@ -543,7 +543,7 @@ export default function ProfileCard({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 transition-colors touch-target"
+            className="inline-flex items-center justify-center p-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 active:scale-95 text-emerald-300 border border-emerald-500/30 transition-all touch-target"
             title="Direct WhatsApp Chat"
             aria-label={`Chat directly on WhatsApp with guardian of proposal ${id}`}
           >
@@ -552,7 +552,7 @@ export default function ProfileCard({
         ) : (
           <button
             onClick={handleUnlockClick}
-            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors touch-target cursor-pointer"
+            className="inline-flex items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-400 border border-slate-700 transition-all touch-target cursor-pointer"
             title="Unlock Contact to Chat on WhatsApp"
             aria-label={`Unlock contact to chat on WhatsApp with guardian of proposal ${id}`}
           >

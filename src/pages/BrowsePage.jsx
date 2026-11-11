@@ -135,7 +135,7 @@ export default function BrowsePage({
       {/* ========================================================================= */}
       {!currentUser && !isDemo ? (
         // Visitor is not signed in
-        <main className="flex-1 flex items-center justify-center py-6 sm:py-12">
+        <main className="flex-1 flex items-center justify-center py-6 sm:py-12 pb-24 sm:pb-12">
           <CandidateAccessGate
             isLoggedIn={false}
             onOpenSignIn={(role, mode) => onOpenSignIn ? onOpenSignIn(role, mode) : navigate('/login')}
@@ -148,7 +148,7 @@ export default function BrowsePage({
         </main>
       ) : !hasRegistered ? (
         // User is signed in, but has not completed proposal details
-        <main className="flex-1 flex items-center justify-center py-6 sm:py-12">
+        <main className="flex-1 flex items-center justify-center py-6 sm:py-12 pb-24 sm:pb-12">
           <CandidateAccessGate
             isLoggedIn={true}
             userName={currentUser.name || 'Member'}
@@ -179,7 +179,7 @@ export default function BrowsePage({
           )}
 
           {/* Main Directory Layout Container */}
-          <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex-1 w-full">
+          <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex-1 w-full pb-24 sm:pb-6">
             <div className="flex gap-8 items-start">
               
               {/* Desktop & Mobile Filter Drawer */}
