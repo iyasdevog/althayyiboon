@@ -33,7 +33,8 @@ import {
   MARITAL_STATUSES,
   COMMON_PROFESSIONS,
   COMPLEXIONS,
-  WORK_LOCATIONS
+  WORK_LOCATIONS,
+  MADRASA_CLASSES
 } from '../data/mockProfiles';
 import { useAuth } from '../context/AuthContext';
 import { calculateListingExpiry } from '../utils/profileValidity';
@@ -107,6 +108,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
       institution: '',
       sect: 'Sunni',
       subGroup: 'General Sunni',
+      madrasaClass: '',
     },
     generalEducation: {
       level: "Bachelor's Degree (BA, BSc, BCom, BTech, MBBS, etc.)",
@@ -982,6 +984,21 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                             {ISLAMIC_QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
                           </select>
                         </div>
+
+                        {/* Madrasa Class – shown only when Madrasa is selected */}
+                        {formData.islamicQualification[0] === 'Madrasa' && (
+                          <div>
+                            <label className={labelCls}>Highest Madrasa Class Completed</label>
+                            <select
+                              value={formData.islamicBackground.madrasaClass || ''}
+                              onChange={e => updateSection('islamicBackground', 'madrasaClass', e.target.value)}
+                              className={inputCls}
+                            >
+                              <option value="">Select Class</option>
+                              {MADRASA_CLASSES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                            </select>
+                          </div>
+                        )}
 
                         <div>
                           <label className={labelCls}>Islamic Institution / College</label>

@@ -27,7 +27,8 @@ import {
   SECTS, 
   MARITAL_STATUSES, 
   WORK_LOCATIONS,
-  COMMON_PROFESSIONS 
+  COMMON_PROFESSIONS,
+  MADRASA_CLASSES
 } from '../data/mockProfiles';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -45,6 +46,7 @@ const PRIMARY_ISLAMIC_QUALIFICATIONS = [
   "Baqavi",
   "Faizy",
   "Saqafi",
+  "Madrasa",
   "Custom / Other"
 ];
 
@@ -157,10 +159,15 @@ export default function FilterSidebar({
   const handleIslamicQualToggle = (qual) => {
     setFilters(prev => {
       const current = prev.islamicQualifications || [];
-      const updated = current.includes(qual)
+      const isRemoving = current.includes(qual);
+      const updated = isRemoving
         ? current.filter(item => item !== qual)
         : [...current, qual];
-      return { ...prev, islamicQualifications: updated };
+      return { 
+        ...prev, 
+        islamicQualifications: updated,
+        ...(qual === 'Madrasa' && isRemoving ? { madrasaClass: '' } : {})
+      };
     });
   };
 
@@ -252,6 +259,9 @@ export default function FilterSidebar({
   (filters.islamicQualifications || []).forEach(iq => {
     activeChips.push({ label: iq, remove: () => handleIslamicQualToggle(iq) });
   });
+  if (filters.madrasaClass) {
+    activeChips.push({ label: `Madrasa: Class ${filters.madrasaClass}+`, remove: () => setFilters(p => ({ ...p, madrasaClass: '' })) });
+  }
   (filters.educationLevels || []).forEach(el => {
     activeChips.push({ label: el.split('(')[0].trim(), remove: () => handleEducationLevelToggle(el) });
   });
@@ -456,6 +466,20 @@ export default function FilterSidebar({
                   </label>
                 );
               })}
+
+              {/* Madrasa Class dropdown – appears when Madrasa is checked */}
+              {filters.islamicQualifications?.includes('Madrasa') && (
+                <div className="ml-6 mt-1 mb-1">
+                  <select
+                    value={filters.madrasaClass || ''}
+                    onChange={(e) => setFilters(prev => ({ ...prev, madrasaClass: e.target.value }))}
+                    className="w-full px-3 py-1.5 text-xs bg-slate-950 rounded-lg border border-emerald-500/40 text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
+                  >
+                    <option value="">Any Madrasa Class</option>
+                    {MADRASA_CLASSES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                </div>
+              )}
 
               {/* Custom community approved filters */}
               {approvedCustomFilters

@@ -74,8 +74,8 @@ export default function ProfileDetailPage({
   const gender = profile?.basicInfo?.gender || (profile?.gender === 'female' ? 'Bride' : 'Groom');
   const district = profile?.locationFamily?.homeDistrict || 'Kerala';
   const qual = Array.isArray(profile?.islamicQualification) && profile?.islamicQualification.length
-    ? profile.islamicQualification.join(', ')
-    : (profile?.islamicBackground?.qualification || '');
+    ? profile.islamicQualification.map(q => q === 'Madrasa' && profile?.islamicBackground?.madrasaClass ? `Madrasa (Class ${profile.islamicBackground.madrasaClass})` : q).join(', ')
+    : (profile?.islamicBackground?.qualification === 'Madrasa' && profile?.islamicBackground?.madrasaClass ? `Madrasa (Class ${profile.islamicBackground.madrasaClass})` : (profile?.islamicBackground?.qualification || ''));
   const edu = profile?.generalEducation?.degreeName || profile?.educationOccupation?.education || '';
   const job = profile?.educationOccupation?.occupation || profile?.careerWorkingStatus || '';
   const age = profile?.basicInfo?.age || '';
@@ -262,8 +262,8 @@ export default function ProfileDetailPage({
   const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
 
   const islamicList = Array.isArray(islamicQualification) && islamicQualification.length > 0
-    ? islamicQualification.filter(q => q && q !== 'None')
-    : (islamicBackground.qualification && islamicBackground.qualification !== 'None' ? [islamicBackground.qualification] : []);
+    ? islamicQualification.filter(q => q && q !== 'None').map(q => q === 'Madrasa' && islamicBackground.madrasaClass ? `Madrasa (Class ${islamicBackground.madrasaClass})` : q)
+    : (islamicBackground.qualification && islamicBackground.qualification !== 'None' ? [islamicBackground.qualification === 'Madrasa' && islamicBackground.madrasaClass ? `Madrasa (Class ${islamicBackground.madrasaClass})` : islamicBackground.qualification] : []);
 
   const academicDegree = generalEducation.degreeName || educationOccupation.degree || educationOccupation.education || "";
   const academicLevel = generalEducation.level || educationOccupation.level || "";

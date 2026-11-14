@@ -36,8 +36,25 @@ export const ISLAMIC_QUALIFICATIONS = [
   "Furqani",
   "Hafiz / Hafiza",
   "Afzal-ul-Ulama",
+  "Madrasa",
   "Custom / Other",
   "None"
+];
+
+// Highest Madrasa Class (Standards 1 to 12)
+export const MADRASA_CLASSES = [
+  { value: "12", label: "Class 12 (Plus Two / Dheeniyaat)" },
+  { value: "11", label: "Class 11" },
+  { value: "10", label: "Class 10 (Secondary Board)" },
+  { value: "9", label: "Class 9" },
+  { value: "8", label: "Class 8" },
+  { value: "7", label: "Class 7 (Public Board)" },
+  { value: "6", label: "Class 6" },
+  { value: "5", label: "Class 5 (Primary Board)" },
+  { value: "4", label: "Class 4" },
+  { value: "3", label: "Class 3" },
+  { value: "2", label: "Class 2" },
+  { value: "1", label: "Class 1" }
 ];
 
 // General Academic Qualification Levels

@@ -234,8 +234,11 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
     }
 
     if (educationOccupation.education) lines.push(`• ${lang === 'ml' ? 'വിദ്യാഭ്യാസം' : 'Education'}: ${educationOccupation.education}`);
-    if (islamicBackground.qualification && islamicBackground.qualification !== "None") {
-      lines.push(`• ${lang === 'ml' ? 'മത പഠനം' : 'Islamic Ed.'}: ${islamicBackground.qualification}`);
+    const displayIslamicQual = islamicBackground.qualification === 'Madrasa' && islamicBackground.madrasaClass
+      ? `Madrasa (Class ${islamicBackground.madrasaClass})`
+      : islamicBackground.qualification;
+    if (displayIslamicQual && displayIslamicQual !== "None") {
+      lines.push(`• ${lang === 'ml' ? 'മത പഠനം' : 'Islamic Ed.'}: ${displayIslamicQual}`);
     }
     if (educationOccupation.profession) lines.push(`• ${lang === 'ml' ? 'തൊഴിൽ' : 'Job'}: ${educationOccupation.profession}`);
 
@@ -609,7 +612,9 @@ export default function SharePosterModal({ profile = null, onClose, onShowToast 
                         <div className="flex items-center gap-1.5 text-amber-300 font-medium">
                           <BookOpen className="w-3 h-3 text-amber-400 shrink-0" />
                           <span>
-                            {lang === 'ml' ? 'മത പഠനം' : 'Islamic Ed.'} - {Array.isArray(islamicQualification) ? islamicQualification.filter(q => q && q !== 'None').join(', ') : islamicBackground.qualification}
+                            {lang === 'ml' ? 'മത പഠനം' : 'Islamic Ed.'} - {Array.isArray(islamicQualification)
+                              ? islamicQualification.filter(q => q && q !== 'None').map(q => q === 'Madrasa' && islamicBackground.madrasaClass ? `Madrasa (Class ${islamicBackground.madrasaClass})` : q).join(', ')
+                              : (islamicBackground.qualification === 'Madrasa' && islamicBackground.madrasaClass ? `Madrasa (Class ${islamicBackground.madrasaClass})` : islamicBackground.qualification)}
                           </span>
                         </div>
                       )}

@@ -16,7 +16,10 @@ export async function shareProfile(profile, onShowToast) {
   const displayTitle = isBride ? 'Bride' : 'Groom';
   const ageStr = basicInfo.age ? `${basicInfo.age} Yrs` : '';
   const genderStr = basicInfo.gender || displayTitle;
-  const qualStr = islamicBackground.qualification ? `, ${islamicBackground.qualification}` : '';
+  const formattedIslamicQual = islamicBackground.qualification === 'Madrasa' && islamicBackground.madrasaClass
+    ? `Madrasa (Class ${islamicBackground.madrasaClass})`
+    : (islamicBackground.qualification || '');
+  const qualStr = formattedIslamicQual ? `, ${formattedIslamicQual}` : '';
   const profStr = educationOccupation.profession ? `, ${educationOccupation.profession}` : '';
   const distStr = locationFamily.homeDistrict ? `, ${locationFamily.homeDistrict}` : '';
 
@@ -26,7 +29,7 @@ export async function shareProfile(profile, onShowToast) {
     `💍 *Al-ThayyiBoon Matrimony Proposal*`,
     `• *Proposal:* ${displayTitle}`,
     `• *Gender/Age:* ${genderStr} (${ageStr})`,
-    `• *Qualification:* ${islamicBackground.qualification || 'N/A'}`,
+    `• *Qualification:* ${formattedIslamicQual || 'N/A'}`,
     `• *Profession:* ${educationOccupation.profession || 'N/A'}`,
     `• *District:* ${locationFamily.homeDistrict || 'Kerala'}`,
     ``,

@@ -95,8 +95,8 @@ export default function ProfileDetailModal({
   const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
 
   const islamicList = Array.isArray(islamicQualification) && islamicQualification.length > 0
-    ? islamicQualification.filter(q => q && q !== 'None')
-    : (islamicBackground.qualification && islamicBackground.qualification !== 'None' ? [islamicBackground.qualification] : []);
+    ? islamicQualification.filter(q => q && q !== 'None').map(q => q === 'Madrasa' && islamicBackground.madrasaClass ? `Madrasa (Class ${islamicBackground.madrasaClass})` : q)
+    : (islamicBackground.qualification && islamicBackground.qualification !== 'None' ? [islamicBackground.qualification === 'Madrasa' && islamicBackground.madrasaClass ? `Madrasa (Class ${islamicBackground.madrasaClass})` : islamicBackground.qualification] : []);
 
   const academicDegree = generalEducation.degreeName || educationOccupation.degree || educationOccupation.education || "";
   const academicLevel = generalEducation.level || educationOccupation.level || "";

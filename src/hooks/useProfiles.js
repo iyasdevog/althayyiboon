@@ -79,6 +79,7 @@ export function useProfiles() {
     minAge: 18,
     maxAge: 70,
     islamicQualifications: [],
+    madrasaClass: '',
     educationLevels: [],
     subjectCategories: [],
     professions: [],
@@ -223,6 +224,7 @@ export function useProfiles() {
     if (filters.gender !== "All") count++;
     if (filters.minAge > 18 || filters.maxAge < 70) count++;
     if (filters.islamicQualifications?.length > 0) count += filters.islamicQualifications.length;
+    if (filters.madrasaClass) count++;
     if (filters.educationLevels?.length > 0) count += filters.educationLevels.length;
     if (filters.subjectCategories?.length > 0) count += filters.subjectCategories.length;
     if (filters.professions?.length > 0) count += filters.professions.length;
@@ -303,6 +305,13 @@ export function useProfiles() {
         });
 
         if (!matchesIslamic) return false;
+      }
+
+      // 5b. Madrasa Class filter (minimum class)
+      if (filters.madrasaClass) {
+        const pMadrasaClass = parseInt(profile.islamicBackground?.madrasaClass || '0', 10);
+        const fMadrasaClass = parseInt(filters.madrasaClass, 10);
+        if (pMadrasaClass < fMadrasaClass) return false;
       }
 
       // 6. General Academic Education Level (Multi-Select)

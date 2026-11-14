@@ -6,7 +6,8 @@ import {
   EDUCATION_LEVELS,
   SUBJECT_CATEGORIES,
   SECTS, 
-  COMPLEXIONS
+  COMPLEXIONS,
+  MADRASA_CLASSES
 } from '../data/mockProfiles';
 import { fuzzyMatchPlace } from '../utils/geoUtils';
 
@@ -372,6 +373,22 @@ export default function EditProfileModal({
                         {ISLAMIC_QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
                       </select>
                     </div>
+
+                    {/* Madrasa Class – shown only when Madrasa is selected */}
+                    {formData.islamicQualification[0] === 'Madrasa' && (
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">Highest Madrasa Class</label>
+                        <select
+                          value={formData.islamicBackground.madrasaClass || ''}
+                          onChange={(e) => updateSection('islamicBackground', 'madrasaClass', e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                        >
+                          <option value="">Select Class</option>
+                          {MADRASA_CLASSES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        </select>
+                      </div>
+                    )}
+
                     <div>
                       <label className="block text-[11px] text-slate-400 mb-1">Sect / Maslak</label>
                       <select
