@@ -5,7 +5,10 @@ import Footer from '../components/Footer';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import ProfileCard from '../components/ProfileCard';
 import { useProfiles } from '../context/ProfilesContext';
+import { useAuth } from '../context/AuthContext';
 import { useSeo } from '../utils/useSeo';
+import { isUserRegistered } from '../utils/profileValidity';
+import CandidateAccessGate from '../components/CandidateAccessGate';
 import { Heart, ArrowLeft, ArrowRight, Sparkles, Filter, Trash2 } from 'lucide-react';
 
 export default function SavedProfilesPage({
@@ -18,7 +21,10 @@ export default function SavedProfilesPage({
 }) {
   const navigate = useNavigate();
   const { profiles, rawProfiles, bookmarks, toggleBookmark, totalCount, activeFilterCount } = useProfiles();
+  const { currentUser, isAdmin, isDemo, switchUserPersona, linkExistingProfileToAccount } = useAuth();
   const [selectedGender, setSelectedGender] = useState('All');
+
+  const hasRegistered = isUserRegistered(currentUser, rawProfiles);
 
   useSeo({
     title: 'Saved Proposals | Al-ThayyiBoon – Your Bookmarked Matrimonial Profiles',
@@ -26,6 +32,75 @@ export default function SavedProfilesPage({
     canonicalUrl: 'https://althayyiboon.com/saved',
     ogType: 'website'
   });
+
+  const handleLinkProfile = async (identifier, pin) => {
+    const res = linkExistingProfileToAccount(identifier, pin, rawProfiles);
+    if (res.success) {
+      onShowToast?.(`Proposal (${res.profile.id}) successfully linked! You now have full directory access.`);
+      return { success: true };
+    }
+    return { success: false, error: res.error };
+  };
+
+  // Gate 1: unauthenticated non-demo visitor
+  if (!currentUser && !isDemo) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
+        <DemoNoticeBanner onOpenSignIn={(role) => onOpenSignIn?.(role)} />
+        <Navbar
+          totalProfiles={totalCount}
+          activeFilterCount={activeFilterCount}
+          bookmarkCount={bookmarks.length}
+          showFavoritesOnly={true}
+          onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+          onOpenPosterGenerator={() => navigate('/poster')}
+          onOpenWalletModal={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
+          onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
+          onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
+        />
+        <main className="flex-1 flex items-center justify-center py-8">
+          <CandidateAccessGate
+            isLoggedIn={false}
+            onOpenSignIn={(role, mode) => onOpenSignIn ? onOpenSignIn(role, mode) : navigate('/login')}
+            onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+            onSwitchPersona={(role) => {
+              switchUserPersona(role);
+              onShowToast?.(`Switched to ${role} demo mode!`);
+            }}
+          />
+        </main>
+        <Footer onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} />
+      </div>
+    );
+  }
+
+  // Gate 2: signed in user who has not registered their candidate details
+  if (currentUser && !hasRegistered) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
+        <Navbar
+          totalProfiles={totalCount}
+          activeFilterCount={activeFilterCount}
+          bookmarkCount={bookmarks.length}
+          showFavoritesOnly={true}
+          onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+          onOpenPosterGenerator={() => navigate('/poster')}
+          onOpenWalletModal={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
+          onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
+          onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
+        />
+        <main className="flex-1 flex items-center justify-center py-8">
+          <CandidateAccessGate
+            isLoggedIn={true}
+            userName={currentUser.name || 'Member'}
+            onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+            onLinkExistingProfile={handleLinkProfile}
+          />
+        </main>
+        <Footer onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} />
+      </div>
+    );
+  }
 
   // Filter bookmarked profiles
   const bookmarkedProfiles = rawProfiles.filter(p => bookmarks.includes(p.id));

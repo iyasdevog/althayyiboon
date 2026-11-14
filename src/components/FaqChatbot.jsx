@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   MessageCircle, 
   X, 
@@ -26,99 +26,107 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 
-// Standard FAQ Knowledge Base with Guided Prompts
-const FAQ_KNOWLEDGE_BASE = [
-  {
-    id: 'privacy',
-    title: '🔒 Reciprocal Privacy',
-    prompt: 'How does reciprocal privacy work? Can strangers see my profile?',
-    keywords: ['privacy', 'private', 'secure', 'reciprocal', 'stranger', 'photo', 'view', 'who can see', 'opposite', 'lock'],
-    response: `Al-ThayyiBoon strictly enforces **Reciprocal Modest Viewing**:
+// Dynamic FAQ Knowledge Base generator reflecting active admin configuration
+export function getFaqKnowledgeBase(pricing) {
+  const unlockFee = pricing?.contactUnlockFee ?? 15;
+  const isCampaign = Boolean(pricing?.campaignMode);
+
+  return [
+    {
+      id: 'privacy',
+      title: '🔒 Reciprocal Privacy',
+      prompt: 'How does reciprocal privacy work? Can strangers see my profile?',
+      keywords: ['privacy', 'private', 'secure', 'reciprocal', 'stranger', 'photo', 'view', 'who can see', 'opposite', 'lock'],
+      response: `Al-ThayyiBoon strictly enforces **Reciprocal Modest Viewing**:
 • **Opposite-Gender Only:** Registered Brides (or their Walis) can only view Groom proposals, and registered Grooms can only view Bride proposals.
 • **No Public Browsing:** Casual anonymous visitors and search engine bots cannot browse real candidate details.
 • **Zero Web Scraping:** Phone numbers and sensitive contact details are never exposed publicly—they require reciprocal Wali authorization and contact unlock.`,
-    action: { label: 'Register Proposal', type: 'open_add' }
-  },
-  {
-    id: 'fee',
-    title: '💰 Registration & Contact Fee (₹15)',
-    prompt: 'Why is there a registration fee and contact view fee?',
-    keywords: ['fee', 'cost', 'charge', '15', 'rupees', 'price', 'payment', 'money', 'free', 'why pay', 'unlock'],
-    response: `We charge a nominal registration fee and a tiny contact unlock fee (**₹15 / 1 Credit**):
+      action: { label: 'Register Proposal', type: 'open_add' }
+    },
+    {
+      id: 'fee',
+      title: `💰 Registration & Contact Fee (₹${unlockFee})`,
+      prompt: `Why is there a registration fee and contact view fee (₹${unlockFee})?`,
+      keywords: ['fee', 'cost', 'charge', String(unlockFee), '15', '25', 'rupees', 'price', 'payment', 'money', 'free', 'why pay', 'unlock'],
+      response: `We charge a nominal registration fee and a tiny contact unlock fee (**₹${unlockFee} / 1 Credit**):
 1. **Eliminate Brokers & Fake Accounts:** Unlike free open groups that get flooded with spammers and middlemen, the token fee ensures only serious candidates and genuine parents join.
 2. **Platform Sustainability & Wali Verification:** It funds manual phone verification, hosting, and data security without selling user data or showing annoying pop-up ads.
-3. **Halal & Modest:** You only unlock contacts of proposals you genuinely match with.`,
-    action: { label: 'Learn About Pricing & Credits', type: 'open_wallet' }
-  },
-  {
-    id: 'validity',
-    title: '⏳ 3-Month Active Listing',
-    prompt: 'Why are profile listings valid for only 3 months?',
-    keywords: ['validity', '3 month', 'three month', 'expire', 'duration', 'renew', 'stale', 'active', 'old'],
-    response: `To guarantee that 100% of proposals on Al-ThayyiBoon are **fresh and active**:
+3. **Halal & Modest:** You only unlock contacts of proposals you genuinely match with.${isCampaign ? '\n\n*(Note: Free Registration Campaign is currently active: Profile registration is ₹0 and includes 3 free contact unlocks!)*' : ''}`,
+      action: { label: 'Learn About Pricing & Credits', type: 'open_wallet' }
+    },
+    {
+      id: 'validity',
+      title: '⏳ 3-Month Active Listing',
+      prompt: 'Why are profile listings valid for only 3 months?',
+      keywords: ['validity', '3 month', 'three month', 'expire', 'duration', 'renew', 'stale', 'active', 'old'],
+      response: `To guarantee that 100% of proposals on Al-ThayyiBoon are **fresh and active**:
 • Traditional matrimony sites are cluttered with profiles from years ago whose marriages were already solemnized.
 • Every listing on Al-ThayyiBoon remains active for **90 days (3 months)**.
 • If still searching, the candidate or parent can easily renew with a single tap. If solemnized, the proposal automatically retires—saving families from unnecessary calls.`,
-    action: { label: 'View Validity Policy', type: 'open_validity' }
-  },
-  {
-    id: 'qualifications',
-    title: '🎓 Islamic & Academic Degrees',
-    prompt: 'What Islamic & University qualifications are supported?',
-    keywords: ['qualification', 'degree', 'islamic', 'wafi', 'wafiyya', 'dawa', 'sharia', 'afzal', 'hafiz', 'alim', 'doctor', 'engineer', 'study', 'academic', 'mbb', 'btech'],
-    response: `Al-ThayyiBoon proudly bridges **both Islamic Scholarship & Higher Academic Excellence**:
+      action: { label: 'View Validity Policy', type: 'open_validity' }
+    },
+    {
+      id: 'qualifications',
+      title: '🎓 Islamic & Academic Degrees',
+      prompt: 'What Islamic & University qualifications are supported?',
+      keywords: ['qualification', 'degree', 'islamic', 'wafi', 'wafiyya', 'dawa', 'sharia', 'afzal', 'hafiz', 'alim', 'doctor', 'engineer', 'study', 'academic', 'mbb', 'btech'],
+      response: `Al-ThayyiBoon proudly bridges **both Islamic Scholarship & Higher Academic Excellence**:
 • **Islamic Institutions:** Wafi, Wafiyya, Da'wa / Sharee'a graduates, Afzal-ul-Ulama, Certified Hafiz-ul-Qur'an, and Alim/Ulama qualifications across recognized Kerala boards.
 • **Academic & Professional:** MBBS / MD Doctors, B.Tech / M.Tech Software Engineers, Ph.D. Scholars, CA / CMA, Civil Services, and University Masters/Bachelors.
 • You can filter proposals having dual qualifications (e.g. Wafiyya + B.Sc or Wafi + M.A.).`,
-    action: { label: 'Filter by Qualification', type: 'open_filters' }
-  },
-  {
-    id: 'location',
-    title: '📍 Malabar & Kerala Locations',
-    prompt: 'How does location and distance filter work in Malabar areas?',
-    keywords: ['location', 'place', 'distance', 'malabar', 'koolimadu', 'town', 'district', 'km', 'gps', 'malappuram', 'kozhikode', 'kannur', 'kasaragod', 'wayanad', 'palakkad'],
-    response: `We have indexed **over 165+ Kerala towns and junction localities**, with exhaustive coverage across Malabar:
+      action: { label: 'Filter by Qualification', type: 'open_filters' }
+    },
+    {
+      id: 'location',
+      title: '📍 Malabar & Kerala Locations',
+      prompt: 'How does location and distance filter work in Malabar areas?',
+      keywords: ['location', 'place', 'distance', 'malabar', 'koolimadu', 'town', 'district', 'km', 'gps', 'malappuram', 'kozhikode', 'kannur', 'kasaragod', 'wayanad', 'palakkad'],
+      response: `We have indexed **over 165+ Kerala towns and junction localities**, with exhaustive coverage across Malabar:
 • **Towns Covered:** Malappuram, Kozhikode, Kannur, Kasaragod, Wayanad, Palakkad, and local areas like Koolimadu, Mavoor, Feroke, Manjeri, Tirur, Vadakara, Thalassery, etc.
 • **GPS Distance Radius:** You can filter candidates within 5 km, 15 km, 25 km, or 50 km of your own town or current GPS location.
 • **Native Mahallu & Nearest Town:** Candidates can specify both their exact local village/mahallu and nearest town for accurate GPS distance.`,
-    action: { label: 'Search by Distance', type: 'open_filters' }
-  },
-  {
-    id: 'verification',
-    title: '🛡️ Verification & Wali Supervision',
-    prompt: 'How does Wali and candidate verification work?',
-    keywords: ['verify', 'verification', 'wali', 'parent', 'guardian', 'trust', 'fake', 'admin', 'identity'],
-    response: `Every proposal on Al-ThayyiBoon is tied to a responsible guardian (Wali):
+      action: { label: 'Search by Distance', type: 'open_filters' }
+    },
+    {
+      id: 'verification',
+      title: '🛡️ Verification & Wali Supervision',
+      prompt: 'How does Wali and candidate verification work?',
+      keywords: ['verify', 'verification', 'wali', 'parent', 'guardian', 'trust', 'fake', 'admin', 'identity'],
+      response: `Every proposal on Al-ThayyiBoon is tied to a responsible guardian (Wali):
 • Direct contact details must belong to the Father, Mother, Brother, or lawful Guardian.
 • Admin audits new submissions to verify Islamic credentials and ensure authenticity.
 • Any inappropriate submission is immediately banned to safeguard community modesty.`,
-    action: { label: 'Contact Admin', type: 'open_whatsapp' }
-  },
-  {
-    id: 'edit_remove',
-    title: '✏️ Edit or Delete Proposal',
-    prompt: 'How do I edit or remove my proposal after solemnization?',
-    keywords: ['edit', 'delete', 'remove', 'change', 'update', 'pin', 'solemnized', 'nikah', 'hide'],
-    response: `You retain full control over your proposal at all times:
+      action: { label: 'Contact Admin', type: 'open_whatsapp' }
+    },
+    {
+      id: 'edit_remove',
+      title: '✏️ Edit or Delete Proposal',
+      prompt: 'How do I edit or remove my proposal after solemnization?',
+      keywords: ['edit', 'delete', 'remove', 'change', 'update', 'pin', 'solemnized', 'nikah', 'hide'],
+      response: `You retain full control over your proposal at all times:
 1. Locate your card on the website or visit your proposal link.
 2. Click the **Edit (pencil)** icon on the card.
 3. Enter your **4-Digit Edit PIN** set during registration, or sign in with the Google / Email account you used.
 4. You can update details, change photos, or click **"Delete Proposal"** once your Nikah is fixed.`,
-    action: { label: 'Browse Proposals', type: 'open_browse' }
-  }
-];
+      action: { label: 'Browse Proposals', type: 'open_browse' }
+    }
+  ];
+}
 
-// Feedback Area Options for Customer Improvement Suggestions
-const IMPROVEMENT_AREAS = [
-  { id: 'mobile_ui', label: '📱 Mobile Experience & Ergonomics', desc: 'Layout, buttons, readability on phone' },
-  { id: 'location_search', label: '📍 Location & Malabar Towns', desc: 'GPS accuracy, more local village names' },
-  { id: 'privacy_modesty', label: '🔒 Privacy & Modesty Controls', desc: 'Reciprocal lock, photo protection' },
-  { id: 'registration_form', label: '📝 Registration Form Simplicity', desc: 'Step-by-step proposal submission' },
-  { id: 'filters_sorting', label: '🔍 Filters & Search Options', desc: 'Islamic degrees, age, distance radius' },
-  { id: 'payment_unlock', label: '💳 Payment & ₹15 Unlock System', desc: 'UPI payment, wallet recharge convenience' },
-  { id: 'speed_performance', label: '⚡ Website Speed & Smoothness', desc: 'Page load times and responsiveness' },
-  { id: 'new_feature', label: '✨ Other / New Feature Idea', desc: 'Any new tool or idea for the community' }
-];
+// Dynamic Feedback Area Options for Customer Improvement Suggestions
+export function getImprovementAreas(pricing) {
+  const unlockFee = pricing?.contactUnlockFee ?? 15;
+  return [
+    { id: 'mobile_ui', label: '📱 Mobile Experience & Ergonomics', desc: 'Layout, buttons, readability on phone' },
+    { id: 'location_search', label: '📍 Location & Malabar Towns', desc: 'GPS accuracy, more local village names' },
+    { id: 'privacy_modesty', label: '🔒 Privacy & Modesty Controls', desc: 'Reciprocal lock, photo protection' },
+    { id: 'registration_form', label: '📝 Registration Form Simplicity', desc: 'Step-by-step proposal submission' },
+    { id: 'filters_sorting', label: '🔍 Filters & Search Options', desc: 'Islamic degrees, age, distance radius' },
+    { id: 'payment_unlock', label: `💳 Payment & ₹${unlockFee} Unlock System`, desc: 'UPI payment, wallet recharge convenience' },
+    { id: 'speed_performance', label: '⚡ Website Speed & Smoothness', desc: 'Page load times and responsiveness' },
+    { id: 'new_feature', label: '✨ Other / New Feature Idea', desc: 'Any new tool or idea for the community' }
+  ];
+}
 
 export default function FaqChatbot({ 
   isOpen, 
@@ -130,6 +138,9 @@ export default function FaqChatbot({
   onShowToast 
 }) {
   const { currentUser, pricing } = useAuth();
+  const faqList = useMemo(() => getFaqKnowledgeBase(pricing), [pricing]);
+  const improvementAreas = useMemo(() => getImprovementAreas(pricing), [pricing]);
+
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'feedback'
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -237,7 +248,7 @@ export default function FaqChatbot({
       let bestFaq = null;
       let highestMatches = 0;
 
-      for (const faq of FAQ_KNOWLEDGE_BASE) {
+      for (const faq of faqList) {
         let matchCount = 0;
         for (const kw of faq.keywords) {
           if (lower.includes(kw)) matchCount++;
@@ -321,7 +332,7 @@ export default function FaqChatbot({
       const payload = {
         rating,
         selectedAreas,
-        selectedAreaLabels: selectedAreas.map(id => IMPROVEMENT_AREAS.find(a => a.id === id)?.label || id),
+        selectedAreaLabels: selectedAreas.map(id => improvementAreas.find(a => a.id === id)?.label || id),
         feedbackNote: feedbackNote.trim(),
         senderName: senderName.trim() || 'Anonymous Member',
         senderContact: senderContact.trim() || 'Not Provided',
@@ -365,7 +376,7 @@ export default function FaqChatbot({
 
   // Send suggestion to Admin WhatsApp directly
   const handleSendToWhatsApp = () => {
-    const areaTexts = selectedAreas.map(id => IMPROVEMENT_AREAS.find(a => a.id === id)?.label).filter(Boolean).join(', ');
+    const areaTexts = selectedAreas.map(id => improvementAreas.find(a => a.id === id)?.label).filter(Boolean).join(', ');
     const ratingStars = '⭐'.repeat(rating);
     const msg = 
       `*Al-ThayyiBoon Website Suggestion*\n\n` +
@@ -533,7 +544,7 @@ export default function FaqChatbot({
                         <Sparkles className="w-3 h-3" /> Popular Questions
                       </p>
                       <div className="grid grid-cols-1 gap-1.5">
-                        {FAQ_KNOWLEDGE_BASE.slice(0, 5).map((faq) => (
+                        {faqList.slice(0, 5).map((faq) => (
                           <button
                             key={faq.id}
                             type="button"
@@ -583,7 +594,7 @@ export default function FaqChatbot({
 
             {/* Quick Chips Bar */}
             <div className="px-3 py-2 bg-slate-950/80 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-              {FAQ_KNOWLEDGE_BASE.map(faq => (
+              {faqList.map(faq => (
                 <button
                   key={faq.id}
                   type="button"
@@ -673,7 +684,7 @@ export default function FaqChatbot({
                     Select Areas for Improvement (Choose all that apply):
                   </label>
                   <div className="grid grid-cols-1 gap-1.5">
-                    {IMPROVEMENT_AREAS.map(area => {
+                    {improvementAreas.map(area => {
                       const isSelected = selectedAreas.includes(area.id);
                       return (
                         <button

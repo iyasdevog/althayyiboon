@@ -29,7 +29,8 @@ export default function SignInPage({
   });
 
   const handleSuccess = (authResult) => {
-    if (authResult?.isNewRegistration) {
+    const isRegistered = authResult?.isNewRegistration === false && Boolean(authResult?.matchedProfile || authResult?.profile?.hasRegisteredProfile);
+    if (!isRegistered) {
       navigate('/add');
     } else {
       navigate('/profiles');

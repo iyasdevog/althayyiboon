@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { 
   User, 
   Heart, 
@@ -18,6 +19,8 @@ import {
 } from 'lucide-react';
 
 export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPortal }) {
+  const { pricing } = useAuth();
+  const unlockFee = pricing?.contactUnlockFee ?? 15;
   const [activeFaq, setActiveFaq] = useState(null);
   const [previewSearch, setPreviewSearch] = useState('');
 
@@ -37,7 +40,7 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
     },
     {
       q: "What is the contact unlock policy and why is there a nominal fee?",
-      a: "Contact numbers are unlocked via nominal pay-per-view credits (₹15 / 1 credit). This nominal safeguard eliminates time-wasters, spammers, and non-serious inquiries, ensuring that only genuine families reach out."
+      a: `Contact numbers are unlocked via nominal pay-per-view credits (₹${unlockFee} / 1 credit). This nominal safeguard eliminates time-wasters, spammers, and non-serious inquiries, ensuring that only genuine families reach out.`
     },
     {
       q: "Can candidates with combined Islamic (Wafi/Wafiyya) and University degrees register?",
@@ -56,40 +59,40 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-r from-emerald-600/15 via-teal-500/10 to-amber-500/10 blur-[140px] rounded-full pointer-events-none"></div>
 
       {/* Top Banner Navigation */}
-      <header className="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 sm:gap-3">
+      <header className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 shadow-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-1.5 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
             <img 
               src="/brand-icon.png" 
               alt="Al-ThayyiBoon Matrimony" 
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-lg shadow-emerald-950/40 object-cover ring-1 ring-emerald-500/20"
+              className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl shadow-md shadow-emerald-950/40 object-cover ring-1 ring-emerald-500/20 shrink-0"
             />
-            <div>
-              <span className="text-lg sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight">
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm xs:text-base sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight whitespace-nowrap">
                 Al-ThayyiBoon
               </span>
-              <p className="text-[10px] sm:text-xs text-amber-400 font-semibold uppercase tracking-wider hidden xs:block">
+              <p className="text-[10px] sm:text-xs text-amber-400 font-semibold uppercase tracking-wider hidden sm:block whitespace-nowrap">
                 Matrimonial • Islamic &amp; Academic
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Link
               to="/profiles"
-              className="hidden sm:inline-flex px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 transition-colors"
+              className="hidden sm:inline-flex px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 transition-colors whitespace-nowrap"
             >
               Browse Proposals
             </Link>
             <button
               onClick={() => onSignIn && onSignIn('groom', 'register')}
-              className="hidden sm:inline-flex px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-950/30 transition-transform active:scale-95 cursor-pointer"
+              className="hidden sm:inline-flex px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-950/30 transition-transform active:scale-95 cursor-pointer whitespace-nowrap"
             >
               Register (Free)
             </button>
             <button
               onClick={() => onSignIn && onSignIn('groom', 'signin')}
-              className="px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 transition-colors cursor-pointer"
+              className="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 transition-colors cursor-pointer whitespace-nowrap active:scale-95"
             >
               Sign In
             </button>

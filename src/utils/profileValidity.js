@@ -7,6 +7,42 @@ export const LISTING_DURATION_MONTHS = 3;
 export const LISTING_DURATION_DAYS = 90;
 export const RENEWAL_WARNING_DAYS = 15;
 
+export const ADMIN_EMAILS = [
+  'admin@althayyiboon.com',
+  'althayyiboon@gmail.com',
+  'iyasdevog@gmail.com'
+];
+
+/**
+ * Checks whether the current user is fully registered to browse listings.
+ * Registered candidates, authorized administrators, and demo persona testers are allowed.
+ * Unregistered signed-in candidates MUST register before viewing the directory.
+ */
+export function isUserRegistered(user, rawProfiles = []) {
+  if (!user) return false;
+  if (user.isDemo) return true;
+  if (user.role === 'admin' || user.isAdmin) return true;
+  if (user.email && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase())) {
+    return true;
+  }
+  if (user.hasRegisteredProfile) return true;
+  if (user.isLegacyUser) return true;
+  if (!Array.isArray(rawProfiles)) return false;
+
+  return rawProfiles.some(p => {
+    if (!p) return false;
+    const pCreatorUid = p.creatorUid;
+    const pCreatorEmail = (p.creatorEmail || '').toLowerCase();
+    const pEmail = (p.email || p.contactPreferences?.email || '').toLowerCase();
+    const uEmail = (user.email || '').toLowerCase();
+
+    if (pCreatorUid && user.uid && pCreatorUid === user.uid) return true;
+    if (uEmail && (pCreatorEmail === uEmail || pEmail === uEmail)) return true;
+    if (user.profileId && String(p.id).toLowerCase() === String(user.profileId).toLowerCase()) return true;
+    return false;
+  });
+}
+
 export const MONTHLY_CAMPAIGN_PERKS = [
   {
     title: '100% Free Registration (₹0)',

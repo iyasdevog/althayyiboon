@@ -9,25 +9,26 @@ import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
 import { shareProfile } from '../utils/shareUtils';
 import { useSeo } from '../utils/useSeo';
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  Phone, 
-  MessageSquare, 
-  Share2, 
-  Heart, 
-  User, 
-  BookOpen, 
-  GraduationCap, 
-  Briefcase, 
-  MapPin, 
-  Home, 
-  ShieldCheck, 
-  Lock, 
-  Unlock, 
-  Coins, 
-  Copy, 
-  Check, 
+import { isUserRegistered } from '../utils/profileValidity';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Phone,
+  MessageSquare,
+  Share2,
+  Heart,
+  User,
+  BookOpen,
+  GraduationCap,
+  Briefcase,
+  MapPin,
+  Home,
+  ShieldCheck,
+  Lock,
+  Unlock,
+  Coins,
+  Copy,
+  Check,
   Image as ImageIcon,
   Sparkles,
   Users
@@ -47,14 +48,14 @@ export default function ProfileDetailPage({
   const { id } = useParams();
   const navigate = useNavigate();
   const { profiles, rawProfiles, bookmarks, toggleBookmark, totalCount, activeFilterCount } = useProfiles();
-  const { 
+  const {
     currentUser,
     isAdmin,
     switchUserPersona,
     linkExistingProfileToAccount,
-    isContactUnlocked, 
-    unlockContact, 
-    isParent, 
+    isContactUnlocked,
+    unlockContact,
+    isParent,
     isDemo: authIsDemo
   } = useAuth();
 
@@ -81,7 +82,7 @@ export default function ProfileDetailPage({
   const age = profile?.basicInfo?.age || '';
   const profileParts = [gender, qual, edu, district].filter(Boolean).join(' · ');
   const seoTitle = profile ? `${profileParts} | Al-ThayyiBoon Matrimony` : 'Matrimonial Proposal | Al-ThayyiBoon';
-  const seoDesc = profile 
+  const seoDesc = profile
     ? `Verified Islamic & Academic proposal for ${gender} (${age ? `${age} yrs, ` : ''}${district}, Kerala). Qualifications: ${[qual, edu, job].filter(Boolean).join(', ')}. Direct guardian contact verified on Al-ThayyiBoon.`
     : 'Discover verified Islamic & Academic proposals for Kerala Muslims and Gulf diaspora on Al-ThayyiBoon.';
 
@@ -117,20 +118,7 @@ export default function ProfileDetailPage({
   });
 
   // Determine if current user has an active registered proposal
-  const hasRegistered = Boolean(
-    isAdmin || 
-    authIsDemo || 
-    currentUser?.hasRegisteredProfile || 
-    currentUser?.isLegacyUser || 
-    rawProfiles.some(p => 
-      (p.creatorUid && p.creatorUid === currentUser?.uid) ||
-      (currentUser?.email && (
-        (p.creatorEmail && p.creatorEmail.toLowerCase() === currentUser.email.toLowerCase()) ||
-        (p.email && p.email.toLowerCase() === currentUser.email.toLowerCase()) ||
-        (p.contactPreferences?.email && p.contactPreferences.email.toLowerCase() === currentUser.email.toLowerCase())
-      ))
-    )
-  );
+  const hasRegistered = isUserRegistered(currentUser, rawProfiles);
 
   // Gate 1: unauthenticated non-demo visitor
   if (!currentUser && !authIsDemo) {
@@ -188,10 +176,6 @@ export default function ProfileDetailPage({
                 return { success: true };
               }
               return { success: false, error: res.error };
-            }}
-            onSwitchPersona={(role) => {
-              switchUserPersona(role);
-              onShowToast?.(`Switched to ${role} demo mode!`);
             }}
           />
         </main>
@@ -254,8 +238,8 @@ export default function ProfileDetailPage({
 
   const candidateDisplayName = isDemo
     ? (isBride ? 'Bride' : 'Groom')
-    : isParent 
-      ? `Candidate ${isBride ? 'Bride' : 'Groom'}` 
+    : isParent
+      ? `Candidate ${isBride ? 'Bride' : 'Groom'}`
       : (basicInfo.fullName || (isBride ? 'Bride Proposal' : 'Groom Proposal'));
 
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
@@ -300,8 +284,8 @@ export default function ProfileDetailPage({
   const getWhatsAppLink = () => {
     if (isDemo || isParent) return "#";
     const rawNumber = (rawWhatsApp || "").replace(/[^0-9]/g, "");
-    const formattedNum = rawNumber.startsWith("91") || rawNumber.startsWith("966") || rawNumber.startsWith("971") || rawNumber.startsWith("974") 
-      ? rawNumber 
+    const formattedNum = rawNumber.startsWith("91") || rawNumber.startsWith("966") || rawNumber.startsWith("971") || rawNumber.startsWith("974")
+      ? rawNumber
       : "91" + rawNumber;
 
     const text = encodeURIComponent(
@@ -353,7 +337,7 @@ export default function ProfileDetailPage({
       />
 
       <main className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 w-full pb-24 sm:pb-6">
-        
+
         {/* Navigation & Breadcrumb Bar */}
         <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6 text-xs sm:text-sm">
           <div className="flex items-center gap-2 text-slate-400">
@@ -394,32 +378,29 @@ export default function ProfileDetailPage({
 
         {/* Profile Card Container */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm">
-          
+
           {/* Header Banner */}
-          <div className={`p-4 sm:p-8 border-b border-slate-800 ${
-            isBride 
-              ? 'bg-gradient-to-r from-slate-900 via-rose-950/30 to-slate-900' 
-              : 'bg-gradient-to-r from-slate-900 via-emerald-950/30 to-slate-900'
-          }`}>
+          <div className={`p-4 sm:p-8 border-b border-slate-800 ${isBride
+            ? 'bg-gradient-to-r from-slate-900 via-rose-950/30 to-slate-900'
+            : 'bg-gradient-to-r from-slate-900 via-emerald-950/30 to-slate-900'
+            }`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              
+
               {/* Candidate Identity */}
               <div className="flex items-start gap-4">
-                <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center font-bold text-xl sm:text-2xl shrink-0 shadow-lg border ${
-                  isBride 
-                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
-                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                }`}>
+                <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center font-bold text-xl sm:text-2xl shrink-0 shadow-lg border ${isBride
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  }`}>
                   {isBride ? '👰' : '🤵'}
                 </div>
 
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                      isBride 
-                        ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' 
-                        : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                    }`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${isBride
+                      ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+                      : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                      }`}>
                       {isBride ? 'Bride Proposal' : 'Groom Proposal'}
                     </span>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold flex items-center gap-1">
@@ -459,15 +440,14 @@ export default function ProfileDetailPage({
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-2 shrink-0">
-                
+
                 {/* Bookmark Toggle */}
                 <button
                   onClick={() => toggleBookmark(profile.id)}
-                  className={`p-2.5 sm:px-3 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${
-                    isBookmarked
-                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
-                      : 'bg-slate-800 hover:bg-slate-750 text-slate-300 border-slate-700'
-                  }`}
+                  className={`p-2.5 sm:px-3 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${isBookmarked
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
+                    : 'bg-slate-800 hover:bg-slate-750 text-slate-300 border-slate-700'
+                    }`}
                   title={isBookmarked ? "Remove Bookmark" : "Save Proposal"}
                 >
                   <Heart className={`w-4 h-4 ${isBookmarked ? 'fill-rose-400 text-rose-400' : 'text-slate-400'}`} />
@@ -522,11 +502,10 @@ export default function ProfileDetailPage({
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
-                      isActive
-                        ? 'bg-emerald-500 text-slate-950 shadow-md font-bold'
-                        : 'bg-slate-800/60 hover:bg-slate-800 text-slate-300 border border-slate-700/60'
-                    }`}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${isActive
+                      ? 'bg-emerald-500 text-slate-950 shadow-md font-bold'
+                      : 'bg-slate-800/60 hover:bg-slate-800 text-slate-300 border border-slate-700/60'
+                      }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
                     <span>{tab.label}</span>
@@ -539,14 +518,14 @@ export default function ProfileDetailPage({
 
           {/* Tab Content Body */}
           <div className="p-4 sm:p-8">
-            
+
             {/* OVERVIEW TAB */}
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                
+
                 {/* Highlights Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                  
+
                   {/* Islamic Qualification */}
                   <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
                     <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold mb-1.5">
@@ -677,7 +656,7 @@ export default function ProfileDetailPage({
                     <BookOpen className="w-4 h-4 text-emerald-400" />
                     <span>Religious Education & Background</span>
                   </h3>
-                  
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
                     <div>
                       <span className="text-slate-400 block mb-1">Islamic Degrees / Qualifications:</span>
@@ -821,7 +800,7 @@ export default function ProfileDetailPage({
             {/* GUARDIAN CONTACT TAB */}
             {activeTab === 'contact' && (
               <div className="space-y-6">
-                
+
                 {/* Contact Unlock Card */}
                 <div className="p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-emerald-500/30 space-y-4">
                   <div className="flex items-center justify-between">
@@ -835,11 +814,10 @@ export default function ProfileDetailPage({
                       </div>
                     </div>
 
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
-                      isUnlocked 
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
-                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                    }`}>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${isUnlocked
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                      }`}>
                       {isUnlocked ? 'Unlocked' : 'Protected'}
                     </span>
                   </div>

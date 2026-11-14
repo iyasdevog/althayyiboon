@@ -13,6 +13,7 @@ import Footer from '../components/Footer';
 import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
 import { useSeo } from '../utils/useSeo';
+import { isUserRegistered } from '../utils/profileValidity';
 
 export default function BrowsePage({
   onOpenAddModal,
@@ -63,20 +64,14 @@ export default function BrowsePage({
   const showStatsNumbers = isStatsNumbersVisible ? isStatsNumbersVisible(rawProfiles.length) : true;
 
   // Determine if current user has an active registered proposal
-  const hasRegistered = Boolean(
-    isAdmin || 
-    isDemo || 
-    currentUser?.hasRegisteredProfile || 
-    currentUser?.isLegacyUser || 
-    rawProfiles.some(p => 
-      (p.creatorUid && p.creatorUid === currentUser?.uid) ||
-      (currentUser?.email && (
-        (p.creatorEmail && p.creatorEmail.toLowerCase() === currentUser.email.toLowerCase()) ||
-        (p.email && p.email.toLowerCase() === currentUser.email.toLowerCase()) ||
-        (p.contactPreferences?.email && p.contactPreferences.email.toLowerCase() === currentUser.email.toLowerCase())
-      ))
-    )
-  );
+  const hasRegistered = isUserRegistered(currentUser, rawProfiles);
+
+  // Automatically force open registration modal if user is logged in but hasn't submitted candidate details
+  useEffect(() => {
+    if (currentUser && !hasRegistered && !isDemo && !isAdmin) {
+      onOpenAddModal?.();
+    }
+  }, [currentUser, hasRegistered, isDemo, isAdmin]);
 
   // Dynamic SEO metadata for Directory Browse
   useSeo({
@@ -156,10 +151,6 @@ export default function BrowsePage({
             userName={currentUser.name || 'Member'}
             onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
             onLinkExistingProfile={handleLinkProfile}
-            onSwitchPersona={(role) => {
-              switchUserPersona(role);
-              onShowToast?.(`Switched to ${role} demo mode (Sample Data)!`);
-            }}
           />
         </main>
       ) : (

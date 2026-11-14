@@ -100,18 +100,21 @@ export default function Navbar({
     <header className="sticky top-0 z-40">
       
       {/* Campaign, 3-Month Freshness & Verification Banner */}
-      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-amber-950/70 border-b border-emerald-800/40 py-1.5 px-3 sm:px-6">
+      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-amber-950/70 border-b border-emerald-800/40 py-1 sm:py-1.5 px-2.5 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] sm:text-xs gap-2">
-          <div className="flex items-center gap-2 text-slate-300 truncate">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-slate-300 truncate">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-            <span className="font-semibold text-emerald-300 shrink-0">Verified Matrimonial Network</span>
+            <span className="font-semibold text-emerald-300 shrink-0">
+              <span className="hidden sm:inline">Verified Matrimonial Network</span>
+              <span className="sm:hidden">Verified Network</span>
+            </span>
             <span className="text-slate-500 shrink-0">•</span>
             <button
               onClick={() => setShowValidityModal(true)}
               className="hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer truncate"
               title="Click to view 3-month profile validity and monthly campaign rules"
             >
-              <span className="text-amber-300/90 font-medium hidden xs:inline">3-Month Valid Listings (WhatsApp Renewal)</span>
+              <span className="text-amber-300/90 font-medium hidden sm:inline">3-Month Valid Listings (WhatsApp Renewal)</span>
               {pricing?.campaignMode && (
                 <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] ml-1 shrink-0 border border-emerald-500/30">
                   Free ₹0 Drive
@@ -131,15 +134,15 @@ export default function Navbar({
             </button>
 
             {currentUser && !isAdmin && userGender && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 text-[10px] sm:text-[11px] font-semibold text-amber-300 border border-amber-500/30">
+              <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-800 text-[10px] sm:text-[11px] font-semibold text-amber-300 border border-amber-500/30 whitespace-nowrap">
                 <Lock className="w-2.5 h-2.5" />
-                <span>Viewing {userGender === 'male' ? 'Brides' : 'Grooms'}</span>
+                <span><span className="hidden xs:inline">Viewing </span>{userGender === 'male' ? 'Brides' : 'Grooms'}</span>
               </span>
             )}
             {currentUser && isAdmin && (
               <button 
                 onClick={onOpenAdminPortal}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-[10px] sm:text-[11px] font-bold text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-[10px] sm:text-[11px] font-bold text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <ShieldCheck className="w-3 h-3 text-amber-400" />
                 <span>Admin Mode</span>
@@ -160,11 +163,11 @@ export default function Navbar({
                 <img
                   src="/brand-icon.png"
                   alt="Al-ThayyiBoon Emblem"
-                  className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl object-cover shadow-md shadow-emerald-950/40 ring-1 ring-emerald-500/20 group-hover:scale-105 transition-all shrink-0"
+                  className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl object-cover shadow-md shadow-emerald-950/40 ring-1 ring-emerald-500/20 group-hover:scale-105 transition-all shrink-0"
                 />
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="text-base sm:text-xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight whitespace-nowrap">
+                    <span className="text-sm xs:text-base sm:text-xl font-black bg-gradient-to-r from-emerald-400 via-emerald-200 to-amber-300 bg-clip-text text-transparent tracking-tight whitespace-nowrap">
                       Al-ThayyiBoon
                     </span>
                     <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">

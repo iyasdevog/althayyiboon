@@ -24,6 +24,7 @@ import FaqChatbot from './components/FaqChatbot';
 
 import { useProfiles } from './context/ProfilesContext';
 import { useAuth } from './context/AuthContext';
+import { isUserRegistered } from './utils/profileValidity';
 import { Check, MessageCircle } from 'lucide-react';
 
 export default function App() {
@@ -62,6 +63,15 @@ export default function App() {
   const [posterProfile, setPosterProfile] = useState(null);
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+
+  const hasRegistered = isUserRegistered(currentUser, rawProfiles);
+
+  // Automatically force open registration modal if user is authenticated but has not completed their proposal registration
+  useEffect(() => {
+    if (currentUser && !hasRegistered && !isDemo && !isAdmin) {
+      setIsAddModalOpen(true);
+    }
+  }, [currentUser?.uid, currentUser?.email, hasRegistered, isDemo, isAdmin]);
 
   const handleOpenSignIn = (role = 'groom', mode = 'signin') => {
     setSignInDefaultRole(role || 'groom');
@@ -385,6 +395,7 @@ export default function App() {
       {isAddModalOpen && (
         <AddProfileModal
           onClose={() => setIsAddModalOpen(false)}
+          isForcedRegistration={Boolean(currentUser && !hasRegistered && !isDemo && !isAdmin)}
           onSubmitProfile={async (formData) => {
             const newDoc = await addNewProfile(formData);
             if (setHasRegisteredProfile) {
@@ -440,9 +451,11 @@ export default function App() {
         onClose={() => setIsSignInModalOpen(false)}
         onSuccess={(authResult) => {
           setIsSignInModalOpen(false);
-          if (authResult?.isNewRegistration) {
-            // New user registration completed -> open candidate proposal form directly!
+          const isRegistered = authResult?.isNewRegistration === false && Boolean(authResult?.matchedProfile || authResult?.profile?.hasRegisteredProfile);
+          if (!isRegistered) {
+            // Unregistered candidate -> force open registration modal directly!
             setIsAddModalOpen(true);
+            showToast(`Welcome, ${authResult?.profile?.name || 'Member'}! Please complete your proposal registration.`);
           } else {
             navigate('/profiles');
           }

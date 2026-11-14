@@ -11,7 +11,8 @@ import {
   Key, 
   AlertCircle,
   Users,
-  EyeOff
+  EyeOff,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -23,7 +24,7 @@ export default function CandidateAccessGate({
   onSwitchPersona,
   onLinkExistingProfile
 }) {
-  const { pricing } = useAuth();
+  const { pricing, logout } = useAuth();
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkId, setLinkId] = useState('');
   const [linkPin, setLinkPin] = useState('');
@@ -260,6 +261,18 @@ export default function CandidateAccessGate({
                   </button>
                 </form>
               )}
+            </div>
+
+            {/* Sign Out Option */}
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={logout}
+                className="text-xs text-slate-500 hover:text-slate-300 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign out from {userName}</span>
+              </button>
             </div>
 
           </div>

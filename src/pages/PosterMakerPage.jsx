@@ -4,8 +4,11 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import SharePosterModal from '../components/SharePosterModal';
+import CandidateAccessGate from '../components/CandidateAccessGate';
 import { useProfiles } from '../context/ProfilesContext';
+import { useAuth } from '../context/AuthContext';
 import { useSeo } from '../utils/useSeo';
+import { isUserRegistered } from '../utils/profileValidity';
 import { Image as ImageIcon, ArrowLeft, Users, Sparkles } from 'lucide-react';
 
 export default function PosterMakerPage({
@@ -18,6 +21,9 @@ export default function PosterMakerPage({
   const { id } = useParams();
   const navigate = useNavigate();
   const { rawProfiles, profiles, bookmarks, totalCount, activeFilterCount } = useProfiles();
+  const { currentUser, isAdmin, isDemo, switchUserPersona, linkExistingProfileToAccount } = useAuth();
+
+  const hasRegistered = isUserRegistered(currentUser, rawProfiles);
 
   // Selected candidate ID
   const [selectedId, setSelectedId] = useState(id || (profiles[0]?.id || rawProfiles[0]?.id || null));
@@ -41,6 +47,70 @@ export default function PosterMakerPage({
     || profiles.find(p => String(p.id).toLowerCase() === String(selectedId).toLowerCase())
     || profiles[0]
     || null;
+
+  // Gate 1: unauthenticated visitor
+  if (!currentUser && !isDemo) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
+        <Navbar
+          totalProfiles={totalCount}
+          activeFilterCount={activeFilterCount}
+          bookmarkCount={bookmarks.length}
+          onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+          onOpenPosterGenerator={() => {}}
+          onOpenWalletModal={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
+          onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
+          onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
+        />
+        <main className="flex-1 flex items-center justify-center py-8">
+          <CandidateAccessGate
+            isLoggedIn={false}
+            onOpenSignIn={(role, mode) => onOpenSignIn ? onOpenSignIn(role, mode) : navigate('/login')}
+            onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+            onSwitchPersona={(role) => {
+              switchUserPersona(role);
+              onShowToast?.(`Switched to ${role} demo mode!`);
+            }}
+          />
+        </main>
+        <Footer onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} />
+      </div>
+    );
+  }
+
+  // Gate 2: signed-in user who has not registered their candidate details
+  if (currentUser && !hasRegistered) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">
+        <Navbar
+          totalProfiles={totalCount}
+          activeFilterCount={activeFilterCount}
+          bookmarkCount={bookmarks.length}
+          onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+          onOpenPosterGenerator={() => {}}
+          onOpenWalletModal={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
+          onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
+          onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')}
+        />
+        <main className="flex-1 flex items-center justify-center py-8">
+          <CandidateAccessGate
+            isLoggedIn={true}
+            userName={currentUser.name || 'Member'}
+            onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+            onLinkExistingProfile={async (identifier, pin) => {
+              const res = linkExistingProfileToAccount(identifier, pin, rawProfiles);
+              if (res.success) {
+                onShowToast?.(`Proposal (${res.profile.id}) successfully linked!`);
+                return { success: true };
+              }
+              return { success: false, error: res.error };
+            }}
+          />
+        </main>
+        <Footer onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative">

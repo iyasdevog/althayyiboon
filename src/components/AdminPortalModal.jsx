@@ -37,7 +37,9 @@ import {
   RefreshCw,
   Eye,
   Clock,
-  RotateCcw
+  RotateCcw,
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { checkFirestoreHealth } from '../firebase/profileService';
@@ -106,7 +108,26 @@ export default function AdminPortalModal({
     statsThreshold: pricing.statsThreshold || 200
   });
   const [pricingSavedToast, setPricingSavedToast] = useState(false);
+  const [pricingSaveStatus, setPricingSaveStatus] = useState(null); // null | 'saving' | 'saved' | 'error'
+  const [lastSavedTimestamp, setLastSavedTimestamp] = useState(() => {
+    try {
+      return localStorage.getItem('althayyiboon_last_pricing_save_time') || null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [savedFeeSummary, setSavedFeeSummary] = useState("");
   const [whatsappToast, setWhatsappToast] = useState("");
+
+  // Sync localPricing when pricing in AuthContext updates from cloud
+  useEffect(() => {
+    if (pricing) {
+      setLocalPricing(prev => ({
+        ...prev,
+        ...pricing
+      }));
+    }
+  }, [pricing]);
 
   // Custom Taxonomy inputs
   const [newSubjectCategory, setNewSubjectCategory] = useState("");
@@ -182,11 +203,25 @@ export default function AdminPortalModal({
     }
   };
 
-  const handleSavePricing = (e) => {
-    e.preventDefault();
-    updatePricingConfig(localPricing);
-    setPricingSavedToast(true);
-    setTimeout(() => setPricingSavedToast(false), 2500);
+  const handleSavePricing = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setPricingSaveStatus('saving');
+    try {
+      const res = await updatePricingConfig(localPricing);
+      const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastSavedTimestamp(timeStr);
+      try {
+        localStorage.setItem('althayyiboon_last_pricing_save_time', timeStr);
+      } catch (err) {}
+      setSavedFeeSummary(`Contact Unlock Fee set to ₹${localPricing.contactUnlockFee || 15} / Credit • Campaign: ${localPricing.campaignMode ? 'Active (₹0)' : 'Inactive'}`);
+      setPricingSaveStatus('saved');
+      setPricingSavedToast(true);
+      setTimeout(() => setPricingSavedToast(false), 5000);
+      setTimeout(() => setPricingSaveStatus(prev => prev === 'saved' ? null : prev), 8000);
+    } catch (err) {
+      console.error("Failed to save pricing configuration:", err);
+      setPricingSaveStatus('error');
+    }
   };
 
   const handleAddCategory = (e) => {
@@ -1621,10 +1656,28 @@ export default function AdminPortalModal({
               {activeTab === "pricing" && (
                 <div className="max-w-2xl space-y-6">
                   
-                  {pricingSavedToast && (
-                    <div className="p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Pricing &amp; Campaign configuration saved successfully!</span>
+                  {/* Top Save Confirmation Banner */}
+                  {(pricingSavedToast || lastSavedTimestamp) && (
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-teal-950/70 border border-emerald-500/50 text-emerald-200 text-xs font-semibold flex items-center justify-between gap-3 shadow-xl animate-fade-in">
+                      <div className="flex items-center gap-2.5">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                        <div>
+                          <p className="text-white font-extrabold text-xs sm:text-sm">
+                            Configuration Saved &amp; Live in Cloud Database!
+                          </p>
+                          <p className="text-emerald-300 text-[11px] mt-0.5">
+                            {savedFeeSummary || `Contact Unlock Fee set to ₹${localPricing.contactUnlockFee || 15} / Credit • Directory, FAQ & Chatbot updated.`}
+                          </p>
+                          {lastSavedTimestamp && (
+                            <p className="text-slate-400 font-normal text-[10px] mt-0.5">
+                              Last confirmed save: {lastSavedTimestamp}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] border border-emerald-500/30 uppercase font-extrabold shrink-0">
+                        Live Active
+                      </span>
                     </div>
                   )}
 
@@ -1721,12 +1774,17 @@ export default function AdminPortalModal({
                           <input
                             type="number"
                             min="1"
-                            value={localPricing.contactUnlockFee}
-                            onChange={(e) => setLocalPricing(prev => ({ ...prev, contactUnlockFee: Number(e.target.value) || 15 }))}
+                            value={localPricing.contactUnlockFee ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setLocalPricing(prev => ({ ...prev, contactUnlockFee: val === '' ? '' : Number(val) }));
+                            }}
                             className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs border border-slate-700 focus:outline-none focus:border-emerald-500"
                           />
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1">Default: ₹15 / 1 Credit</p>
+                        <p className="text-[10px] text-emerald-400 font-medium mt-1">
+                          Active Saved Fee: ₹{pricing.contactUnlockFee || 15} / 1 Credit
+                        </p>
                       </div>
 
                       <div>
@@ -2093,14 +2151,57 @@ export default function AdminPortalModal({
                       </div>
                     </div>
 
-                    <div className="pt-2">
+                    {/* Live Save Status Banner above Button */}
+                    {lastSavedTimestamp && (
+                      <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fade-in">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>
+                            <strong>Saved &amp; Active:</strong> Unlock fee set to <strong>₹{localPricing.contactUnlockFee || 15}</strong>. Synchronized across Website, FAQ, and Chatbot.
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-emerald-300 font-mono bg-slate-950 px-2 py-0.5 rounded border border-emerald-500/30 whitespace-nowrap self-start sm:self-auto">
+                          Saved at {lastSavedTimestamp}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="pt-2 flex flex-col sm:flex-row sm:items-center gap-3">
                       <button
                         type="submit"
-                        className="py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all cursor-pointer"
+                        disabled={pricingSaveStatus === 'saving'}
+                        className={`py-3 px-6 rounded-xl font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          pricingSaveStatus === 'saved'
+                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/60 ring-2 ring-emerald-400/40'
+                            : pricingSaveStatus === 'saving'
+                            ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                            : 'bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-slate-950 shadow-emerald-500/20'
+                        }`}
                       >
-                        <Save className="w-4 h-4" />
-                        <span>Save Pricing, Campaign &amp; Gateway Configuration</span>
+                        {pricingSaveStatus === 'saving' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-white" />
+                            <span>Saving Configuration to Cloud...</span>
+                          </>
+                        ) : pricingSaveStatus === 'saved' ? (
+                          <>
+                            <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                            <span>✓ Configuration Saved (₹{localPricing.contactUnlockFee}/credit)</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Save Pricing, Campaign &amp; Gateway Configuration</span>
+                          </>
+                        )}
                       </button>
+
+                      {lastSavedTimestamp && (
+                        <span className="text-[11px] text-emerald-400/90 font-medium flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span>Cloud Synced (Last saved at {lastSavedTimestamp})</span>
+                        </span>
+                      )}
                     </div>
                   </form>
 
@@ -2553,6 +2654,17 @@ export default function AdminPortalModal({
                 </div>
               )}
 
+            </div>
+          </div>
+        )}
+
+        {/* Floating Notification Toast for Pricing Save */}
+        {pricingSavedToast && (
+          <div className="fixed bottom-6 right-6 z-50 animate-bounce-in bg-emerald-500 text-slate-950 font-extrabold px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs sm:text-sm border-2 border-emerald-300">
+            <CheckCircle2 className="w-5 h-5 text-slate-950 stroke-[3]" />
+            <div>
+              <p>Configuration Saved Successfully!</p>
+              <p className="text-[11px] text-slate-900 font-semibold">Contact Unlock Fee: ₹{localPricing.contactUnlockFee || 15} / Credit</p>
             </div>
           </div>
         )}

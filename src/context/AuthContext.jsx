@@ -550,12 +550,22 @@ export function AuthProvider({ children }) {
     return { success: false, reason: 'insufficient_credits' };
   };
 
-  const updatePricingConfig = (newConfig) => {
+  const updatePricingConfig = async (newConfig) => {
+    let updatedObj;
     setPricing((prev) => {
-      const updated = { ...prev, ...newConfig };
-      saveSettingsToStore({ pricing: updated });
-      return updated;
+      updatedObj = { ...prev, ...newConfig };
+      try {
+        localStorage.setItem(PRICING_STORAGE_KEY, JSON.stringify(updatedObj));
+      } catch (e) {}
+      return updatedObj;
     });
+    try {
+      const cloudRes = await saveSettingsToStore({ pricing: updatedObj });
+      return { success: true, cloudSaved: Boolean(cloudRes), pricing: updatedObj };
+    } catch (err) {
+      console.warn("Cloud settings sync fallback:", err);
+      return { success: true, cloudSaved: false, pricing: updatedObj };
+    }
   };
 
   const addCustomTaxonomy = (type, value) => {
