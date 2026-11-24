@@ -189,10 +189,10 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
       ></div>
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden z-10 animate-fade-in my-6">
+      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden z-10 animate-fade-in my-6 max-h-[92vh] flex flex-col">
         
         {/* Header */}
-        <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center justify-center font-bold shadow-lg">
               <Coins className="w-5 h-5" />
@@ -204,7 +204,7 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
                   Pay-Per-View
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">Manage credits & verified contact access</p>
+              <p className="text-xs text-slate-400">Manage credits &amp; verified contact access</p>
             </div>
           </div>
           <button 
@@ -216,7 +216,7 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
         </div>
 
         {/* Current Balance Bar */}
-        <div className="px-5 py-3.5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-3.5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400">Available Balance:</span>
             <span className="text-base font-extrabold text-amber-300 flex items-center gap-1 font-mono">
@@ -233,7 +233,7 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
 
         {/* ===== PAYMENT SUCCESS SCREEN ===== */}
         {paymentSuccess ? (
-          <div className="p-6 sm:p-8 space-y-5 text-center animate-fade-in">
+          <div className="p-6 sm:p-8 space-y-5 text-center animate-fade-in overflow-y-auto custom-scrollbar flex-1">
 
             {/* Success Icon */}
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-950/40">
@@ -303,7 +303,7 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
         ) : (
           <>
         {/* Tab Switcher */}
-        <div className="flex border-b border-slate-800">
+        <div className="flex border-b border-slate-800 shrink-0">
           <button
             onClick={() => setActiveTab('recharge')}
             className={`flex-1 py-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 cursor-pointer ${
@@ -327,7 +327,7 @@ export default function WalletRechargeModal({ isOpen, onClose, onShowToast, onOp
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 sm:p-6 space-y-5">
+        <div className="p-5 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
 
           {/* TAB 1: RECHARGE CREDITS */}
           {activeTab === 'recharge' && (

@@ -8,6 +8,7 @@ import {
   Phone,
   Send,
   CheckCircle,
+  Check,
   AlertCircle,
   Key,
   ChevronLeft,
@@ -146,7 +147,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
     },
     contactDetails: {
       guardianPhone: '',
-      whatsappNumber: ''
+      whatsappNumber: '',
+      preferredContactMethod: 'guardian'
     },
     contactPreferences: {
       guardianName: '',
@@ -155,7 +157,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
       whatsapp: '',
       email: currentUser?.email || '',
       alternateContact: '',
-      contactMethod: 'both',
+      contactMethod: 'guardian',
+      preferredContactMethod: 'guardian',
       expectations: '',
     },
     security: { editPin: '' },
@@ -213,9 +216,22 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
       if (!formData.educationOccupation.profession.trim()) return 'Please enter profession or current occupation';
     }
     if (s === 4) {
-      const phone = formData.contactDetails.guardianPhone || formData.contactPreferences.phone;
-      if (!phone || phone.replace(/[^0-9]/g, '').length < 7) {
-        return 'Please enter a valid Guardian contact phone number';
+      const preferredMethod = formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod || 'guardian';
+      const phone = (formData.contactDetails.guardianPhone || formData.contactPreferences.phone || '').trim();
+      const whatsapp = (formData.contactDetails.whatsappNumber || formData.contactPreferences.whatsapp || '').trim();
+
+      if (preferredMethod === 'whatsapp_only') {
+        const wpDigits = (whatsapp || phone).replace(/[^0-9]/g, '');
+        if (!wpDigits || wpDigits.length < 7) {
+          return 'Please enter a valid dedicated WhatsApp number';
+        }
+      } else {
+        const phDigits = (phone || whatsapp).replace(/[^0-9]/g, '');
+        if (!phDigits || phDigits.length < 7) {
+          return preferredMethod === 'candidate_self'
+            ? 'Please enter a valid candidate contact phone number'
+            : 'Please enter a valid Guardian contact phone number';
+        }
       }
       if (!formData.security.editPin || formData.security.editPin.length < 4) {
         return 'Please create a 4-digit secret Edit PIN for future edits';
@@ -247,8 +263,11 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
     setIsSubmitting(true);
     try {
       const pin = formData.security.editPin.trim();
-      const phone = formData.contactDetails.guardianPhone.trim() || formData.contactPreferences.phone.trim();
-      const whatsapp = formData.contactDetails.whatsappNumber.trim() || formData.contactPreferences.whatsapp.trim() || phone;
+      const preferredMethod = formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod || 'guardian';
+      const phoneInput = (formData.contactDetails.guardianPhone || formData.contactPreferences.phone || '').trim();
+      const whatsappInput = (formData.contactDetails.whatsappNumber || formData.contactPreferences.whatsapp || '').trim();
+      const phone = phoneInput || whatsappInput;
+      const whatsapp = whatsappInput || phoneInput;
 
       // Automatically resolve GPS coordinates (prioritizes nearestTown, then nativePlace, falls back to district)
       const locTarget = (formData.locationFamily.nearestTown || '').trim() || (formData.locationFamily.nativePlace || '').trim();
@@ -289,14 +308,18 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
         },
         contactDetails: {
           guardianPhone: phone,
-          whatsappNumber: whatsapp
+          whatsappNumber: whatsapp,
+          preferredContactMethod: preferredMethod
         },
         contactPreferences: {
           ...formData.contactPreferences,
           phone: phone,
           whatsapp: whatsapp,
+          contactMethod: preferredMethod,
+          preferredContactMethod: preferredMethod,
           secretPin: pin
         },
+        preferredContactMethod: preferredMethod,
         whatsappConsent: formData.whatsappConsent !== false,
         whatsappGroupNumber: formData.whatsappGroupNumber || whatsapp || phone,
         registeredDuringCampaign: Boolean(pricing?.campaignMode),
@@ -621,106 +644,64 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
           <div className="flex-1 overflow-y-auto custom-scrollbar px-5 py-4 space-y-4">
 
             {success ? (
-              <div className="py-6 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/30">
-                  <CheckCircle className="w-8 h-8" />
+              <div className="py-5 text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/30">
+                  <CheckCircle className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Proposal Successfully Listed!</h3>
-                  <p className="text-xs text-slate-400 mt-1">Your profile is now verified and active in the directory.</p>
+                  <h3 className="text-lg font-bold text-white">Proposal Successfully Listed!</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Your profile is submitted and secured in the directory.</p>
                 </div>
 
-                {/* 3-Month Validity & WhatsApp Renewal Notification Card */}
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-teal-950/50 border border-emerald-500/40 text-xs text-slate-200 text-left space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-emerald-300 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-emerald-400" />
+                {/* Consolidated Summary & Verification Card */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-950/40 via-slate-900 to-emerald-950/40 border border-teal-500/40 text-xs text-left space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <span className="font-bold text-teal-300 flex items-center gap-1.5 text-xs">
+                      <Clock className="w-3.5 h-3.5 text-teal-400" />
                       <span>3-Month Active Listing Period</span>
                     </span>
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                       Active
                     </span>
                   </div>
+
                   <p className="text-[11px] text-slate-300 leading-relaxed">
-                    To keep the directory 100% genuine and free of outdated profiles, your proposal is listed for <strong>3 months (until {calculateListingExpiry(new Date(), 3).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })})</strong>.
+                    Our admin team will connect with you via <strong className="text-white">WhatsApp for identity verification</strong> before opening the profile for public browsing.
                   </p>
-                  <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] flex items-start gap-2">
-                    <MessageSquare className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
-                    <span className="text-slate-300">
-                      <strong>WhatsApp Renewal Alert:</strong> We will notify you via WhatsApp at the end of 3 months to confirm if you are still looking and renew with another payment to stay in the listing.
+
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-amber-500/30">
+                    <span className="text-xs text-amber-300 font-bold flex items-center gap-1.5">
+                      <Key className="w-3.5 h-3.5" />
+                      <span>Secret Edit PIN:</span>
                     </span>
+                    <span className="font-mono text-sm font-bold text-white tracking-widest">{submittedPin}</span>
                   </div>
-                </div>
-
-                {/* 'We'll contact you shortly' Identity Verification Notice */}
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-950/60 via-slate-900 to-emerald-950/50 border border-teal-500/40 text-xs text-left space-y-2 animate-fade-in">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center shrink-0">
-                      <MessageSquare className="w-4 h-4 text-teal-400" />
-                    </div>
-                    <div>
-                      <p className="font-extrabold text-teal-200 text-sm">What Happens Next?</p>
-                      <p className="text-[10px] text-teal-400/80 font-medium">Identity Verification via WhatsApp</p>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
-                    Our admin team will <strong className="text-white">connect you shortly via WhatsApp</strong> to verify your identity and confirm the listing details before making the proposal active in the directory.
-                  </p>
-                  <div className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
-                    <span className="text-teal-400 shrink-0 mt-0.5">📞</span>
-                    <p className="text-[11px] text-slate-300 leading-snug">
-                      Please keep your <strong>WhatsApp number active</strong> and respond promptly. Listings are only published after successful identity verification.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-xs text-amber-200 space-y-2 text-left">
-                  <div className="flex items-center gap-2 font-bold text-amber-300 text-sm justify-center">
-                    <Key className="w-4 h-4" />
-                    <span>Secret Edit PIN: <span className="font-mono text-base text-white underline">{submittedPin}</span></span>
-                  </div>
-                  <p className="leading-relaxed text-center text-[11px]">
-                    Please remember this PIN! You will need it whenever you want to update or remove this proposal.
-                  </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
                 >
                   Return to Directory
                 </button>
               </div>
             ) : (
               <>
-                {/* 3-Month Listing Validity & WhatsApp Renewal Notification Banner */}
-                <div className="p-3.5 rounded-2xl bg-slate-950 border border-emerald-500/30 text-xs text-slate-300 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-emerald-300 flex items-center gap-1.5 text-xs">
-                      <Clock className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>3-Month Listing Validity Policy</span>
-                    </span>
-                    <span className="text-[10px] font-bold text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/30">
-                      WhatsApp Renewal
-                    </span>
+                {/* Unified Compact Policy & Campaign Status Bar */}
+                <div className="px-3.5 py-2 rounded-xl bg-slate-950/80 border border-emerald-500/30 text-xs flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-slate-300 text-[11px]">
+                    <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>3-Month Valid Listings (WhatsApp Renewal)</span>
                   </div>
-                  <p className="text-[11px] text-slate-300 leading-snug">
-                    Each registration is valid for <strong>3 months (90 days)</strong> to keep our matrimonial directory fresh and verified. After 3 months, you will receive a WhatsApp message asking if your search is ongoing and to renew with another payment to stay listed.
-                  </p>
+                  {pricing?.campaignMode ? (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">
+                      Free Registration (₹0) + {pricing.campaignRewardCredits || 3} Free Views
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400">Verified Network</span>
+                  )}
                 </div>
-
-                {/* Campaign Mode Free Notice Banner */}
-                {pricing?.campaignMode && (
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-amber-950/40 border border-emerald-500/40 text-xs text-emerald-200 flex items-center gap-2.5">
-                    <span className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 shrink-0 font-extrabold text-[10px] uppercase border border-emerald-500/30">
-                      Free ₹0
-                    </span>
-                    <span className="leading-snug text-[11px]">
-                      <strong>Monthly Data Collection Campaign Active:</strong> Proposal registration is 100% free! You will not be prompted for payment and will receive <strong>{pricing.campaignRewardCredits || 3} complimentary contact views</strong> when the directory opens.
-                    </span>
-                  </div>
-                )}
 
                 {/* ── STEP 1: BASIC INFO ── */}
                 {step === 1 && (
@@ -1173,62 +1154,226 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                 {/* ── STEP 4: CONTACT & SECRET PIN ── */}
                 {step === 4 && (
                   <div className="space-y-4 animate-fade-in">
-                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2.5">
-                      <Shield className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>
-                        Guardian contact numbers are protected with pay-per-view access and masked by default to prevent spam.
-                      </span>
+                    {/* Compact privacy note */}
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300 flex items-center gap-2">
+                      <Shield className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                      <span>Contact details are masked and protected by default to safeguard family privacy.</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className={labelCls}>
-                          {formData.profileCreatedBy === 'Self' ? 'Contact Phone Call Number (Self) *' : 'Guardian Phone Call Number *'}
-                        </label>
-                        <input
-                          type="tel"
-                          required
-                          value={formData.contactDetails.guardianPhone}
-                          onChange={e => {
-                            const val = e.target.value;
-                            updateSection('contactDetails', 'guardianPhone', val);
-                            updateSection('contactPreferences', 'phone', val);
-                          }}
-                          placeholder="+91 9847123456"
-                          className={inputCls}
-                        />
-                      </div>
-
-                      <div>
-                        <label className={labelCls}>
-                          {formData.profileCreatedBy === 'Self' ? 'WhatsApp Number (Self)' : 'Guardian WhatsApp Number'}
-                        </label>
-                        <input
-                          type="tel"
-                          value={formData.contactDetails.whatsappNumber}
-                          onChange={e => {
-                            const val = e.target.value;
-                            updateSection('contactDetails', 'whatsappNumber', val);
-                            updateSection('contactPreferences', 'whatsapp', val);
-                          }}
-                          placeholder="+91 9847123456 (Leave blank if same)"
-                          className={inputCls}
-                        />
-                      </div>
-                    </div>
-
+                    {/* Preferred Contact Method Selection */}
                     <div>
-                      <label className={labelCls}>
-                        {formData.profileCreatedBy === 'Self' ? 'Guardian / Family Reference Name & Relation' : 'Guardian Relation / Name'}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.contactPreferences.guardianName}
-                        onChange={e => updateSection('contactPreferences', 'guardianName', e.target.value)}
-                        placeholder={formData.profileCreatedBy === 'Self' ? "e.g. Father Abdul Latheef / Brother" : "e.g. Father, Uncle, Mother"}
-                        className={inputCls}
-                      />
+                      <label className={labelCls}>Preferred Contact Method *</label>
+                      <p className="text-[11px] text-slate-400 mb-2">
+                        How should matching candidates or families contact you?
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateSection('contactPreferences', 'contactMethod', 'whatsapp_only');
+                            updateSection('contactDetails', 'preferredContactMethod', 'whatsapp_only');
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
+                            (formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'whatsapp_only'
+                              ? 'bg-emerald-950/60 border-emerald-500 text-white shadow-md shadow-emerald-950/40 ring-1 ring-emerald-500'
+                              : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
+                            (formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'whatsapp_only'
+                              ? 'border-emerald-500 bg-emerald-500 text-slate-950'
+                              : 'border-slate-600'
+                          }`}>
+                            {(formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'whatsapp_only' && (
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold block text-emerald-300">WhatsApp Only</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">Strictly via WhatsApp message; direct calls discouraged</span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateSection('contactPreferences', 'contactMethod', 'guardian');
+                            updateSection('contactDetails', 'preferredContactMethod', 'guardian');
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
+                            (formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'guardian'
+                              ? 'bg-emerald-950/60 border-emerald-500 text-white shadow-md shadow-emerald-950/40 ring-1 ring-emerald-500'
+                              : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
+                            (formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'guardian'
+                              ? 'border-emerald-500 bg-emerald-500 text-slate-950'
+                              : 'border-slate-600'
+                          }`}>
+                            {(formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'guardian' && (
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold block text-emerald-300">Contact Guardian / Wali</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">Parent / Wali calls and WhatsApp communication</span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateSection('contactPreferences', 'contactMethod', 'candidate_self');
+                            updateSection('contactDetails', 'preferredContactMethod', 'candidate_self');
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
+                            (formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'candidate_self'
+                              ? 'bg-emerald-950/60 border-emerald-500 text-white shadow-md shadow-emerald-950/40 ring-1 ring-emerald-500'
+                              : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
+                            (formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'candidate_self'
+                              ? 'border-emerald-500 bg-emerald-500 text-slate-950'
+                              : 'border-slate-600'
+                          }`}>
+                            {(formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'candidate_self' && (
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold block text-emerald-300">Contact Candidate Directly</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">Direct phone call or WhatsApp with candidate</span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateSection('contactPreferences', 'contactMethod', 'both');
+                            updateSection('contactDetails', 'preferredContactMethod', 'both');
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
+                            (formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'both'
+                              ? 'bg-emerald-950/60 border-emerald-500 text-white shadow-md shadow-emerald-950/40 ring-1 ring-emerald-500'
+                              : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
+                            (formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'both'
+                              ? 'border-emerald-500 bg-emerald-500 text-slate-950'
+                              : 'border-slate-600'
+                          }`}>
+                            {(formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'both' && (
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold block text-emerald-300">Flexible / Any</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">Accepts calls or WhatsApp messages freely</span>
+                          </div>
+                        </button>
+                      </div>
                     </div>
+
+                    {/* Inputs tailored to selected contact method */}
+                    {(formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'whatsapp_only' ? (
+                      <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/40 space-y-3">
+                        <div>
+                          <label className={labelCls}>Dedicated WhatsApp Number *</label>
+                          <input
+                            type="tel"
+                            required
+                            value={formData.contactDetails.whatsappNumber}
+                            onChange={e => {
+                              const val = e.target.value;
+                              updateSection('contactDetails', 'whatsappNumber', val);
+                              updateSection('contactPreferences', 'whatsapp', val);
+                              if (!formData.contactDetails.guardianPhone) {
+                                updateSection('contactDetails', 'guardianPhone', val);
+                                updateSection('contactPreferences', 'phone', val);
+                              }
+                            }}
+                            placeholder="+91 9847123456"
+                            className={inputCls}
+                          />
+                          <p className="text-[10px] text-emerald-300 mt-1">
+                            Only WhatsApp messages will be directed to this number. Voice calls are discouraged.
+                          </p>
+                        </div>
+                        <div>
+                          <label className={labelCls}>Contact Person / Guardian Reference Name</label>
+                          <input
+                            type="text"
+                            value={formData.contactPreferences.guardianName}
+                            onChange={e => updateSection('contactPreferences', 'guardianName', e.target.value)}
+                            placeholder="e.g. Self / Father / Brother"
+                            className={inputCls}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className={labelCls}>
+                              {(formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'candidate_self'
+                                ? 'Candidate Phone Call Number *'
+                                : 'Guardian Phone Call Number *'}
+                            </label>
+                            <input
+                              type="tel"
+                              required
+                              value={formData.contactDetails.guardianPhone}
+                              onChange={e => {
+                                const val = e.target.value;
+                                updateSection('contactDetails', 'guardianPhone', val);
+                                updateSection('contactPreferences', 'phone', val);
+                              }}
+                              placeholder="+91 9847123456"
+                              className={inputCls}
+                            />
+                          </div>
+
+                          <div>
+                            <label className={labelCls}>
+                              {(formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'candidate_self'
+                                ? 'Candidate WhatsApp Number'
+                                : 'Guardian WhatsApp Number'}
+                            </label>
+                            <input
+                              type="tel"
+                              value={formData.contactDetails.whatsappNumber}
+                              onChange={e => {
+                                const val = e.target.value;
+                                updateSection('contactDetails', 'whatsappNumber', val);
+                                updateSection('contactPreferences', 'whatsapp', val);
+                              }}
+                              placeholder="+91 9847123456 (Leave blank if same)"
+                              className={inputCls}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className={labelCls}>
+                            {(formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'candidate_self'
+                              ? 'Candidate Name / Reference'
+                              : 'Guardian Name & Relation'}
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.contactPreferences.guardianName}
+                            onChange={e => updateSection('contactPreferences', 'guardianName', e.target.value)}
+                            placeholder={(formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod) === 'candidate_self'
+                              ? "Candidate Self"
+                              : "e.g. Father, Uncle, Mother"}
+                            className={inputCls}
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label className={labelCls}>Partner Expectations &amp; Preferences</label>
@@ -1241,80 +1386,62 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                       ></textarea>
                     </div>
 
-                    {/* WHATSAPP GROUP NOTIFICATION CONSENT */}
-                    <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-teal-950/30 border border-emerald-500/40 space-y-3">
-                      <div className="flex items-start gap-3">
+                    {/* Streamlined WhatsApp Group Notification Consent */}
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                      <div className="flex items-center gap-2.5">
                         <input
                           type="checkbox"
                           id="whatsappConsent"
                           checked={formData.whatsappConsent}
                           onChange={e => setFormData(prev => ({ ...prev, whatsappConsent: e.target.checked }))}
-                          className="w-5 h-5 mt-0.5 rounded-lg text-emerald-500 focus:ring-emerald-500 bg-slate-900 border-slate-700 cursor-pointer"
+                          className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-900 border-slate-700 cursor-pointer"
                         />
                         <label htmlFor="whatsappConsent" className="text-xs text-slate-200 cursor-pointer">
-                          <span className="font-bold text-emerald-400 block mb-0.5">
-                            Join Official Matrimonial WhatsApp Group
-                          </span>
-                          Yes, I give consent to add my number to the Al-ThayyiBoon WhatsApp group to receive newly updated verified candidate profiles directly.
+                          Join official WhatsApp updates group for newly added verified proposals
                         </label>
                       </div>
 
                       {formData.whatsappConsent && (
-                        <div className="pt-2 border-t border-slate-800">
-                          <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                            WhatsApp Number for Group Alerts
-                          </label>
-                          <input
-                            type="tel"
-                            value={formData.whatsappGroupNumber}
-                            onChange={e => setFormData(prev => ({ ...prev, whatsappGroupNumber: e.target.value }))}
-                            placeholder={formData.contactDetails.whatsappNumber || formData.contactDetails.guardianPhone || "+91 9847123456"}
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:border-emerald-500 text-xs"
-                          />
-                          <p className="text-[10px] text-slate-400 mt-1">
-                            Leave blank to automatically use the Guardian phone/WhatsApp number above.
-                          </p>
-                        </div>
+                        <input
+                          type="tel"
+                          value={formData.whatsappGroupNumber}
+                          onChange={e => setFormData(prev => ({ ...prev, whatsappGroupNumber: e.target.value }))}
+                          placeholder={formData.contactDetails.whatsappNumber || formData.contactDetails.guardianPhone || "WhatsApp number for group updates"}
+                          className="w-full px-3 py-1.5 rounded-lg bg-slate-900 text-white placeholder-slate-500 border border-slate-700 text-xs"
+                        />
                       )}
                     </div>
 
-                    {/* SECRET 4-DIGIT PIN */}
-                    <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Key className="w-4 h-4 text-emerald-400" />
-                        <label className="text-xs font-bold text-white uppercase tracking-wider">
-                          Create Secret 4-Digit Edit PIN *
-                        </label>
+                    {/* Secret 4-Digit Edit PIN */}
+                    <div className="p-3.5 rounded-xl bg-slate-950 border border-emerald-500/30 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-white uppercase tracking-wider">
+                          <Key className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Secret 4-Digit Edit PIN *</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Needed to update or remove profile later</p>
                       </div>
-                      <p className="text-[11px] text-slate-400">
-                        Enter 4 digits. You will use this PIN to edit or delete this proposal in future.
-                      </p>
                       <input
                         type="password"
                         maxLength="6"
                         required
                         value={formData.security.editPin}
                         onChange={e => updateSection('security', 'editPin', e.target.value)}
-                        placeholder="e.g. 7842"
-                        className="w-full px-4 py-2.5 rounded-xl bg-slate-900 text-emerald-400 font-mono font-bold tracking-widest text-center text-lg border border-slate-700 focus:outline-none focus:border-emerald-500"
+                        placeholder="4 Digits"
+                        className="w-28 px-3 py-1.5 rounded-xl bg-slate-900 text-emerald-400 font-mono font-bold tracking-widest text-center text-base border border-slate-700 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
 
-                    {/* LISTING FEE & CAMPAIGN STATUS */}
+                    {/* Streamlined Listing Benefit Box */}
                     {pricing?.campaignMode ? (
-                      <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-teal-950/30 border border-emerald-500/40 space-y-2">
-                        <div className="flex items-center gap-2">
+                      <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-teal-950/30 border border-emerald-500/40 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 text-xs text-slate-200">
                           <Gift className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span className="text-xs font-bold text-white uppercase tracking-wider">
-                            Campaign Listing Benefit
-                          </span>
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold uppercase ml-auto border border-emerald-500/40">
-                            100% Free (₹0)
-                          </span>
+                          <span>Campaign Drive Active: 100% Free Listing (₹0)</span>
                         </div>
-                        <p className="text-[11px] text-slate-300 leading-relaxed">
-                          During this active candidate drive, registration and directory listing are completely <strong>FREE (₹0)</strong>. No payment required. You will also receive 3 complimentary contact views when the directory opens!
-                        </p>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/30 shrink-0">
+                          Free (₹0)
+                        </span>
                       </div>
                     ) : (
                       <div className="p-4 sm:p-5 rounded-2xl bg-slate-950 border border-amber-500/40 space-y-3.5">

@@ -46,7 +46,7 @@ function maskPhoneNumber() {
   return "••••••••••";
 }
 
-export default function ProfileCard({ 
+function ProfileCard({ 
   profile, 
   onSelectProfile, 
   isBookmarked, 
@@ -79,6 +79,7 @@ export default function ProfileCard({
 
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
   const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
+  const preferredMethod = profile.preferredContactMethod || contactDetails.preferredContactMethod || contactPreferences.contactMethod || contactPreferences.preferredContactMethod || 'guardian';
 
   const candidateDisplayName = isDemo
     ? (isBride ? 'Bride' : 'Groom')
@@ -413,12 +414,22 @@ export default function ProfileCard({
           </div>
         </div>
 
-        {/* Guardian Contact Info / Masked State */}
+        {/* Guardian / Preferred Contact Info / Masked State */}
         <div className="mb-3 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-              <Phone className="w-3 h-3 text-slate-400 shrink-0" />
-              <span className="truncate">Guardian Phone</span>
+              {preferredMethod === 'whatsapp_only' ? (
+                <MessageSquare className="w-3 h-3 text-emerald-400 shrink-0" />
+              ) : (
+                <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+              )}
+              <span className="truncate">
+                {preferredMethod === 'whatsapp_only'
+                  ? 'WhatsApp Preferred'
+                  : preferredMethod === 'candidate_self'
+                  ? 'Candidate Contact'
+                  : 'Guardian Phone'}
+              </span>
               {isDemo ? (
                 <span className="text-[9px] text-amber-400 font-extrabold uppercase bg-amber-500/10 px-1 rounded shrink-0">Demo</span>
               ) : isParent ? (
@@ -434,7 +445,9 @@ export default function ProfileCard({
                 ? "•••••••••• (Sample Data)"
                 : isParent 
                   ? "Protected for Parent View"
-                  : (isUnlocked ? rawPhone || "Contact provided" : maskPhoneNumber(rawPhone))}
+                  : (isUnlocked
+                    ? (preferredMethod === 'whatsapp_only' ? rawWhatsApp || rawPhone : rawPhone || rawWhatsApp) || "Contact provided"
+                    : maskPhoneNumber(rawPhone))}
             </div>
           </div>
 
@@ -564,3 +577,5 @@ export default function ProfileCard({
     </article>
   );
 }
+
+export default React.memo(ProfileCard);

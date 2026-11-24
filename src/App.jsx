@@ -1,31 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import BrowsePage from './pages/BrowsePage';
 import ProfileDetailPage from './pages/ProfileDetailPage';
-import SavedProfilesPage from './pages/SavedProfilesPage';
-import PosterMakerPage from './pages/PosterMakerPage';
-import AddProfilePage from './pages/AddProfilePage';
-import AdminPage from './pages/AdminPage';
-import WalletPage from './pages/WalletPage';
-import SignInPage from './pages/SignInPage';
-import NotFoundPage from './pages/NotFoundPage';
 import CampaignPage from './components/CampaignPage';
 import LandingPage from './components/LandingPage';
 
-import EditProfileModal from './components/EditProfileModal';
-import RequestFilterModal from './components/RequestFilterModal';
-import SharePosterModal from './components/SharePosterModal';
+// Lazy-loaded secondary pages for bundle splitting & optimal performance
+const SavedProfilesPage = lazy(() => import('./pages/SavedProfilesPage'));
+const PosterMakerPage = lazy(() => import('./pages/PosterMakerPage'));
+const AddProfilePage = lazy(() => import('./pages/AddProfilePage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
+const WalletPage = lazy(() => import('./pages/WalletPage'));
+const SignInPage = lazy(() => import('./pages/SignInPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+
+// Lazy-loaded modals to avoid loading unused assets upfront
+const EditProfileModal = lazy(() => import('./components/EditProfileModal'));
+const RequestFilterModal = lazy(() => import('./components/RequestFilterModal'));
+const SharePosterModal = lazy(() => import('./components/SharePosterModal'));
+const FaqChatbot = lazy(() => import('./components/FaqChatbot'));
+
 import WalletRechargeModal from './components/WalletRechargeModal';
 import SignInModal from './components/SignInModal';
 import AddProfileModal from './components/AddProfileModal';
 import GenderVerificationModal from './components/GenderVerificationModal';
-import FaqChatbot from './components/FaqChatbot';
 
 import { useProfiles } from './context/ProfilesContext';
 import { useAuth } from './context/AuthContext';
 import { isUserRegistered } from './utils/profileValidity';
-import { Check, MessageCircle } from 'lucide-react';
+import { Check, MessageCircle, Loader2 } from 'lucide-react';
+
+function PageLoadingFallback() {
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-3">
+      <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+      <span className="text-xs font-semibold text-slate-400">Loading Al-ThayyiBoon...</span>
+    </div>
+  );
+}
 
 export default function App() {
   const navigate = useNavigate();
@@ -110,11 +123,12 @@ export default function App() {
       )}
 
       {/* Multi-Page Routes */}
-      <Routes>
-        <Route 
-          path="/" 
-          element={
-            <HomePage
+      <Suspense fallback={<PageLoadingFallback />}>
+        <Routes>
+          <Route 
+            path="/" 
+            element={
+              <HomePage
               onOpenAddModal={() => setIsAddModalOpen(true)}
               onOpenSignIn={handleOpenSignIn}
               onOpenWalletModal={() => setIsCheckoutOpen(true)}
@@ -376,20 +390,23 @@ export default function App() {
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+    </Suspense>
 
-      {/* Proposal Owner / Admin Edit Modal */}
-      {editingProfile && (
-        <EditProfileModal
-          profile={editingProfile}
-          onClose={() => {
-            setEditingProfile(null);
-            setIsAdminOverrideEdit(false);
-          }}
-          onSaveUpdate={updateProfile}
-          onDeleteProfile={deleteProfile}
-          isAdminOverride={isAdminOverrideEdit}
-        />
-      )}
+      {/* Lazy-Loaded Modals wrapped in Suspense */}
+      <Suspense fallback={null}>
+        {/* Proposal Owner / Admin Edit Modal */}
+        {editingProfile && (
+          <EditProfileModal
+            profile={editingProfile}
+            onClose={() => {
+              setEditingProfile(null);
+              setIsAdminOverrideEdit(false);
+            }}
+            onSaveUpdate={updateProfile}
+            onDeleteProfile={deleteProfile}
+            isAdminOverride={isAdminOverrideEdit}
+          />
+        )}
 
       {/* Public "Add Profile" Submission Form Modal (when triggered via shortcut) */}
       {isAddModalOpen && (
@@ -495,15 +512,18 @@ export default function App() {
       )}
 
       {/* Interactive FAQ & Community Feedback Chatbot */}
-      <FaqChatbot
-        isOpen={isChatbotOpen}
-        onClose={() => setIsChatbotOpen(false)}
-        onOpenAddModal={() => setIsAddModalOpen(true)}
-        onOpenWalletModal={() => setIsCheckoutOpen(true)}
-        onOpenFilterSidebar={() => navigate('/profiles')}
-        onOpenValidityModal={() => navigate('/profiles')}
-        onShowToast={showToast}
-      />
+      {isChatbotOpen && (
+        <FaqChatbot
+          isOpen={isChatbotOpen}
+          onClose={() => setIsChatbotOpen(false)}
+          onOpenAddModal={() => setIsAddModalOpen(true)}
+          onOpenWalletModal={() => setIsCheckoutOpen(true)}
+          onOpenFilterSidebar={() => navigate('/profiles')}
+          onOpenValidityModal={() => navigate('/profiles')}
+          onShowToast={showToast}
+        />
+      )}
+      </Suspense>
 
     </div>
   );

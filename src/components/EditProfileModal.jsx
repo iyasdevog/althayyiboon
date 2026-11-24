@@ -43,10 +43,12 @@ export default function EditProfileModal({
     locationFamily: { ...profile.locationFamily },
     contactDetails: {
       guardianPhone: profile.contactDetails?.guardianPhone || profile.contactPreferences?.phone || "",
-      whatsappNumber: profile.contactDetails?.whatsappNumber || profile.contactPreferences?.whatsapp || ""
+      whatsappNumber: profile.contactDetails?.whatsappNumber || profile.contactPreferences?.whatsapp || "",
+      preferredContactMethod: profile.contactDetails?.preferredContactMethod || profile.contactPreferences?.contactMethod || profile.preferredContactMethod || "guardian"
     },
     contactPreferences: { 
-      contactMethod: "both",
+      contactMethod: profile.contactPreferences?.contactMethod || profile.preferredContactMethod || "guardian",
+      preferredContactMethod: profile.contactPreferences?.preferredContactMethod || profile.preferredContactMethod || "guardian",
       alternateContact: "",
       ...profile.contactPreferences 
     },
@@ -107,11 +109,19 @@ export default function EditProfileModal({
           education: `${formData.generalEducation.degreeName} ${formData.generalEducation.specialization ? `(${formData.generalEducation.specialization})` : ''}`.trim(),
           degree: formData.generalEducation.degreeName.trim()
         },
+        contactDetails: {
+          guardianPhone: formData.contactDetails.guardianPhone,
+          whatsappNumber: formData.contactDetails.whatsappNumber,
+          preferredContactMethod: formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod || 'guardian'
+        },
         contactPreferences: {
           ...formData.contactPreferences,
           phone: formData.contactDetails.guardianPhone,
-          whatsapp: formData.contactDetails.whatsappNumber
-        }
+          whatsapp: formData.contactDetails.whatsappNumber,
+          contactMethod: formData.contactPreferences.contactMethod || 'guardian',
+          preferredContactMethod: formData.contactPreferences.contactMethod || 'guardian'
+        },
+        preferredContactMethod: formData.contactPreferences.contactMethod || 'guardian'
       };
 
       await onSaveUpdate(profile.id, payload);
@@ -503,12 +513,34 @@ export default function EditProfileModal({
                   </div>
                 </div>
 
-                {/* Protected Contact Numbers */}
+                {/* Protected Contact Numbers & Preferences */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-rose-400">Guardian Contact (Pay-Per-View Guarded)</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-rose-400">Contact Preferences &amp; Guarded Numbers</h3>
+                  
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Preferred Contact Method</label>
+                    <select
+                      value={formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod || 'guardian'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        updateSection('contactPreferences', 'contactMethod', val);
+                        updateSection('contactPreferences', 'preferredContactMethod', val);
+                        updateSection('contactDetails', 'preferredContactMethod', val);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="whatsapp_only">WhatsApp Only (Calls discouraged)</option>
+                      <option value="guardian">Contact Guardian / Wali</option>
+                      <option value="candidate_self">Contact Candidate Directly</option>
+                      <option value="both">Flexible / Any (Calls or WhatsApp)</option>
+                    </select>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Guardian Phone Call</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">
+                        {formData.contactPreferences.contactMethod === 'candidate_self' ? 'Candidate Phone' : 'Guardian Phone'}
+                      </label>
                       <input
                         type="tel"
                         value={formData.contactDetails.guardianPhone}
@@ -517,7 +549,9 @@ export default function EditProfileModal({
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Guardian WhatsApp</label>
+                      <label className="block text-[11px] text-slate-400 mb-1">
+                        {formData.contactPreferences.contactMethod === 'whatsapp_only' ? 'Dedicated WhatsApp Number' : 'WhatsApp Number'}
+                      </label>
                       <input
                         type="tel"
                         value={formData.contactDetails.whatsappNumber}

@@ -93,6 +93,7 @@ export default function ProfileDetailModal({
 
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
   const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
+  const preferredMethod = profile.preferredContactMethod || contactDetails.preferredContactMethod || contactPreferences.contactMethod || contactPreferences.preferredContactMethod || 'guardian';
 
   const islamicList = Array.isArray(islamicQualification) && islamicQualification.length > 0
     ? islamicQualification.filter(q => q && q !== 'None').map(q => q === 'Madrasa' && islamicBackground.madrasaClass ? `Madrasa (Class ${islamicBackground.madrasaClass})` : q)
@@ -581,11 +582,26 @@ export default function ProfileDetailModal({
                   </div>
                 </div>
 
+                {/* Preferred Contact Method Alert if WhatsApp Only */}
+                {preferredMethod === 'whatsapp_only' && (
+                  <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-2">
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Candidate prefers WhatsApp messaging only. Voice calls are discouraged.</span>
+                  </div>
+                )}
+
                 {/* Phone & WhatsApp Numbers */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
                   <div className="flex items-center justify-between bg-slate-900 px-3 py-2.5 rounded-xl border border-slate-800">
                     <span className="text-slate-400 flex items-center gap-1.5 text-[11px]">
-                      <Phone className="w-3.5 h-3.5 text-sky-400" /> Phone:
+                      <Phone className="w-3.5 h-3.5 text-sky-400" />
+                      <span>
+                        {preferredMethod === 'candidate_self'
+                          ? 'Candidate Phone:'
+                          : preferredMethod === 'whatsapp_only'
+                          ? 'Phone (Calls Discouraged):'
+                          : 'Guardian Phone:'}
+                      </span>
                     </span>
                     <span className="font-mono font-bold text-white text-xs">
                       {isDemo
@@ -598,7 +614,8 @@ export default function ProfileDetailModal({
 
                   <div className="flex items-center justify-between bg-slate-900 px-3 py-2.5 rounded-xl border border-slate-800">
                     <span className="text-slate-400 flex items-center gap-1.5 text-[11px]">
-                      <MessageSquare className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp:
+                      <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{preferredMethod === 'whatsapp_only' ? 'WhatsApp (Preferred):' : 'WhatsApp:'}</span>
                     </span>
                     <span className="font-mono font-bold text-emerald-300 text-xs">
                       {isDemo

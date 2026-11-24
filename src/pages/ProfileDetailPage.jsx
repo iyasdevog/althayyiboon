@@ -244,6 +244,7 @@ export default function ProfileDetailPage({
 
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
   const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
+  const preferredMethod = profile.preferredContactMethod || contactDetails.preferredContactMethod || contactPreferences.contactMethod || contactPreferences.preferredContactMethod || 'guardian';
 
   const islamicList = Array.isArray(islamicQualification) && islamicQualification.length > 0
     ? islamicQualification.filter(q => q && q !== 'None').map(q => q === 'Madrasa' && islamicBackground.madrasaClass ? `Madrasa (Class ${islamicBackground.madrasaClass})` : q)
@@ -809,40 +810,76 @@ export default function ProfileDetailPage({
                         <Phone className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-white text-sm sm:text-base">Guardian & Parent Contact</h3>
-                        <p className="text-xs text-slate-400">Direct contact with authorized family guardian</p>
+                        <h3 className="font-bold text-white text-sm sm:text-base">
+                          {preferredMethod === 'candidate_self'
+                            ? 'Candidate Direct Contact'
+                            : preferredMethod === 'whatsapp_only'
+                            ? 'Candidate WhatsApp Contact'
+                            : 'Guardian & Parent Contact'}
+                        </h3>
+                        <p className="text-xs text-slate-400">
+                          {preferredMethod === 'whatsapp_only'
+                            ? 'Family prefers WhatsApp communication'
+                            : preferredMethod === 'candidate_self'
+                            ? 'Direct candidate communication'
+                            : 'Authorized family guardian'}
+                        </p>
                       </div>
                     </div>
 
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${isUnlocked
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                      }`}>
-                      {isUnlocked ? 'Unlocked' : 'Protected'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="hidden sm:inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                        {preferredMethod === 'whatsapp_only'
+                          ? '💬 WhatsApp Only'
+                          : preferredMethod === 'candidate_self'
+                          ? '👤 Direct Candidate'
+                          : preferredMethod === 'both'
+                          ? '📞 Calls / WhatsApp'
+                          : '🛡️ Guardian First'}
+                      </span>
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${isUnlocked
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        }`}>
+                        {isUnlocked ? 'Unlocked' : 'Protected'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Status / Contact numbers */}
                   {isUnlocked && !isDemo && !isParent ? (
                     <div className="space-y-3 pt-2">
-                      <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-800/40 flex items-center justify-between">
-                        <div>
-                          <span className="text-[11px] text-emerald-400 font-semibold block">Guardian Phone</span>
-                          <span className="text-base sm:text-lg font-mono font-bold text-white">{rawPhone}</span>
+                      {preferredMethod === 'whatsapp_only' && (
+                        <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>Candidate family strictly prefers WhatsApp messaging. Please message first rather than direct calling.</span>
                         </div>
-                        <a
-                          href={`tel:${rawPhone}`}
-                          className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>Call</span>
-                        </a>
-                      </div>
+                      )}
+
+                      {preferredMethod !== 'whatsapp_only' && rawPhone && (
+                        <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-800/40 flex items-center justify-between">
+                          <div>
+                            <span className="text-[11px] text-emerald-400 font-semibold block">
+                              {preferredMethod === 'candidate_self' ? 'Candidate Phone' : 'Guardian Phone'}
+                            </span>
+                            <span className="text-base sm:text-lg font-mono font-bold text-white">{rawPhone}</span>
+                          </div>
+                          <a
+                            href={`tel:${rawPhone}`}
+                            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                            <span>Call</span>
+                          </a>
+                        </div>
+                      )}
 
                       {rawWhatsApp && (
                         <div className="p-3.5 rounded-xl bg-teal-950/30 border border-teal-800/40 flex items-center justify-between">
                           <div>
-                            <span className="text-[11px] text-teal-400 font-semibold block">WhatsApp Direct Contact</span>
+                            <span className="text-[11px] text-teal-400 font-semibold block">
+                              {preferredMethod === 'whatsapp_only' ? 'Dedicated WhatsApp (Preferred)' : 'WhatsApp Direct Contact'}
+                            </span>
                             <span className="text-base sm:text-lg font-mono font-bold text-white">{rawWhatsApp}</span>
                           </div>
                           <a
