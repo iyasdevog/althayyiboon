@@ -727,7 +727,7 @@ export default function AdminPortalModal({
       role="dialog" 
       aria-modal="true" 
       aria-label="Admin Management Console"
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 overflow-y-auto"
     >
       {/* Backdrop */}
       <div 
@@ -736,27 +736,28 @@ export default function AdminPortalModal({
       ></div>
 
       {/* Modal Card Container */}
-      <div className="relative w-full max-w-6xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden z-10 my-4 flex flex-col max-h-[94vh] animate-fade-in">
+      <div className="relative w-full max-w-6xl bg-slate-900 border-0 sm:border border-slate-700/80 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden z-10 my-0 sm:my-4 flex flex-col h-[100dvh] sm:h-auto sm:max-h-[94vh] animate-fade-in">
         
         {/* Top Header */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-              <ShieldCheck className="w-5 h-5" />
+        <div className="px-3.5 py-3 sm:p-5 bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold shrink-0">
+              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-white">Al-ThayyiBoon Admin Console</h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Master Control
+                <h2 className="text-sm sm:text-lg font-bold text-white truncate">Admin Console</h2>
+                <span className="hidden xs:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                  Master
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Moderation, Pricing Controls &amp; Taxonomy Management</p>
+              <p className="hidden sm:block text-xs text-slate-400">Moderation, Pricing Controls &amp; Taxonomy Management</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors shrink-0 cursor-pointer"
+            aria-label="Close Admin Console"
           >
             <X className="w-5 h-5" />
           </button>
@@ -826,17 +827,17 @@ export default function AdminPortalModal({
           <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
             
             {/* Top Navigation Tabs */}
-            <div className="px-4 sm:px-6 pt-3 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto custom-scrollbar flex-1 min-w-0 pb-1">
+            <div className="px-2.5 sm:px-6 pt-2 sm:pt-3 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar sm:custom-scrollbar flex-1 min-w-0 pb-1.5 sm:pb-1">
                 <button
                   onClick={() => setActiveTab("proposals")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                  className={`py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-sm font-semibold rounded-xl sm:rounded-b-none sm:rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeTab === "proposals"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <Users className="w-4 h-4" />
+                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>Proposals ({totalCount})</span>
                 </button>
 
@@ -846,14 +847,14 @@ export default function AdminPortalModal({
                     setLoadingConnections(true);
                     fetchConnectionRequests().then(list => setConnectionRequests(list || [])).finally(() => setLoadingConnections(false));
                   }}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                  className={`py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-sm font-semibold rounded-xl sm:rounded-b-none sm:rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeTab === "connections"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <Send className="w-4 h-4 text-emerald-400" />
-                  <span>Contact Requests ({connectionRequests.length})</span>
+                  <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                  <span><span className="sm:hidden">Requests</span><span className="hidden sm:inline">Contact Requests</span> ({connectionRequests.length})</span>
                   {pendingConnectionCount > 0 && (
                     <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 text-[10px] font-bold flex items-center justify-center">
                       {pendingConnectionCount}
@@ -863,14 +864,14 @@ export default function AdminPortalModal({
 
                 <button
                   onClick={() => setActiveTab("renewals")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                  className={`py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-sm font-semibold rounded-xl sm:rounded-b-none sm:rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeTab === "renewals"
                       ? "border-amber-500 text-amber-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <RotateCcw className="w-4 h-4 text-amber-400" />
-                  <span>3M Renewals</span>
+                  <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+                  <span><span className="sm:hidden">Renewals</span><span className="hidden sm:inline">3M Renewals</span></span>
                   {(expiredCount + renewalDueCount) > 0 && (
                     <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
                       {expiredCount + renewalDueCount}
@@ -880,62 +881,62 @@ export default function AdminPortalModal({
 
                 <button
                   onClick={() => setActiveTab("whatsapp")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                  className={`py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-sm font-semibold rounded-xl sm:rounded-b-none sm:rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeTab === "whatsapp"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <MessageSquare className="w-4 h-4 text-emerald-400" />
-                  <span>WhatsApp &amp; Broadcast ({whatsappCount})</span>
+                  <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                  <span><span className="sm:hidden">WhatsApp</span><span className="hidden sm:inline">WhatsApp &amp; Broadcast</span> ({whatsappCount})</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("credentials")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                  className={`py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-sm font-semibold rounded-xl sm:rounded-b-none sm:rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeTab === "credentials"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <Key className="w-4 h-4 text-amber-400" />
-                  <span>Candidate Logins ({totalCount})</span>
+                  <Key className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+                  <span><span className="sm:hidden">Logins</span><span className="hidden sm:inline">Candidate Logins</span> ({totalCount})</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("pricing")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                  className={`py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-sm font-semibold rounded-xl sm:rounded-b-none sm:rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeTab === "pricing"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <Coins className="w-4 h-4 text-amber-400" />
-                  <span>Pricing &amp; Campaign Controls</span>
+                  <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+                  <span><span className="sm:hidden">Campaign</span><span className="hidden sm:inline">Pricing &amp; Campaign Controls</span></span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("taxonomies")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                  className={`py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-sm font-semibold rounded-xl sm:rounded-b-none sm:rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeTab === "taxonomies"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <GraduationCap className="w-4 h-4 text-sky-400" />
-                  <span>Education Taxonomies</span>
+                  <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400" />
+                  <span><span className="sm:hidden">Education</span><span className="hidden sm:inline">Education Taxonomies</span></span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("filterRequests")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                  className={`py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-sm font-semibold rounded-xl sm:rounded-b-none sm:rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeTab === "filterRequests"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <FileCheck className="w-4 h-4 text-purple-400" />
-                  <span>User Filter Requests</span>
+                  <FileCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400" />
+                  <span><span className="sm:hidden">Filters</span><span className="hidden sm:inline">User Filter Requests</span></span>
                   {pendingFilterReqs > 0 && (
                     <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 text-[10px] font-bold flex items-center justify-center">
                       {pendingFilterReqs}
@@ -945,22 +946,22 @@ export default function AdminPortalModal({
 
                 <button
                   onClick={() => setActiveTab("dataBackup")}
-                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                  className={`py-1.5 sm:py-2 px-2.5 sm:px-3 text-[11px] sm:text-sm font-semibold rounded-xl sm:rounded-b-none sm:rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     activeTab === "dataBackup"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
                       : "border-transparent text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <Database className="w-4 h-4 text-cyan-400" />
-                  <span>Data Backup</span>
+                  <Database className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
+                  <span><span className="sm:hidden">Backup</span><span className="hidden sm:inline">Data Backup</span></span>
                 </button>
               </div>
 
               {/* Dedicated CSV Export Button Container */}
-              <div className="flex items-center gap-2 shrink-0 pb-1 pl-3 border-l border-slate-800">
+              <div className="flex items-center gap-2 shrink-0 pb-1.5 sm:pb-1 pl-2 sm:pl-3 border-l border-slate-800">
                 <button
                   onClick={handleExportCSV}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors shadow-sm cursor-pointer"
                   title="Export all database records to CSV spreadsheet"
                 >
                   <Download className="w-3.5 h-3.5 text-emerald-400" />
@@ -970,7 +971,7 @@ export default function AdminPortalModal({
             </div>
 
             {/* TAB CONTENT CONTAINER */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-6">
               
               {/* WhatsApp Notification Toast */}
               {whatsappToast && (
@@ -1186,8 +1187,51 @@ export default function AdminPortalModal({
                         <p>No profiles match the selected filter.</p>
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
+                      <>
+                        {/* Mobile Renewals Card List */}
+                        <div className="sm:hidden divide-y divide-slate-800/60">
+                          {renewalProfiles.map(p => {
+                            const validity = getProfileValidity(p);
+                            const name = p.basicInfo?.fullName || p.id;
+                            const gender = p.basicInfo?.gender || (p.gender === 'female' ? 'Bride' : 'Groom');
+                            return (
+                              <div key={p.id} className="p-3 flex items-center justify-between gap-2.5">
+                                <div className="min-w-0 space-y-1">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-[10px] font-mono text-emerald-400 font-bold">{p.id}</span>
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                      gender === 'Bride' ? 'bg-pink-500/10 text-pink-300 border-pink-500/30' : 'bg-sky-500/10 text-sky-300 border-sky-500/30'
+                                    }`}>
+                                      {gender}
+                                    </span>
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${validity.statusBadge.color}`}>
+                                      {validity.statusBadge.label}
+                                    </span>
+                                  </div>
+                                  <p className="font-semibold text-xs text-white truncate">{name}</p>
+                                  <p className="text-[10px] text-slate-400">Expires: {validity.expiryDateFormatted}</p>
+                                </div>
+                                <button
+                                  onClick={() => handleSendRenewalWhatsApp(p)}
+                                  className={`px-2.5 py-2 rounded-xl font-bold text-[11px] inline-flex items-center gap-1 shrink-0 cursor-pointer ${
+                                    validity.isExpired
+                                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                                      : validity.isRenewalDue
+                                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                      : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                                  }`}
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                  <span>Renew</span>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Desktop Renewals Table */}
+                        <div className="hidden sm:block overflow-x-auto">
+                          <table className="w-full text-xs">
                           <thead className="bg-slate-950">
                             <tr className="text-left text-slate-500">
                               <th className="p-3 font-semibold">Candidate</th>
@@ -1245,7 +1289,8 @@ export default function AdminPortalModal({
                             })}
                           </tbody>
                         </table>
-                      </div>
+                        </div>
+                      </>
                     )}
                   </div>
 
@@ -1259,53 +1304,53 @@ export default function AdminPortalModal({
                 <div className="space-y-4">
                   
                   {/* Top Stats Strip */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block">Total Proposals</span>
-                      <span className="text-xl font-extrabold text-white">{totalCount}</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+                    <div className="bg-slate-950/80 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-800">
+                      <span className="text-[10px] sm:text-[11px] text-slate-400 block">Total Proposals</span>
+                      <span className="text-lg sm:text-xl font-extrabold text-white">{totalCount}</span>
                     </div>
-                    <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block">Brides / Grooms</span>
-                      <span className="text-xl font-extrabold text-white">{brideCount} / {groomCount}</span>
+                    <div className="bg-slate-950/80 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-800">
+                      <span className="text-[10px] sm:text-[11px] text-slate-400 block">Brides / Grooms</span>
+                      <span className="text-lg sm:text-xl font-extrabold text-white">{brideCount} / {groomCount}</span>
                     </div>
-                    <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5">
-                      <span className="text-[11px] text-amber-300 block font-semibold">Campaign Regs</span>
-                      <span className="text-xl font-extrabold text-amber-300">{campaignCount}</span>
-                      <div className="flex items-center gap-2 mt-1">
+                    <div className="bg-slate-950/80 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-amber-500/30 bg-amber-500/5">
+                      <span className="text-[10px] sm:text-[11px] text-amber-300 block font-semibold">Campaign Regs</span>
+                      <span className="text-lg sm:text-xl font-extrabold text-amber-300">{campaignCount}</span>
+                      <div className="flex items-center gap-1.5 mt-1">
                         <span className="text-[10px] font-bold text-pink-300 bg-pink-500/15 px-1.5 py-0.5 rounded-md">👰 {campaignBrideCount}</span>
                         <span className="text-[10px] font-bold text-sky-300 bg-sky-500/15 px-1.5 py-0.5 rounded-md">🤵 {campaignGroomCount}</span>
                       </div>
                     </div>
-                    <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
-                      <span className="text-[11px] text-emerald-300 block font-semibold">WhatsApp Opt-Ins</span>
-                      <span className="text-xl font-extrabold text-emerald-300">{whatsappCount}</span>
+                    <div className="bg-slate-950/80 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
+                      <span className="text-[10px] sm:text-[11px] text-emerald-300 block font-semibold">WhatsApp Opt-Ins</span>
+                      <span className="text-lg sm:text-xl font-extrabold text-emerald-300">{whatsappCount}</span>
                     </div>
-                    <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block">Campaign Mode</span>
-                      <span className={`text-base font-bold ${localPricing.campaignMode ? 'text-emerald-400' : 'text-slate-400'}`}>
+                    <div className="col-span-2 sm:col-span-1 bg-slate-950/80 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-800 flex sm:block items-center justify-between">
+                      <span className="text-[10px] sm:text-[11px] text-slate-400 block">Campaign Mode</span>
+                      <span className={`text-sm sm:text-base font-bold ${localPricing.campaignMode ? 'text-emerald-400' : 'text-slate-400'}`}>
                         {localPricing.campaignMode ? 'Active (Free)' : 'Standard (Paid)'}
                       </span>
                     </div>
                   </div>
 
                   {/* Search & Filter Toolbar */}
-                  <div className="p-3 bg-slate-950/80 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                      <Search className="w-4 h-4 text-slate-400" />
+                  <div className="p-2.5 sm:p-3 bg-slate-950/80 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0 bg-slate-900/70 sm:bg-transparent px-3 py-2 sm:p-0 rounded-xl border border-slate-800 sm:border-0">
+                      <Search className="w-4 h-4 text-slate-400 shrink-0" />
                       <input
                         type="text"
-                        placeholder="Search ID, Name, District, Qualification, Degree..."
+                        placeholder="Search ID, Name, District, Qualification..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-full"
                       />
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 sm:flex items-center gap-2">
                       <select
                         value={genderFilter}
                         onChange={(e) => setGenderFilter(e.target.value)}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-xs text-slate-300 border border-slate-800 cursor-pointer"
+                        className="px-2.5 py-2 sm:py-1.5 rounded-xl bg-slate-900 text-xs text-slate-300 border border-slate-800 cursor-pointer w-full sm:w-auto"
                       >
                         <option value="all">All Genders</option>
                         <option value="bride">Brides Only</option>
@@ -1315,11 +1360,11 @@ export default function AdminPortalModal({
                       <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-xs text-slate-300 border border-slate-800 cursor-pointer"
+                        className="px-2.5 py-2 sm:py-1.5 rounded-xl bg-slate-900 text-xs text-slate-300 border border-slate-800 cursor-pointer w-full sm:w-auto"
                       >
                         <option value="all">All Status</option>
-                        <option value="campaign">Campaign Registrations ({campaignCount})</option>
-                        <option value="whatsapp">WhatsApp Opt-Ins ({whatsappCount})</option>
+                        <option value="campaign">Campaign ({campaignCount})</option>
+                        <option value="whatsapp">WhatsApp ({whatsappCount})</option>
                         <option value="approved">Active / Approved</option>
                         <option value="hidden">Hidden</option>
                       </select>
@@ -1328,35 +1373,152 @@ export default function AdminPortalModal({
 
                   {/* Bulk Actions Bar */}
                   {selectedIds.length > 0 && (
-                    <div className="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between gap-3 animate-fade-in">
+                    <div className="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-fade-in">
                       <span className="text-xs font-bold text-emerald-300">
                         {selectedIds.length} proposal(s) selected
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={handleBulkApprove}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold hover:bg-emerald-500/30"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold hover:bg-emerald-500/30 cursor-pointer"
                         >
                           Mark Active
                         </button>
                         <button
                           onClick={handleBulkHide}
-                          className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold hover:bg-slate-700"
+                          className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold hover:bg-slate-700 cursor-pointer"
                         >
-                          Hide from Directory
+                          Hide
                         </button>
                         <button
                           onClick={handleBulkDelete}
-                          className="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold hover:bg-rose-500/30"
+                          className="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold hover:bg-rose-500/30 cursor-pointer"
                         >
-                          Delete Selected
+                          Delete
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* Proposals Table */}
-                  <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60">
+                  {/* Mobile Proposals Card List */}
+                  <div className="sm:hidden space-y-2.5">
+                    {adminProfiles.map((p) => {
+                      const isSelected = selectedIds.includes(p.id);
+                      const basic = p.basicInfo || {};
+                      const genEdu = p.generalEducation || {};
+                      const islamicList = Array.isArray(p.islamicQualification)
+                        ? p.islamicQualification
+                        : (p.islamicBackground?.qualification ? [p.islamicBackground.qualification] : []);
+                      const contacts = p.contactDetails || p.contactPreferences || {};
+                      const phone = contacts.guardianPhone || contacts.phone || '';
+                      const isBrideRow = basic.gender === 'Bride' || p.gender === 'female';
+
+                      return (
+                        <div
+                          key={p.id}
+                          className={`p-3 rounded-2xl border transition-colors space-y-2.5 ${
+                            isSelected ? 'bg-emerald-950/20 border-emerald-500/40' : 'bg-slate-950/70 border-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start gap-2.5 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleToggleSelect(p.id)}
+                                className="w-4 h-4 mt-1 rounded border-slate-700 bg-slate-950 text-emerald-500 shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-mono text-[11px] text-emerald-400 font-bold">{p.id}</span>
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                    isBrideRow ? 'bg-rose-500/15 text-rose-300' : 'bg-emerald-500/15 text-emerald-300'
+                                  }`}>
+                                    {basic.gender || (isBrideRow ? 'Bride' : 'Groom')} • {basic.age}y
+                                  </span>
+                                </div>
+                                <p className="font-bold text-sm text-white truncate mt-0.5">{basic.fullName || 'Candidate'}</p>
+                              </div>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                              p.status === 'hidden'
+                                ? 'bg-slate-800 text-slate-400'
+                                : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20'
+                            }`}>
+                              {p.status || 'Active'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-1.5 text-[11px] text-slate-300 bg-slate-900/60 p-2 rounded-xl border border-slate-800/70">
+                            <div className="truncate">
+                              <span className="text-slate-500">Islamic: </span>
+                              <span className="text-emerald-300 font-semibold">{islamicList.length > 0 ? islamicList.join(', ') : 'None'}</span>
+                            </div>
+                            <div className="truncate">
+                              <span className="text-slate-500">District: </span>
+                              <span>{p.locationFamily?.homeDistrict || 'Kerala'}</span>
+                            </div>
+                            <div className="truncate col-span-2">
+                              <span className="text-slate-500">Edu: </span>
+                              <span className="text-sky-300 font-medium">{genEdu.degreeName || p.educationOccupation?.education || genEdu.level || 'Not specified'}</span>
+                            </div>
+                            <div className="truncate col-span-2 font-mono">
+                              <span className="text-slate-500 font-sans">Contact: </span>
+                              {phone ? (
+                                <a href={`tel:${phone}`} className="text-emerald-400 underline underline-offset-2">{phone}</a>
+                              ) : 'N/A'}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-1.5 pt-0.5">
+                            <button
+                              onClick={() => handleSendWhatsAppInvite(p)}
+                              className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 cursor-pointer"
+                              title="Send WhatsApp Group Invite"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleShareCredentials(p)}
+                              className="p-2 rounded-xl bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 cursor-pointer"
+                              title="Share Login Credentials via WhatsApp"
+                            >
+                              <Key className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleShareProfileBiodata(p)}
+                              className="p-2 rounded-xl bg-teal-500/10 text-teal-400 hover:bg-teal-500/20 border border-teal-500/30 cursor-pointer"
+                              title="Share Proposal Biodata to WhatsApp"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => onSelectEditProfile(p)}
+                              className="px-2.5 py-1.5 rounded-xl bg-slate-800 text-amber-300 hover:bg-slate-700 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                              title="Admin Override Edit"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Delete profile ${p.id}?`)) {
+                                  onDeleteProfile(p.id);
+                                }
+                              }}
+                              className="p-2 rounded-xl bg-slate-800 text-rose-400 hover:bg-slate-700 cursor-pointer"
+                              title="Delete Profile"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Desktop Proposals Table */}
+                  <div className="hidden sm:block border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead className="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
@@ -1732,8 +1894,61 @@ export default function AdminPortalModal({
                     </div>
                   </div>
 
-                  {/* Credentials Table */}
-                  <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60">
+                  {/* Mobile Candidate Logins Card List */}
+                  <div className="sm:hidden space-y-2.5">
+                    {profiles.map(p => {
+                      const basic = p.basicInfo || {};
+                      const phone = p.contactDetails?.whatsappNumber || p.contactDetails?.guardianPhone || p.contactPreferences?.phone || 'N/A';
+                      const hasExplicitCredentials = Boolean(
+                        (p.loginCredentials?.username || '').trim() &&
+                        (p.loginCredentials?.password || '').trim()
+                      );
+                      const username = (p.loginCredentials?.username || '').trim() || p.id;
+                      const password = (p.loginCredentials?.password || '').trim()
+                        || (p.security?.editPin || '').trim()
+                        || `ALTB@${p.id}`;
+                      const isLegacy = !hasExplicitCredentials;
+
+                      return (
+                        <div key={p.id} className={`p-3 rounded-2xl border space-y-2 ${isLegacy ? 'bg-amber-950/10 border-amber-500/20' : 'bg-slate-950/70 border-slate-800'}`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <span className="font-mono text-[11px] text-emerald-400 font-bold">{p.id}</span>
+                              <p className="font-bold text-xs text-white truncate">{basic.fullName || 'Candidate'}</p>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                              isLegacy ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                            }`}>
+                              {isLegacy ? 'Legacy' : 'Modern'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5 text-[11px] font-mono bg-slate-900/70 p-2 rounded-xl border border-slate-800">
+                            <div className="truncate">
+                              <span className="text-slate-500 font-sans">User: </span>
+                              <span className="text-slate-200 font-bold">{username}</span>
+                            </div>
+                            <div className="truncate">
+                              <span className="text-slate-500 font-sans">PIN: </span>
+                              <span className="text-amber-300 font-bold">{password}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[11px] font-mono text-slate-400 truncate">{phone}</span>
+                            <button
+                              onClick={() => handleShareCredentials(p)}
+                              className="px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                            >
+                              <Send className="w-3 h-3 text-amber-400" />
+                              <span>Share</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Desktop Credentials Table */}
+                  <div className="hidden sm:block border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/60">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead className="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
