@@ -15,14 +15,18 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  Sparkles
+  Sparkles,
+  Languages
 } from 'lucide-react';
 
 export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPortal }) {
   const { pricing } = useAuth();
+  const isManualMode = pricing?.manualPaymentMode !== false;
   const unlockFee = pricing?.contactUnlockFee ?? 15;
   const [activeFaq, setActiveFaq] = useState(null);
   const [previewSearch, setPreviewSearch] = useState('');
+  const [lang, setLang] = useState('en');
+  const isMl = lang === 'ml';
 
   const previewTags = [
     { label: 'Wafiyya Scholars', category: 'Islamic Education' },
@@ -36,12 +40,17 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
   const faqs = [
     {
       q: "How does Al-ThayyiBoon protect candidate privacy and modesty?",
-      a: "Candidate contact numbers and personal identifers are strictly guarded. Unauthenticated web crawlers and public lurkers cannot view profiles. Grooms can only view Brides, and Brides can only view Grooms. Direct contact occurs exclusively through registered parents or walis."
+      a: "Candidate contact numbers and personal identifiers are strictly hidden and stored in protected admin-only records. Grooms can only view Brides, and Brides can only view Grooms. No raw phone numbers are exposed publicly."
     },
-    {
-      q: "What is the contact unlock policy and why is there a nominal fee?",
-      a: `Contact numbers are unlocked via nominal pay-per-view credits (₹${unlockFee} / 1 credit). This nominal safeguard eliminates time-wasters, spammers, and non-serious inquiries, ensuring that only genuine families reach out.`
-    },
+    isManualMode
+      ? {
+          q: "How do I connect with a proposal if contact details are hidden?",
+          a: "Click 'Request Connection' on any proposal to send a request to Admin. Admin will shortly contact you after verifying the proposal validity of the requested client. All registrations and connections are currently handled manually with zero online payment."
+        }
+      : {
+          q: "What is the contact unlock policy and why is there a nominal fee?",
+          a: `Contact numbers are unlocked via nominal pay-per-view credits (₹${unlockFee} / 1 credit). This nominal safeguard eliminates time-wasters, spammers, and non-serious inquiries, ensuring that only genuine families reach out.`
+        },
     {
       q: "Can candidates with combined Islamic (Wafi/Wafiyya) and University degrees register?",
       a: "Yes! Al-ThayyiBoon specializes in dual-curriculum candidates (e.g. Wafi + Degree, Wafiyya + PG, Hudawi + PhD, or conventional Doctors and Engineers with strong Islamic values)."
@@ -78,6 +87,14 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <button
+              onClick={() => setLang(prev => prev === 'ml' ? 'en' : 'ml')}
+              className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 transition-all cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95"
+              title={isMl ? 'Switch to English' : 'മലയാളത്തിലേക്ക് മാറുക'}
+            >
+              <Languages className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
+              <span className={isMl ? '' : 'font-malayalam'}>{isMl ? 'English' : 'മലയാളം'}</span>
+            </button>
             <Link
               to="/profiles"
               className="hidden sm:inline-flex px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 transition-colors whitespace-nowrap"
@@ -111,17 +128,33 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
         </div>
 
         {/* Hero Title */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-4xl leading-tight sm:leading-tight mb-4">
-          Pure, Dignified &amp; Shariah-Aligned Matrimony for{' '}
-          <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">
-            Kerala &amp; the Gulf
-          </span>
-        </h1>
+        {isMl ? (
+          <>
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white max-w-4xl mb-4 font-malayalam">
+              കേരളത്തിലെയും ഗൾഫിലെയും മുസ്‌ലിം സമൂഹത്തിനായി{' '}
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">
+                സുരക്ഷിതവും മാന്യവുമായ നിക്കാഹ് ഡയറക്ടറി
+              </span>
+            </h1>
+            <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto mb-8 sm:mb-10 font-malayalam">
+              വാഫി, വാഫിയ്യ, ഹുദവി പണ്ഡിതരെയും ഡോക്ടർമാർ, എഞ്ചിനീയർമാർ, ഉന്നത വിദ്യാഭ്യാസമുള്ള പ്രൊഫഷണലുകളെയും രക്ഷാകർത്താക്കളുടെ പൂർണ്ണ സുരക്ഷയോടെ ബന്ധിപ്പിക്കുന്നു. കോൺടാക്റ്റ് നമ്പറുകൾ സ്വകാര്യമായി സൂക്ഷിച്ചിരിക്കുന്നു — അഡ്മിൻ പരിശോധനയ്ക്ക് ശേഷം ബന്ധപ്പെടാം.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-4xl leading-tight sm:leading-tight mb-4">
+              Pure, Dignified &amp; Shariah-Aligned Matrimony for{' '}
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">
+                Kerala &amp; the Gulf
+              </span>
+            </h1>
 
-        {/* Hero Subtitle */}
-        <p className="text-sm sm:text-lg text-slate-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
-          Connecting Islamic Scholars (Wafi, Wafiyya, Hudawi) and Academic Professionals (Doctors, Engineers, Post-Graduates) with protected guardian contacts.
-        </p>
+            {/* Hero Subtitle */}
+            <p className="text-sm sm:text-lg text-slate-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
+              Connecting Islamic Scholars (Wafi, Wafiyya, Hudawi) and Academic Professionals (Doctors, Engineers, Post-Graduates) with admin-verified guardian introductions.
+            </p>
+          </>
+        )}
 
         {/* Interactive Directory Preview Search Teaser */}
         <div className="w-full max-w-2xl bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-4 sm:p-5 mb-12 shadow-2xl text-left">
@@ -307,9 +340,13 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
               <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 font-mono font-bold flex items-center justify-center mb-4">
                 03
               </div>
-              <h4 className="font-bold text-white text-base mb-2">Connect Directly with Guardian</h4>
+              <h4 className="font-bold text-white text-base mb-2">
+                {isManualMode ? 'Admin-Verified Connection' : 'Connect Directly with Guardian'}
+              </h4>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                Unlock verified parent phone number and start a direct, respectful WhatsApp consultation with the candidate's Wali.
+                {isManualMode
+                  ? 'Contact details stay hidden for privacy. Send a connection request and Admin will shortly contact you after verifying the proposal validity.'
+                  : "Unlock verified parent phone number and start a direct, respectful WhatsApp consultation with the candidate's Wali."}
               </p>
             </div>
           </div>

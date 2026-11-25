@@ -308,22 +308,29 @@ export default function Navbar({
                         <p className="text-[11px] text-slate-400 truncate mt-0.5">{currentUser.email || 'Registered Member'}</p>
                       </div>
 
-                      {/* Quick Balance */}
-                      <div className="py-2.5 flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Wallet Credits:</span>
-                        <div className="flex items-center gap-1">
-                          <span className="font-extrabold text-amber-300">{credits} Credits</span>
-                          <button
-                            onClick={() => {
-                              setIsUserMenuOpen(false);
-                              onOpenWalletModal();
-                            }}
-                            className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 ml-1 underline cursor-pointer"
-                          >
-                            + Add
-                          </button>
+                      {/* Quick Balance / Verification Mode */}
+                      {pricing?.manualPaymentMode !== false ? (
+                        <div className="py-2.5 flex items-center justify-between text-xs">
+                          <span className="text-slate-400">Connection Mode:</span>
+                          <span className="font-bold text-emerald-400 text-[11px]">Admin Verified</span>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="py-2.5 flex items-center justify-between text-xs">
+                          <span className="text-slate-400">Wallet Credits:</span>
+                          <div className="flex items-center gap-1">
+                            <span className="font-extrabold text-amber-300">{credits} Credits</span>
+                            <button
+                              onClick={() => {
+                                setIsUserMenuOpen(false);
+                                onOpenWalletModal();
+                              }}
+                              className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 ml-1 underline cursor-pointer"
+                            >
+                              + Add
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Shortcuts */}
                       <div className="space-y-1 pt-1 border-t border-slate-800 text-xs">

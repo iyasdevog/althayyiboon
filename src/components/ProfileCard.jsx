@@ -18,10 +18,12 @@ import {
   Unlock,
   Coins,
   Phone,
-  Scale
+  Scale,
+  ShieldCheck
 } from 'lucide-react';
 import { shareProfile } from '../utils/shareUtils';
 import { useAuth } from '../context/AuthContext';
+import ConnectionRequestModal from './ConnectionRequestModal';
 
 function formatPostedDate(dateStr) {
   if (!dateStr) return null;
@@ -61,6 +63,8 @@ function ProfileCard({
   const { isContactUnlocked, unlockContact, pricing, isParent, isDemo: authIsDemo } = useAuth();
   const navigate = useNavigate();
   const isDemo = Boolean(authIsDemo || profile.isFakeData || profile.id?.startsWith('DEMO-'));
+  const isManualMode = pricing?.manualPaymentMode !== false;
+  const [isConnectModalOpen, setIsConnectModalOpen] = React.useState(false);
 
   const {
     id,
@@ -111,6 +115,10 @@ function ProfileCard({
       if (onShowToast) {
         onShowToast("Names & direct phone numbers are protected in Parent View.");
       }
+      return;
+    }
+    if (isManualMode) {
+      setIsConnectModalOpen(true);
       return;
     }
     const result = unlockContact(profile);
@@ -447,19 +455,21 @@ function ProfileCard({
                   ? "Protected for Parent View"
                   : (isUnlocked
                     ? (preferredMethod === 'whatsapp_only' ? rawWhatsApp || rawPhone : rawPhone || rawWhatsApp) || "Contact provided"
-                    : maskPhoneNumber(rawPhone))}
+                    : isManualMode
+                      ? "Hidden • Request via Admin"
+                      : maskPhoneNumber(rawPhone))}
             </div>
           </div>
 
-          {/* Pay-Per-View Unlock CTA Button */}
+          {/* Pay-Per-View Unlock or Admin Connection Request CTA Button */}
           {isDemo ? (
             <button
               onClick={handleUnlockClick}
               className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-[11px] shadow-sm flex items-center gap-1 transition-all active:scale-95 shrink-0 cursor-pointer"
-              title="Unlock Real Guardian Contact (Sign In)"
+              title="Sign In to Connect"
             >
-              <Coins className="w-3.5 h-3.5" />
-              <span>Unlock (₹{fee})</span>
+              <Lock className="w-3.5 h-3.5" />
+              <span>{isManualMode ? 'Connect' : `Unlock (₹${fee})`}</span>
             </button>
           ) : isParent ? (
             <span className="px-2.5 py-1.5 rounded-lg bg-teal-500/10 text-teal-300 border border-teal-500/20 text-[11px] font-semibold flex items-center gap-1 shrink-0">
@@ -469,11 +479,11 @@ function ProfileCard({
           ) : !isUnlocked ? (
             <button
               onClick={handleUnlockClick}
-              className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-[11px] shadow-sm flex items-center gap-1 transition-all active:scale-95 shrink-0 cursor-pointer"
-              title="Unlock Guardian Phone and WhatsApp"
+              className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-[11px] shadow-sm flex items-center gap-1 transition-all active:scale-95 shrink-0 cursor-pointer"
+              title={isManualMode ? "Send Connection Request to Admin" : "Unlock Guardian Phone and WhatsApp"}
             >
-              <Coins className="w-3.5 h-3.5" />
-              <span>Unlock (₹{fee})</span>
+              {isManualMode ? <ShieldCheck className="w-3.5 h-3.5" /> : <Coins className="w-3.5 h-3.5" />}
+              <span>{isManualMode ? 'Request Contact' : `Unlock (₹${fee})`}</span>
             </button>
           ) : (
             <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
@@ -574,6 +584,16 @@ function ProfileCard({
         )}
       </div>
 
+      {isConnectModalOpen && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ConnectionRequestModal
+            isOpen={isConnectModalOpen}
+            onClose={() => setIsConnectModalOpen(false)}
+            profile={profile}
+            onShowToast={onShowToast}
+          />
+        </div>
+      )}
     </article>
   );
 }

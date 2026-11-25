@@ -23,10 +23,12 @@ import {
   Copy,
   Maximize2,
   Minimize2,
-  Users
+  Users,
+  ShieldCheck
 } from 'lucide-react';
 import { shareProfile } from '../utils/shareUtils';
 import { useAuth } from '../context/AuthContext';
+import ConnectionRequestModal from './ConnectionRequestModal';
 
 function maskPhoneNumber() {
   return "••••••••••";
@@ -45,8 +47,10 @@ export default function ProfileDetailModal({
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'islamic' | 'family' | 'contact'
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const navigate = useNavigate();
   const { isContactUnlocked, unlockContact, pricing, isParent, isDemo: authIsDemo } = useAuth();
+  const isManualMode = pricing?.manualPaymentMode !== false;
   const isDemo = Boolean(authIsDemo || profile?.isFakeData || profile?.id?.startsWith('DEMO-'));
 
   // Keyboard navigation: Escape closes, Left/Right arrow moves prev/next
@@ -118,6 +122,10 @@ export default function ProfileDetailModal({
     }
     if (isParent) {
       if (onShowToast) onShowToast("Contact numbers are protected in Parent View.");
+      return;
+    }
+    if (isManualMode) {
+      setIsConnectModalOpen(true);
       return;
     }
     const res = unlockContact(profile);
@@ -608,7 +616,7 @@ export default function ProfileDetailModal({
                         ? '•••••••••• (Sample Data)'
                         : isParent 
                           ? 'Protected for Parent View' 
-                          : (isUnlocked ? rawPhone || 'Available' : maskPhoneNumber(rawPhone))}
+                          : (isUnlocked ? rawPhone || 'Available' : isManualMode ? 'Hidden • Request via Admin' : maskPhoneNumber(rawPhone))}
                     </span>
                   </div>
 
@@ -622,7 +630,7 @@ export default function ProfileDetailModal({
                         ? '•••••••••• (Sample Data)'
                         : isParent 
                           ? 'Protected for Parent View' 
-                          : (isUnlocked ? rawWhatsApp || 'Available' : maskPhoneNumber(rawWhatsApp))}
+                          : (isUnlocked ? rawWhatsApp || 'Available' : isManualMode ? 'Hidden • Request via Admin' : maskPhoneNumber(rawWhatsApp))}
                     </span>
                   </div>
                 </div>
@@ -655,22 +663,24 @@ export default function ProfileDetailModal({
                     </p>
                   </div>
                 ) : !isUnlocked ? (
-                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/40 via-slate-900 to-amber-950/40 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 mt-2">
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-teal-950/40 border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 mt-2">
                     <div className="text-xs text-slate-300 text-center sm:text-left">
                       <p className="font-bold text-white flex items-center justify-center sm:justify-start gap-1">
-                        <Lock className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Unlock Verified Guardian Contact</span>
+                        <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{isManualMode ? 'Connect via Admin Verification' : 'Unlock Verified Guardian Contact'}</span>
                       </p>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        Get instant access to phone number &amp; direct WhatsApp messaging
+                        {isManualMode
+                          ? 'Contact details are hidden. Send a request and Admin will shortly contact you after verifying proposal validity.'
+                          : 'Get instant access to phone number & direct WhatsApp messaging'}
                       </p>
                     </div>
                     <button
                       onClick={handleUnlock}
-                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-900/40 flex items-center justify-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
+                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
                     >
-                      <Coins className="w-4 h-4" />
-                      <span>Unlock (₹{fee} / 1 Credit)</span>
+                      {isManualMode ? <ShieldCheck className="w-4 h-4" /> : <Coins className="w-4 h-4" />}
+                      <span>{isManualMode ? 'Request Connection' : `Unlock (₹${fee} / 1 Credit)`}</span>
                     </button>
                   </div>
                 ) : null}
@@ -730,10 +740,10 @@ export default function ProfileDetailModal({
           ) : (
             <button
               onClick={handleUnlock}
-              className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-amber-900/30 transition-all cursor-pointer"
+              className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-900/30 transition-all cursor-pointer"
             >
-              <Coins className="w-4 h-4" />
-              <span>Unlock Guardian Contact (₹{fee})</span>
+              {isManualMode ? <ShieldCheck className="w-4 h-4" /> : <Coins className="w-4 h-4" />}
+              <span>{isManualMode ? 'Request Connection via Admin' : `Unlock Guardian Contact (₹${fee})`}</span>
             </button>
           )}
 
@@ -755,6 +765,13 @@ export default function ProfileDetailModal({
         </div>
 
       </div>
+
+      <ConnectionRequestModal
+        isOpen={isConnectModalOpen}
+        onClose={() => setIsConnectModalOpen(false)}
+        profile={profile}
+        onShowToast={onShowToast}
+      />
     </div>
   );
 }

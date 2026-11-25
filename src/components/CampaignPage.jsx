@@ -35,6 +35,7 @@ export default function CampaignPage({
 
   // Parse countdown target date
   const targetDateStr = pricing.campaignEndDate || '2026-11-20T23:59:00';
+  const isManualMode = pricing?.manualPaymentMode !== false;
   const rewardCredits = pricing.campaignRewardCredits || 3;
   const whatsappGroupLink = pricing.whatsappGroupLink;
 
@@ -45,17 +46,6 @@ export default function CampaignPage({
     seconds: 0,
     isExpired: false
   });
-
-  // Inject Noto Sans Malayalam Google Font
-  useEffect(() => {
-    if (!document.getElementById('noto-sans-malayalam-font')) {
-      const link = document.createElement('link');
-      link.id = 'noto-sans-malayalam-font';
-      link.rel = 'stylesheet';
-      link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;600;700;800;900&display=swap';
-      document.head.appendChild(link);
-    }
-  }, []);
 
   useEffect(() => {
     function calculateCountdown() {
@@ -100,7 +90,7 @@ export default function CampaignPage({
     }
   })();
 
-  const mlFont = { fontFamily: "'Noto Sans Malayalam', sans-serif" };
+  const mlFont = { fontFamily: "'Noto Sans Malayalam', sans-serif", lineHeight: 1.75, letterSpacing: '0px' };
 
   // Bilingual content
   const i18n = {
@@ -119,12 +109,18 @@ export default function CampaignPage({
       secs: 'സെക്കൻഡ്',
       targetLabel: 'ലക്ഷ്യ തീയതി: ',
       benefitBadge: 'പ്രത്യേക ക്യാമ്പെയ്ൻ ഓഫർ',
-      benefitTitle: `100% സൗജന്യ രജിസ്ട്രേഷൻ + ${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് വ്യൂകൾ`,
-      benefitDesc: `ഈ സജീവ ക്യാമ്പെയ്ൻ കാലയളവിൽ പ്രൊഫൈൽ രജിസ്ട്രേഷൻ പൂർണ്ണമായും സൗജന്യമാണ് (₹0). യാതൊരു ഫീസും നൽകേണ്ടതില്ല. ഇപ്പോൾ രജിസ്റ്റർ ചെയ്യുന്ന എല്ലാവർക്കും ഡയറക്ടറി തുറക്കുമ്പോൾ `,
-      benefitDescBold: `${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് അൺലോക്കുകൾ`,
-      benefitDescEnd: ` ലഭിക്കുന്നതാണ്!`,
+      benefitTitle: isManualMode
+        ? '100% സൗജന്യ രജിസ്ട്രേഷൻ + അഡ്മിൻ പരിശോധിച്ച ബന്ധപ്പെടൽ'
+        : `100% സൗജന്യ രജിസ്ട്രേഷൻ + ${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് വ്യൂകൾ`,
+      benefitDesc: isManualMode
+        ? 'ഈ കാലയളവിൽ പ്രൊഫൈൽ രജിസ്ട്രേഷൻ പൂർണ്ണമായും സൗജന്യമാണ് (₹0). എല്ലാ പ്രൊപ്പോസലുകളുടെയും ഫോൺ നമ്പറുകൾ സ്വകാര്യമായി സൂക്ഷിച്ചിരിക്കുന്നു — താൽപ്പര്യമുള്ള പ്രൊപ്പോസലിലേക്ക് കണക്ഷൻ അഭ്യർത്ഥന അയച്ചാൽ, പ്രൊപ്പോസലിന്റെ സാധുത പരിശോധിച്ച ശേഷം അഡ്മിൻ നിങ്ങളെ ഉടൻ ബന്ധപ്പെടുന്നതാണ്.'
+        : `ഈ സജീവ ക്യാമ്പെയ്ൻ കാലയളവിൽ പ്രൊഫൈൽ രജിസ്ട്രേഷൻ പൂർണ്ണമായും സൗജന്യമാണ് (₹0). യാതൊരു ഫീസും നൽകേണ്ടതില്ല. ഇപ്പോൾ രജിസ്റ്റർ ചെയ്യുന്ന എല്ലാവർക്കും ഡയറക്ടറി തുറക്കുമ്പോൾ `,
+      benefitDescBold: isManualMode ? '' : `${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് അൺലോക്കുകൾ`,
+      benefitDescEnd: isManualMode ? '' : ` ലഭിക്കുന്നതാണ്!`,
       checkFree: 'രജിസ്ട്രേഷൻ തികച്ചും സൗജന്യം (₹0)',
-      checkViews: `ഡയറക്ടറി തുറക്കുമ്പോൾ ${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് വ്യൂകൾ`,
+      checkViews: isManualMode
+        ? 'അഡ്മിൻ പരിശോധനയ്ക്ക് ശേഷം നേരിട്ട് ബന്ധപ്പെടാം'
+        : `ഡയറക്ടറി തുറക്കുമ്പോൾ ${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് വ്യൂകൾ`,
       checkWali: 'വലിയ്യ് & മഹ്രം സുരക്ഷ',
       ctaRegister: 'സൗജന്യമായി രജിസ്റ്റർ ചെയ്യുക (₹0)',
       ctaExplore: 'ഡെമോ പ്രൊഫൈലുകൾ കാണുക',
@@ -160,12 +156,16 @@ export default function CampaignPage({
       secs: 'Secs',
       targetLabel: 'Target Launch Date: ',
       benefitBadge: 'Special Campaign Benefit',
-      benefitTitle: `100% Free Registration + ${rewardCredits} Complimentary Contact Views`,
-      benefitDesc: `During this active campaign drive, profile registration is completely FREE (₹0). You will not be prompted for any payment. Candidates registered during the campaign will automatically receive `,
-      benefitDescBold: `${rewardCredits} complimentary contact unlocks`,
-      benefitDescEnd: ` when the directory opens on ${formattedTargetDate}!`,
+      benefitTitle: isManualMode
+        ? '100% Free Registration + Admin-Verified Introductions'
+        : `100% Free Registration + ${rewardCredits} Complimentary Contact Views`,
+      benefitDesc: isManualMode
+        ? 'Profile registration is completely FREE (₹0) with zero online payment required. Contact details remain hidden for privacy — send a connection request on any proposal and our admin will shortly contact you after verifying the proposal validity.'
+        : `During this active campaign drive, profile registration is completely FREE (₹0). You will not be prompted for any payment. Candidates registered during the campaign will automatically receive `,
+      benefitDescBold: isManualMode ? '' : `${rewardCredits} complimentary contact unlocks`,
+      benefitDescEnd: isManualMode ? '' : ` when the directory opens on ${formattedTargetDate}!`,
       checkFree: 'Zero Registration Fee (₹0)',
-      checkViews: `${rewardCredits} Free Contact Views at Launch`,
+      checkViews: isManualMode ? 'Admin-Verified Connections' : `${rewardCredits} Free Contact Views at Launch`,
       checkWali: 'Wali & Modesty Protected',
       ctaRegister: 'Register Free Proposal (₹0)',
       ctaExplore: 'Explore Demo Directory',

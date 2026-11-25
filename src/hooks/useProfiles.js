@@ -126,20 +126,22 @@ export function useProfiles() {
         return;
       }
 
-      const data = await fetchProfilesFromStore(userGender, isAdmin);
+      const data = await fetchProfilesFromStore(userGender, isAdmin, currentUser?.uid);
       setProfiles(data);
 
       const customF = await fetchApprovedCustomFilters();
       setApprovedCustomFilters(customF);
 
-      const fReqs = await fetchFilterRequests();
-      setFilterRequests(fReqs);
+      if (isAdmin) {
+        const fReqs = await fetchFilterRequests();
+        setFilterRequests(fReqs);
+      }
 
       setLoading(false);
 
       unsubscribe = subscribeToProfiles((updatedList) => {
         setProfiles(updatedList);
-      }, userGender, isAdmin);
+      }, userGender, isAdmin, currentUser?.uid);
     }
 
     loadData();

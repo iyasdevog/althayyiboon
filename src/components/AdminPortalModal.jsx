@@ -42,7 +42,11 @@ import {
   Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { checkFirestoreHealth } from '../firebase/profileService';
+import {
+  checkFirestoreHealth,
+  fetchConnectionRequests,
+  updateConnectionRequestStatus
+} from '../firebase/profileService';
 import { SUBJECT_CATEGORIES } from '../data/mockProfiles';
 import { getProfileValidity, generateWhatsAppRenewalMessage } from '../utils/profileValidity';
 
@@ -83,7 +87,34 @@ export default function AdminPortalModal({
   const [selectedIds, setSelectedIds] = useState([]);
 
   // Local Pricing, Campaign & Platform Settings State
+  const [connectionRequests, setConnectionRequests] = useState([]);
+  const [loadingConnections, setLoadingConnections] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let active = true;
+    setLoadingConnections(true);
+    fetchConnectionRequests()
+      .then((list) => {
+        if (active) setConnectionRequests(list || []);
+      })
+      .finally(() => {
+        if (active) setLoadingConnections(false);
+      });
+    return () => { active = false; };
+  }, [isAuthenticated]);
+
+  const handleUpdateConnectionStatus = async (requestId, newStatus) => {
+    await updateConnectionRequestStatus(requestId, newStatus);
+    setConnectionRequests(prev =>
+      prev.map(r => r.id === requestId ? { ...r, status: newStatus } : r)
+    );
+  };
+
+  const pendingConnectionCount = connectionRequests.filter(r => r.status === 'pending').length;
+
   const [localPricing, setLocalPricing] = useState({
+    manualPaymentMode: pricing.manualPaymentMode !== undefined ? pricing.manualPaymentMode : true,
     contactUnlockFee: pricing.contactUnlockFee || 15,
     profileSubmissionFee: pricing.profileSubmissionFee || 0,
     renewalFee: pricing.renewalFee || 199,
@@ -810,6 +841,23 @@ export default function AdminPortalModal({
                 </button>
 
                 <button
+                  onClick={() => setActiveTab("connections")}
+                  className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
+                    activeTab === "connections"
+                      ? "border-emerald-500 text-emerald-300 bg-slate-900"
+                      : "border-transparent text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Send className="w-4 h-4 text-emerald-400" />
+                  <span>Connection Requests</span>
+                  {pendingConnectionCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 text-[10px] font-bold flex items-center justify-center">
+                      {pendingConnectionCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
                   onClick={() => setActiveTab("renewals")}
                   className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
                     activeTab === "renewals"
@@ -925,6 +973,124 @@ export default function AdminPortalModal({
                 <div className="mb-4 p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
                   <Check className="w-4 h-4" />
                   <span>{whatsappToast}</span>
+                </div>
+              )}
+
+              {/* ========================================================= */}
+              {/* TAB: CONNECTION REQUESTS (ADMIN-MEDIATED FLOW)            */}
+              {/* ========================================================= */}
+              {activeTab === "connections" && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/50 via-slate-950 to-teal-950/40 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        <span>Client Connection Requests ({connectionRequests.length})</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Verify the proposal validity of requested clients before manually sharing contacts or coordinating payment.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setLoadingConnections(true);
+                        fetchConnectionRequests().then(list => setConnectionRequests(list || [])).finally(() => setLoadingConnections(false));
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${loadingConnections ? 'animate-spin' : ''}`} />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
+
+                  {connectionRequests.length === 0 ? (
+                    <div className="p-10 text-center rounded-2xl border border-slate-800 bg-slate-950/50 text-slate-400 text-sm">
+                      <Send className="w-8 h-8 mx-auto mb-2 text-slate-600" />
+                      <p>No connection requests received yet.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {connectionRequests.map(req => {
+                        const cleanPhone = (req.requesterContact || '').replace(/[^0-9]/g, '');
+                        const waNum = cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`;
+                        const statusColor =
+                          req.status === 'verified_contacted'
+                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                            : req.status === 'rejected'
+                            ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                            : 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+
+                        return (
+                          <div key={req.id} className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="space-y-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusColor}`}>
+                                  {req.status === 'verified_contacted' ? 'Verified & Contacted' : req.status}
+                                </span>
+                                <span className="text-xs font-bold text-white">
+                                  {req.requesterName || 'Client'}
+                                </span>
+                                <span className="text-[11px] font-mono text-emerald-400">
+                                  {req.requesterContact}
+                                </span>
+                                {req.requesterProfileId && (
+                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+                                    Client ID: {req.requesterProfileId}
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="text-xs text-slate-300">
+                                Requested Proposal:{' '}
+                                <span className="font-bold text-amber-300">{req.targetCandidateName}</span>{' '}
+                                <span className="font-mono text-[11px] text-slate-400">({req.targetProfileId})</span>
+                                {req.targetDistrict && <span className="text-slate-400"> • {req.targetDistrict}</span>}
+                              </p>
+
+                              {req.message && (
+                                <p className="text-[11px] text-slate-400 italic">"{req.message}"</p>
+                              )}
+
+                              <p className="text-[10px] text-slate-500">
+                                {req.createdAt ? new Date(req.createdAt).toLocaleString() : ''}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 shrink-0">
+                              {cleanPhone.length >= 8 && (
+                                <a
+                                  href={`https://wa.me/${waNum}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                  <span>WhatsApp</span>
+                                </a>
+                              )}
+                              {req.status !== 'verified_contacted' && (
+                                <button
+                                  onClick={() => handleUpdateConnectionStatus(req.id, 'verified_contacted')}
+                                  className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Mark Contacted</span>
+                                </button>
+                              )}
+                              {req.status !== 'rejected' && (
+                                <button
+                                  onClick={() => handleUpdateConnectionStatus(req.id, 'rejected')}
+                                  className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 text-xs font-semibold cursor-pointer"
+                                >
+                                  Dismiss
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1680,6 +1846,43 @@ export default function AdminPortalModal({
                       </span>
                     </div>
                   )}
+
+                  {/* Manual Payment & Verification Hold Toggle */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/90 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        <span className="text-sm font-extrabold text-white">Manual Payment &amp; Connection Mode</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                          localPricing.manualPaymentMode
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                        }`}>
+                          {localPricing.manualPaymentMode ? 'ACTIVE (HOLDING PAYMENTS)' : 'AUTOMATED'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1 max-w-lg">
+                        Temporarily holds all credit deductions &amp; registration payments. Contact details stay hidden and clients send connection requests to Admin. Turn off later when ready to automate &amp; scale.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = !localPricing.manualPaymentMode;
+                        const next = { ...localPricing, manualPaymentMode: updated };
+                        setLocalPricing(next);
+                        updatePricingConfig(next);
+                      }}
+                      className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+                        localPricing.manualPaymentMode
+                          ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
+                          : 'bg-slate-800 text-slate-300 border border-slate-700'
+                      }`}
+                    >
+                      {localPricing.manualPaymentMode ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                      <span>{localPricing.manualPaymentMode ? 'Manual Mode ON' : 'Automated Mode'}</span>
+                    </button>
+                  </div>
 
                   {/* Campaign Mode Override Card */}
                   <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">

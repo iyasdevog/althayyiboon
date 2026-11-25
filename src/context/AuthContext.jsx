@@ -26,8 +26,9 @@ export const ADMIN_EMAILS = [
 ];
 
 export const DEFAULT_PRICING = {
-  contactUnlockFee: 15, // in INR (1 Credit)
-  profileSubmissionFee: 0, // ₹0 during campaign
+  manualPaymentMode: true, // Temporary manual handling: hold all credit system & online payments; connect via Admin request
+  contactUnlockFee: 15, // in INR (1 Credit) - used when manualPaymentMode is false
+  profileSubmissionFee: 0, // ₹0 while manual/campaign mode is active
   campaignMode: true, // When true, submissions are free and campaign holding page is displayed
   campaignEndDate: '2026-11-20T23:59:00', // End date & time defined by admin
   campaignRewardCredits: 3, // Granted at campaign ending date (e.g. 3 contact views)
@@ -519,6 +520,8 @@ export function AuthProvider({ children }) {
   const isContactUnlocked = (profileId) => {
     if (!profileId) return false;
     if (userProfile?.role === 'admin') return true;
+    // When manualPaymentMode is active, direct contact numbers remain hidden for all non-admin users
+    if (pricing?.manualPaymentMode) return false;
     return unlockedProfileIds.includes(profileId);
   };
 
@@ -526,15 +529,20 @@ export function AuthProvider({ children }) {
     const profileId = profile?.id || profile;
     if (!profileId) return { success: false, reason: 'invalid_profile' };
 
-    // Already unlocked
-    if (isContactUnlocked(profileId)) {
-      return { success: true, alreadyUnlocked: true };
-    }
-
     // Admin bypass
     if (userProfile?.role === 'admin') {
       setUnlockedProfileIds((prev) => [...prev, profileId]);
       return { success: true, adminBypass: true };
+    }
+
+    // Hold credit system when manualPaymentMode is enabled
+    if (pricing?.manualPaymentMode) {
+      return { success: false, reason: 'manual_verification_required' };
+    }
+
+    // Already unlocked
+    if (isContactUnlocked(profileId)) {
+      return { success: true, alreadyUnlocked: true };
     }
 
     // Check credits

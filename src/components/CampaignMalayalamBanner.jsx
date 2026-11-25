@@ -20,6 +20,7 @@ export default function CampaignMalayalamBanner({ onOpenAddModal }) {
   if (!pricing?.campaignMode) return null;
 
   const whatsappGroupLink = pricing?.whatsappGroupLink || 'https://chat.whatsapp.com/sample-althayyiboon-group';
+  const isManualMode = pricing?.manualPaymentMode !== false;
   const rewardCredits = pricing?.campaignRewardCredits || 3;
   const targetDateStr = pricing?.campaignEndDate || '2026-11-20T23:59:00';
 
@@ -59,24 +60,28 @@ export default function CampaignMalayalamBanner({ onOpenAddModal }) {
           <div className="space-y-1.5 flex-1 min-w-0">
             {/* Announcement Badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold font-malayalam">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                 <span>ഡാറ്റാ ശേഖരണം പുരോഗമിക്കുന്നു</span>
               </span>
 
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-semibold">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-semibold font-malayalam">
                 <Gift className="w-3 h-3 text-amber-400" />
-                <span>{rewardCredits} സൗജന്യ കോൺടാക്റ്റ് അൺലോക്കുകൾ</span>
+                <span>
+                  {isManualMode
+                    ? 'സൗജന്യ രജിസ്ട്രേഷൻ • അഡ്മിൻ വേരിഫിക്കേഷൻ'
+                    : `${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് അൺലോക്കുകൾ`}
+                </span>
               </span>
 
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px]">
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-malayalam">
                 <Calendar className="w-3 h-3 text-slate-400" />
                 <span>ഓപ്പണിംഗ്: {formattedTargetDate}</span>
               </span>
             </div>
 
             {/* Malayalam Main Heading */}
-            <h2 className="text-base sm:text-lg font-black text-white leading-snug tracking-tight">
+            <h2 className="text-base sm:text-lg font-extrabold text-white font-malayalam">
               പ്രൊപ്പോസൽ ഡാറ്റാ ശേഖരണം നടക്കുന്നു — നിലവിൽ എല്ലാ പ്രൊഫൈലുകളും രഹസ്യമായി സൂക്ഷിച്ചിരിക്കുന്നു
             </h2>
           </div>

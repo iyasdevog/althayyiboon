@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import ProfileCard from '../components/ProfileCard';
 import CandidateAccessGate from '../components/CandidateAccessGate';
+import ConnectionRequestModal from '../components/ConnectionRequestModal';
 import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
 import { shareProfile } from '../utils/shareUtils';
@@ -55,12 +56,15 @@ export default function ProfileDetailPage({
     linkExistingProfileToAccount,
     isContactUnlocked,
     unlockContact,
+    pricing,
     isParent,
     isDemo: authIsDemo
   } = useAuth();
 
+  const isManualMode = pricing?.manualPaymentMode !== false;
   const [activeTab, setActiveTab] = useState('overview');
   const [copied, setCopied] = useState(false);
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
 
   // Find candidate across both filtered and raw profiles
   const profile = rawProfiles.find(p => String(p.id).toLowerCase() === String(id).toLowerCase())
@@ -272,6 +276,10 @@ export default function ProfileDetailPage({
     }
     if (isParent) {
       onShowToast?.("Contact numbers are protected in Parent View.");
+      return;
+    }
+    if (isManualMode) {
+      setIsConnectModalOpen(true);
       return;
     }
     const res = unlockContact(profile);
@@ -900,7 +908,7 @@ export default function ProfileDetailPage({
                         <div className="flex items-center gap-2">
                           <Lock className="w-4 h-4 text-amber-400" />
                           <span className="text-sm font-mono text-slate-300">
-                            {isDemo ? '•••••••••• (Sample Data)' : maskPhoneNumber(rawPhone)}
+                            {isDemo ? '•••••••••• (Sample Data)' : isManualMode ? 'Hidden • Request via Admin' : maskPhoneNumber(rawPhone)}
                           </span>
                         </div>
                         <span className="text-xs text-slate-500">
@@ -910,8 +918,10 @@ export default function ProfileDetailPage({
 
                       <p className="text-xs text-slate-400 leading-relaxed">
                         {isDemo
-                          ? 'This candidate profile is demonstration data. To browse and unlock verified proposals and direct guardian contacts, sign in or register.'
-                          : 'To protect the modest privacy of Muslim candidates and prevent spam, guardian numbers are accessible through pay-per-view credits (1 Credit).'}
+                          ? 'This candidate profile is demonstration data. To browse verified proposals and request connections, sign in or register.'
+                          : isManualMode
+                            ? 'Contact details are hidden to protect candidate privacy. Send a connection request to Admin — Admin will shortly contact you after verifying the proposal validity of the requested client.'
+                            : 'To protect the modest privacy of Muslim candidates and prevent spam, guardian numbers are accessible through pay-per-view credits (1 Credit).'}
                       </p>
 
                       <div className="pt-2 flex flex-wrap gap-2">
@@ -919,17 +929,25 @@ export default function ProfileDetailPage({
                           onClick={handleUnlock}
                           className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
                         >
-                          <Unlock className="w-4 h-4" />
-                          <span>{isDemo ? 'Unlock Real Proposals (Sign In)' : 'Unlock Guardian Contact (-1 Credit)'}</span>
+                          {isManualMode ? <ShieldCheck className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                          <span>
+                            {isDemo
+                              ? 'Sign In to Connect'
+                              : isManualMode
+                                ? 'Request Connection via Admin'
+                                : 'Unlock Guardian Contact (-1 Credit)'}
+                          </span>
                         </button>
 
-                        <button
-                          onClick={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
-                          className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                        >
-                          <Coins className="w-3.5 h-3.5" />
-                          <span>{isDemo ? 'View Pricing' : 'Get Credits'}</span>
-                        </button>
+                        {!isManualMode && (
+                          <button
+                            onClick={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
+                            className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <Coins className="w-3.5 h-3.5" />
+                            <span>{isDemo ? 'View Pricing' : 'Get Credits'}</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -987,6 +1005,13 @@ export default function ProfileDetailPage({
       </main>
 
       <Footer onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} />
+
+      <ConnectionRequestModal
+        isOpen={isConnectModalOpen}
+        onClose={() => setIsConnectModalOpen(false)}
+        profile={profile}
+        onShowToast={onShowToast}
+      />
     </div>
   );
 }

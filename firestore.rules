@@ -1,44 +1,91 @@
 rules_version = '2';
 
 // ============================================================
-//  Al-ThayyiBoon Matrimony – Optimized Firestore Security Rules
+//  Al-ThayyiBoon Matrimony – Hardened Firestore Security Rules
 //  Project: althayyiboon-e6f3d
 //
-//  Configured for frictionless candidate registration during
-//  the active Free Campaign Drive while structuring collections
-//  cleanly for profiles, customFilters, filterRequests, and settings.
+//  Security Model:
+//  - Public `profiles` contains non-sensitive matrimonial bio-data only.
+//  - Sensitive contact numbers, WhatsApp, PINs, and credentials are stored
+//    in `profilePrivate` and readable ONLY by Admins or the profile creator.
+//  - `connectionRequests` lets prospective clients request admin-verified
+//    introductions without exposing candidate contact details.
+//  - `settings` (public config), `customFilters` are read-only for clients,
+//    writable only by Admins.
+//  - `backups` is strictly Admin-only.
 // ============================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Profiles collection: Public read, registration submission, and profile updates
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in [
+          'admin@althayyiboon.com',
+          'althayyiboon@gmail.com',
+          'iyasdevog@gmail.com'
+        ];
+    }
+
+    function isOwner(creatorUid) {
+      return isSignedIn() && creatorUid != null && request.auth.uid == creatorUid;
+    }
+
+    // Public matrimonial bio-data (sanitized: no raw phone/WhatsApp/PINs)
     match /profiles/{profileId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['gender', 'basicInfo'])
+                    && !request.resource.data.keys().hasAny(['isAdmin', 'role']);
+      allow update: if isAdmin() || isOwner(resource.data.creatorUid);
+      allow delete: if isAdmin() || isOwner(resource.data.creatorUid);
     }
 
-    // Dynamic custom taxonomy and filter requests
+    // Protected contact details, WhatsApp numbers, edit PINs & credentials
+    match /profilePrivate/{profileId} {
+      allow create: if request.resource.data.keys().hasAll(['profileId']);
+      allow read, update, delete: if isAdmin() || isOwner(resource.data.creatorUid);
+    }
+
+    // Admin-mediated connection requests (replaces direct contact unlock)
+    match /connectionRequests/{requestId} {
+      allow create: if request.resource.data.keys().hasAll(['targetProfileId', 'requesterContact', 'status'])
+                    && request.resource.data.status == 'pending';
+      allow read, update, delete: if isAdmin()
+                    || (isSignedIn() && resource.data.requesterUid == request.auth.uid);
+    }
+
+    // Dynamic custom taxonomy (public read, admin write)
     match /customFilters/{filterId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
+    // Filter addition requests from users
     match /filterRequests/{requestId} {
-      allow read, write: if true;
+      allow create: if request.resource.data.keys().hasAll(['category', 'filterName', 'status'])
+                    && request.resource.data.status == 'pending';
+      allow read, update, delete: if isAdmin();
     }
 
-    // App configuration, pricing, campaign settings, and health check
+    // App configuration & campaign settings (public read, admin write)
     match /settings/{settingId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // Admin backup snapshots
+    // Admin backup snapshots (strictly admin-only)
     match /backups/{backupId} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
     }
 
-    // Unrestricted fallback to ensure zero registration blockages during campaign
+    // Deny everything else by default
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
 
   }

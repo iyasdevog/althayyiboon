@@ -20,6 +20,55 @@ import {
 const LOCAL_STORAGE_KEY = "althayyiboon_profiles_v2";
 const CUSTOM_FILTERS_KEY = "althayyiboon_custom_filters_v2";
 const FILTER_REQUESTS_KEY = "althayyiboon_filter_requests_v2";
+const CONNECTION_REQUESTS_KEY = "althayyiboon_connection_requests_v1";
+
+/**
+ * Strips sensitive contact details, WhatsApp numbers, edit PINs, and credentials
+ * from profile objects before exposing them to non-admin / non-owner clients.
+ */
+export function sanitizeProfileForPublic(profile, isAdmin = false, currentUid = null) {
+  if (!profile) return profile;
+  const isOwner = Boolean(currentUid && profile.creatorUid && profile.creatorUid === currentUid);
+  if (isAdmin || isOwner) return profile;
+
+  const preferredMethod =
+    profile.preferredContactMethod ||
+    profile.contactDetails?.preferredContactMethod ||
+    profile.contactPreferences?.contactMethod ||
+    profile.contactPreferences?.preferredContactMethod ||
+    'guardian';
+
+  const {
+    security: _sec,
+    loginCredentials: _creds,
+    whatsappGroupNumber: _wg,
+    creatorEmail: _ce,
+    ...safeRest
+  } = profile;
+
+  const {
+    phone: _p,
+    whatsapp: _w,
+    secretPin: _sp,
+    alternateContact: _ac,
+    email: _em,
+    ...safeContactPrefs
+  } = profile.contactPreferences || {};
+
+  return {
+    ...safeRest,
+    preferredContactMethod: preferredMethod,
+    contactDetails: {
+      preferredContactMethod: preferredMethod,
+      isProtected: true
+    },
+    contactPreferences: {
+      ...safeContactPrefs,
+      contactMethod: preferredMethod,
+      preferredContactMethod: preferredMethod
+    }
+  };
+}
 
 // Helper to generate search keywords array for Firestore keyword searching
 export function generateSearchKeywords(profile) {
@@ -107,7 +156,44 @@ function mergeProfiles(fsProfiles = []) {
 
 // ---------------- PROFILES CRUD ---------------- //
 
-export async function fetchProfilesFromStore(authGender = null, isAdmin = false) {
+// Helper to merge profilePrivate records for Admin views
+async function mergeAdminPrivateContacts(profilesList = []) {
+  try {
+    const privSnap = await getDocs(collection(db, "profilePrivate"));
+    if (privSnap.empty) return profilesList;
+    const privMap = new Map();
+    privSnap.docs.forEach(d => {
+      privMap.set(d.id, d.data());
+    });
+    return profilesList.map(p => {
+      const priv = privMap.get(p.id);
+      if (!priv) return p;
+      return {
+        ...p,
+        contactDetails: {
+          ...(p.contactDetails || {}),
+          ...(priv.contactDetails || {}),
+          guardianPhone: priv.contactDetails?.guardianPhone || priv.phone || p.contactDetails?.guardianPhone || '',
+          whatsappNumber: priv.contactDetails?.whatsappNumber || priv.whatsapp || p.contactDetails?.whatsappNumber || ''
+        },
+        contactPreferences: {
+          ...(p.contactPreferences || {}),
+          phone: priv.phone || priv.contactDetails?.guardianPhone || p.contactPreferences?.phone || '',
+          whatsapp: priv.whatsapp || priv.contactDetails?.whatsappNumber || p.contactPreferences?.whatsapp || '',
+          secretPin: priv.secretPin || p.contactPreferences?.secretPin || ''
+        },
+        whatsappGroupNumber: priv.whatsappGroupNumber || p.whatsappGroupNumber || '',
+        security: priv.editPin ? { ...(p.security || {}), editPin: priv.editPin } : p.security,
+        loginCredentials: priv.loginCredentials || p.loginCredentials
+      };
+    });
+  } catch (e) {
+    console.warn("Admin private contact merge notice:", e.message);
+    return profilesList;
+  }
+}
+
+export async function fetchProfilesFromStore(authGender = null, isAdmin = false, currentUid = null) {
   try {
     const colRef = collection(db, "profiles");
     let q;
@@ -126,13 +212,16 @@ export async function fetchProfilesFromStore(authGender = null, isAdmin = false)
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      const fsProfiles = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      return mergeProfiles(fsProfiles);
+      let fsProfiles = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (isAdmin) {
+        fsProfiles = await mergeAdminPrivateContacts(fsProfiles);
+      }
+      return mergeProfiles(fsProfiles).map(p => sanitizeProfileForPublic(p, isAdmin, currentUid));
     }
   } catch (err) {
     console.warn("Firestore fetch notice:", err.message);
   }
-  return getLocalStorageProfiles();
+  return getLocalStorageProfiles().map(p => sanitizeProfileForPublic(p, isAdmin, currentUid));
 }
 
 export async function saveProfileToStore(newProfileData) {
@@ -171,12 +260,58 @@ export async function saveProfileToStore(newProfileData) {
   
     const now = new Date();
     const expiresAt = calculateListingExpiry(now, 3).toISOString();
+    const preferredMethod =
+      newProfileData.preferredContactMethod ||
+      contactDetails.preferredContactMethod ||
+      newProfileData.contactPreferences?.contactMethod ||
+      "guardian";
 
-    const docPayload = {
+    // Public-safe payload stored in `profiles` (no raw phone/WhatsApp/PINs/credentials)
+    const {
+      security: _dropSec,
+      loginCredentials: _dropCreds,
+      whatsappGroupNumber: _dropWg,
+      ...restInput
+    } = newProfileData;
+
+    const {
+      phone: _dropPhone,
+      whatsapp: _dropWa,
+      secretPin: _dropPin,
+      alternateContact: _dropAlt,
+      ...safePrefs
+    } = newProfileData.contactPreferences || {};
+
+    const publicDocPayload = {
+      ...restInput,
+      gender: normalizedGender,
+      islamicQualification: normalizedIslamicQual,
+      generalEducation: generalEdu,
+      preferredContactMethod: preferredMethod,
+      contactDetails: {
+        preferredContactMethod: preferredMethod,
+        isProtected: true
+      },
+      contactPreferences: {
+        ...safePrefs,
+        contactMethod: preferredMethod,
+        preferredContactMethod: preferredMethod
+      },
+      status: "approved",
+      listingStatus: "active",
+      listingDurationMonths: 3,
+      createdAt: now.toISOString(),
+      expiresAt: expiresAt,
+      whatsappRenewalNotified: false,
+      searchKeywords
+    };
+
+    const fullDocPayload = {
       ...newProfileData,
       gender: normalizedGender,
       islamicQualification: normalizedIslamicQual,
       generalEducation: generalEdu,
+      preferredContactMethod: preferredMethod,
       contactDetails: contactDetails,
       contactPreferences: {
         ...newProfileData.contactPreferences,
@@ -200,16 +335,31 @@ export async function saveProfileToStore(newProfileData) {
   try {
     const colRef = collection(db, "profiles");
     const docRef = await addDoc(colRef, {
-      ...docPayload,
+      ...publicDocPayload,
       firestoreTimestamp: serverTimestamp()
     });
     savedId = docRef.id;
+
+    // Store sensitive contact details & PIN in protected `profilePrivate` collection
+    await setDoc(doc(db, "profilePrivate", savedId), {
+      profileId: savedId,
+      contactDetails,
+      phone: contactDetails.guardianPhone || newProfileData.contactPreferences?.phone || "",
+      whatsapp: contactDetails.whatsappNumber || newProfileData.contactPreferences?.whatsapp || "",
+      whatsappGroupNumber: newProfileData.whatsappGroupNumber || "",
+      secretPin,
+      editPin: secretPin,
+      loginCredentials: newProfileData.loginCredentials || null,
+      creatorUid: newProfileData.creatorUid || null,
+      creatorEmail: newProfileData.creatorEmail || null,
+      createdAt: now.toISOString()
+    });
   } catch (err) {
     console.warn("Firestore save fallback:", err.message);
   }
 
   const localList = getLocalStorageProfiles();
-  const completeProfile = { ...docPayload, id: savedId };
+  const completeProfile = { ...fullDocPayload, id: savedId };
   saveLocalStorageProfiles([completeProfile, ...localList.filter(p => p.id !== savedId)]);
   return completeProfile;
 }
@@ -218,7 +368,39 @@ export async function updateProfileInStore(profileId, updatedFields) {
   const searchKeywords = generateSearchKeywords(updatedFields);
   const secretPin = updatedFields.security?.editPin || updatedFields.contactPreferences?.secretPin;
 
-  const patchData = {
+  const {
+    security: _dropSec,
+    loginCredentials: _dropCreds,
+    whatsappGroupNumber: _dropWg,
+    contactDetails: updatedContactDetails,
+    contactPreferences: updatedContactPrefs,
+    ...publicUpdates
+  } = updatedFields;
+
+  const {
+    phone: _dropPhone,
+    whatsapp: _dropWa,
+    secretPin: _dropPin,
+    alternateContact: _dropAlt,
+    ...safePrefs
+  } = updatedContactPrefs || {};
+
+  const publicPatchData = {
+    ...publicUpdates,
+    ...(updatedContactDetails ? {
+      contactDetails: {
+        preferredContactMethod: updatedContactDetails.preferredContactMethod || safePrefs.contactMethod || 'guardian',
+        isProtected: true
+      }
+    } : {}),
+    ...(updatedContactPrefs ? {
+      contactPreferences: safePrefs
+    } : {}),
+    updatedAt: new Date().toISOString(),
+    searchKeywords
+  };
+
+  const fullPatchData = {
     ...updatedFields,
     ...(secretPin ? {
       contactPreferences: {
@@ -236,7 +418,24 @@ export async function updateProfileInStore(profileId, updatedFields) {
 
   try {
     const docRef = doc(db, "profiles", profileId);
-    await setDoc(docRef, patchData, { merge: true });
+    await setDoc(docRef, publicPatchData, { merge: true });
+
+    if (updatedContactDetails || updatedContactPrefs || secretPin || updatedFields.whatsappGroupNumber) {
+      const privRef = doc(db, "profilePrivate", profileId);
+      await setDoc(privRef, {
+        profileId,
+        ...(updatedContactDetails ? { contactDetails: updatedContactDetails } : {}),
+        ...(updatedContactDetails?.guardianPhone || updatedContactPrefs?.phone
+          ? { phone: updatedContactDetails?.guardianPhone || updatedContactPrefs?.phone }
+          : {}),
+        ...(updatedContactDetails?.whatsappNumber || updatedContactPrefs?.whatsapp
+          ? { whatsapp: updatedContactDetails?.whatsappNumber || updatedContactPrefs?.whatsapp }
+          : {}),
+        ...(updatedFields.whatsappGroupNumber ? { whatsappGroupNumber: updatedFields.whatsappGroupNumber } : {}),
+        ...(secretPin ? { secretPin, editPin: secretPin } : {}),
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }
   } catch (err) {
     console.warn("Firestore update fallback to local:", err.message);
   }
@@ -244,7 +443,7 @@ export async function updateProfileInStore(profileId, updatedFields) {
   const list = getLocalStorageProfiles();
   const index = list.findIndex(p => p.id === profileId);
   if (index !== -1) {
-    list[index] = { ...list[index], ...patchData };
+    list[index] = { ...list[index], ...fullPatchData };
     saveLocalStorageProfiles(list);
   }
 }
@@ -307,7 +506,7 @@ export async function bulkUpdateStatusInStore(profileIds = [], newStatus = "appr
   saveLocalStorageProfiles(updated);
 }
 
-export function subscribeToProfiles(onDataChange, authGender = null, isAdmin = false) {
+export function subscribeToProfiles(onDataChange, authGender = null, isAdmin = false, currentUid = null) {
   try {
     const colRef = collection(db, "profiles");
     let q;
@@ -321,20 +520,23 @@ export function subscribeToProfiles(onDataChange, authGender = null, isAdmin = f
       q = query(colRef, orderBy("createdAt", "desc"));
     }
 
-    return onSnapshot(q, (snapshot) => {
+    return onSnapshot(q, async (snapshot) => {
       if (!snapshot.empty) {
-        const fsProfiles = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        onDataChange(mergeProfiles(fsProfiles));
+        let fsProfiles = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (isAdmin) {
+          fsProfiles = await mergeAdminPrivateContacts(fsProfiles);
+        }
+        onDataChange(mergeProfiles(fsProfiles).map(p => sanitizeProfileForPublic(p, isAdmin, currentUid)));
       } else {
-        onDataChange(getLocalStorageProfiles());
+        onDataChange(getLocalStorageProfiles().map(p => sanitizeProfileForPublic(p, isAdmin, currentUid)));
       }
     }, (error) => {
       console.warn("Firestore listener error, falling back to local storage:", error.message);
-      onDataChange(getLocalStorageProfiles());
+      onDataChange(getLocalStorageProfiles().map(p => sanitizeProfileForPublic(p, isAdmin, currentUid)));
     });
   } catch (e) {
     console.warn("Subscribe error, falling back to local storage:", e.message);
-    onDataChange(getLocalStorageProfiles());
+    onDataChange(getLocalStorageProfiles().map(p => sanitizeProfileForPublic(p, isAdmin, currentUid)));
   }
   return () => {};
 }
@@ -522,4 +724,90 @@ export async function checkFirestoreHealth() {
   } catch (e) {
     return { success: false, status: "error", error: e.message };
   }
+}
+
+// ---------------- ADMIN-MEDIATED CONNECTION REQUESTS ---------------- //
+
+function getLocalConnectionRequests() {
+  try {
+    const saved = localStorage.getItem(CONNECTION_REQUESTS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveLocalConnectionRequests(list) {
+  try {
+    localStorage.setItem(CONNECTION_REQUESTS_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
+
+export async function submitConnectionRequest(requestData) {
+  const now = new Date().toISOString();
+  const payload = {
+    targetProfileId: requestData.targetProfileId,
+    targetCandidateName: requestData.targetCandidateName || 'Candidate',
+    targetGender: requestData.targetGender || '',
+    targetDistrict: requestData.targetDistrict || '',
+    requesterUid: requestData.requesterUid || null,
+    requesterProfileId: requestData.requesterProfileId || null,
+    requesterName: (requestData.requesterName || '').trim(),
+    requesterContact: (requestData.requesterContact || '').trim(),
+    requesterEmail: requestData.requesterEmail || null,
+    requesterRole: requestData.requesterRole || 'member',
+    message: (requestData.message || '').trim(),
+    status: "pending",
+    createdAt: now
+  };
+
+  let id = "creq_" + Date.now();
+  try {
+    const colRef = collection(db, "connectionRequests");
+    const docRef = await addDoc(colRef, {
+      ...payload,
+      firestoreTimestamp: serverTimestamp()
+    });
+    id = docRef.id;
+  } catch (e) {
+    console.warn("Firestore connectionRequest save fallback:", e.message);
+  }
+
+  const newItem = { ...payload, id };
+  const existing = getLocalConnectionRequests();
+  saveLocalConnectionRequests([newItem, ...existing]);
+  return newItem;
+}
+
+export async function fetchConnectionRequests() {
+  try {
+    const colRef = collection(db, "connectionRequests");
+    const q = query(colRef, orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+  } catch (e) {
+    console.warn("Firestore connectionRequests fetch notice:", e.message);
+  }
+  return getLocalConnectionRequests();
+}
+
+export async function updateConnectionRequestStatus(requestId, status, adminNote = "") {
+  const patch = {
+    status,
+    ...(adminNote ? { adminNote } : {}),
+    updatedAt: new Date().toISOString()
+  };
+  try {
+    if (requestId && !requestId.startsWith("creq_")) {
+      const docRef = doc(db, "connectionRequests", requestId);
+      await updateDoc(docRef, patch);
+    }
+  } catch (e) {
+    console.warn("Firestore updateConnectionRequestStatus notice:", e.message);
+  }
+
+  const list = getLocalConnectionRequests();
+  saveLocalConnectionRequests(list.map(r => r.id === requestId ? { ...r, ...patch } : r));
 }

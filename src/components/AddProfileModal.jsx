@@ -327,10 +327,16 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
         listingStatus: 'active',
         expiresAt: calculateListingExpiry(new Date(), 3).toISOString(),
         whatsappRenewalNotified: false,
-        paymentStatus: pricing?.campaignMode ? 'free_campaign' : (paymentRef ? 'paid' : 'pending_payment'),
-        submissionFee: pricing?.campaignMode ? 0 : (pricing?.profileSubmissionFee || 499),
-        paymentRef: paymentRef.trim() || null,
-        paymentMethod: pricing?.campaignMode ? 'campaign_free' : paymentMethod,
+        paymentStatus: pricing?.manualPaymentMode !== false
+          ? 'manual_hold'
+          : (pricing?.campaignMode ? 'free_campaign' : (paymentRef ? 'paid' : 'pending_payment')),
+        submissionFee: (pricing?.manualPaymentMode !== false || pricing?.campaignMode)
+          ? 0
+          : (pricing?.profileSubmissionFee || 499),
+        paymentRef: pricing?.manualPaymentMode !== false ? null : (paymentRef.trim() || null),
+        paymentMethod: pricing?.manualPaymentMode !== false
+          ? 'manual_admin'
+          : (pricing?.campaignMode ? 'campaign_free' : paymentMethod),
         loginCredentials: {
           username: `ALTB-${Date.now().toString().slice(-4)}`,
           password: pin || `altb${Date.now().toString().slice(-4)}`
@@ -694,7 +700,11 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                     <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                     <span>3-Month Valid Listings (WhatsApp Renewal)</span>
                   </div>
-                  {pricing?.campaignMode ? (
+                  {pricing?.manualPaymentMode !== false ? (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">
+                      Free Registration (₹0) • Admin Verified
+                    </span>
+                  ) : pricing?.campaignMode ? (
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">
                       Free Registration (₹0) + {pricing.campaignRewardCredits || 3} Free Views
                     </span>
@@ -1433,7 +1443,22 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                     </div>
 
                     {/* Streamlined Listing Benefit Box */}
-                    {pricing?.campaignMode ? (
+                    {pricing?.manualPaymentMode !== false ? (
+                      <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-teal-950/30 border border-emerald-500/40 flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2.5 text-xs text-slate-200">
+                          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold text-white block">Free Registration • Manual Admin Verification</span>
+                            <span className="text-[11px] text-slate-400 leading-relaxed block mt-0.5">
+                              Online payments are currently paused. Your contact details remain hidden and are coordinated manually by Admin after verifying proposal validity.
+                            </span>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/30 shrink-0">
+                          Free (₹0)
+                        </span>
+                      </div>
+                    ) : pricing?.campaignMode ? (
                       <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-teal-950/30 border border-emerald-500/40 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 text-xs text-slate-200">
                           <Gift className="w-4 h-4 text-emerald-400 shrink-0" />

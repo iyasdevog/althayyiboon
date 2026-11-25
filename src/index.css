@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Malayalam:wght@400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
 
 @layer base {
   *, *::before, *::after {
@@ -16,7 +16,7 @@
   body {
     background-color: #020617;
     color: #f8fafc;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Malayalam', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
@@ -34,6 +34,13 @@
       font-size: 14px;
     }
   }
+}
+
+/* Malayalam typography optimization: prevents glyph clipping and tight crowding */
+.font-malayalam {
+  font-family: 'Noto Sans Malayalam', 'Plus Jakarta Sans', system-ui, sans-serif;
+  line-height: 1.75;
+  letter-spacing: 0 !important;
 }
 
 /* ===== Glassmorphism Styles ===== */
