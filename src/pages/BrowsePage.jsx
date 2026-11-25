@@ -6,8 +6,6 @@ import StatsBar from '../components/StatsBar';
 import FilterSidebar from '../components/FilterSidebar';
 import ProfileGrid from '../components/ProfileGrid';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
-import CampaignMalayalamBanner from '../components/CampaignMalayalamBanner';
-import ProposalRegistrationPrompt from '../components/ProposalRegistrationPrompt';
 import CandidateAccessGate from '../components/CandidateAccessGate';
 import Footer from '../components/Footer';
 import { useProfiles } from '../context/ProfilesContext';
@@ -108,6 +106,7 @@ export default function BrowsePage({
       {/* Sticky Header Navbar */}
       <Navbar
         onOpenAddModal={onOpenAddModal ? onOpenAddModal : () => navigate('/add')}
+        onOpenEditModal={onOpenEditModal}
         totalProfiles={totalCount}
         onToggleMobileFilter={() => setIsMobileFilterOpen(true)}
         activeFilterCount={activeFilterCount}
@@ -120,14 +119,6 @@ export default function BrowsePage({
         onOpenSignIn={onOpenSignIn ? onOpenSignIn : () => navigate('/login')}
         onOpenChatbot={onOpenChatbot}
       />
-
-      {/* Unsubmitted Profile Registration & Payment Prompt (for logged in members who can see directory) */}
-      {hasRegistered && (
-        <ProposalRegistrationPrompt onOpenAddModal={onOpenAddModal} />
-      )}
-
-      {/* Campaign Malayalam Data Collection Banner */}
-      <CampaignMalayalamBanner onOpenAddModal={onOpenAddModal} />
 
       {/* ========================================================================= */}
       {/* CONDITIONAL RENDERING: REQUIRE SIGN IN & PROPOSAL REGISTRATION */}

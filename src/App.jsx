@@ -506,17 +506,15 @@ export default function App() {
       {!isChatbotOpen && (
         <button
           onClick={() => setIsChatbotOpen(true)}
-          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-2 py-2.5 px-3 sm:px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-xl shadow-emerald-950/70 border border-emerald-400/40 group active:scale-95 transition-all cursor-pointer ring-2 ring-emerald-500/20"
+          className="fixed bottom-[72px] sm:bottom-6 right-3 sm:right-6 z-40 flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:h-auto sm:py-2.5 sm:px-4 rounded-full sm:rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-xl shadow-emerald-950/70 border border-emerald-400/40 group active:scale-95 transition-all cursor-pointer ring-2 ring-emerald-500/20"
           title="FAQ Assistant & Improvement Suggestions"
           aria-label="Open FAQ Assistant & Suggestions"
         >
           <div className="relative">
             <MessageCircle className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
             <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400"></span>
           </div>
           <span className="hidden sm:inline font-bold tracking-tight">FAQ &amp; Suggestions</span>
-          <span className="sm:hidden font-bold">Help</span>
         </button>
       )}
 

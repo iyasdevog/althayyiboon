@@ -216,7 +216,6 @@ export default function AddProfileModal({ onClose, onSubmitProfile, onEditOwnPro
     }
     if (s === 3) {
       if (!formData.generalEducation.level) return 'Please select highest qualification level';
-      if (!formData.generalEducation.degreeName.trim()) return 'Please enter academic degree title (e.g. B.A., M.Sc., B.Tech, MBBS)';
       if (!formData.generalEducation.subjectCategory) return 'Please select specialized subject category';
       if (!formData.educationOccupation.profession.trim()) return 'Please enter profession or current occupation';
     }
@@ -302,13 +301,13 @@ export default function AddProfileModal({ onClose, onSubmitProfile, onEditOwnPro
         },
         generalEducation: {
           ...formData.generalEducation,
-          degreeName: formData.generalEducation.degreeName.trim(),
+          degreeName: (formData.generalEducation.degreeName || '').trim(),
           specialization: formData.generalEducation.specialization.trim()
         },
         educationOccupation: {
           ...formData.educationOccupation,
-          education: `${formData.generalEducation.degreeName} ${formData.generalEducation.specialization ? `(${formData.generalEducation.specialization})` : ''}`.trim(),
-          degree: formData.generalEducation.degreeName.trim(),
+          education: `${formData.generalEducation.degreeName || formData.generalEducation.level} ${formData.generalEducation.specialization ? `(${formData.generalEducation.specialization})` : ''}`.trim(),
+          degree: (formData.generalEducation.degreeName || formData.generalEducation.level || '').trim(),
           profession: formData.educationOccupation.profession.trim()
         },
         contactDetails: {
@@ -1206,20 +1205,6 @@ export default function AddProfileModal({ onClose, onSubmitProfile, onEditOwnPro
                         </div>
 
                         <div>
-                          <label className={labelCls}>Degree Title *</label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.generalEducation.degreeName}
-                            onChange={e => updateSection('generalEducation', 'degreeName', e.target.value)}
-                            placeholder="e.g. B.A., M.Sc., Ph.D., B.Tech, MBBS"
-                            className={inputCls}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
                           <label className={labelCls}>Specialized Subject Category *</label>
                           <select
                             required
@@ -1230,17 +1215,17 @@ export default function AddProfileModal({ onClose, onSubmitProfile, onEditOwnPro
                             {SUBJECT_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                           </select>
                         </div>
+                      </div>
 
-                        <div>
-                          <label className={labelCls}>Specific Subject / Field of Study</label>
-                          <input
-                            type="text"
-                            value={formData.generalEducation.specialization}
-                            onChange={e => updateSection('generalEducation', 'specialization', e.target.value)}
-                            placeholder="e.g. Economics, Computer Science, Chemistry"
-                            className={inputCls}
-                          />
-                        </div>
+                      <div>
+                        <label className={labelCls}>Specific Subject / Field of Study</label>
+                        <input
+                          type="text"
+                          value={formData.generalEducation.specialization}
+                          onChange={e => updateSection('generalEducation', 'specialization', e.target.value)}
+                          placeholder="e.g. Economics, Computer Science, Chemistry"
+                          className={inputCls}
+                        />
                       </div>
                     </div>
 

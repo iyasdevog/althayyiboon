@@ -19,7 +19,8 @@ import {
   Gift,
   HelpCircle,
   MessageSquare,
-  Calendar
+  Calendar,
+  Pencil
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ValidityPolicyModal from './ValidityPolicyModal';
@@ -27,6 +28,7 @@ import MobileBottomNav from './MobileBottomNav';
 
 export default function Navbar({ 
   onOpenAddModal, 
+  onOpenEditModal,
   _totalProfiles, 
   onToggleMobileFilter, 
   activeFilterCount,
@@ -39,7 +41,7 @@ export default function Navbar({
   onOpenSignIn,
   onOpenChatbot
 }) {
-  const { credits, currentUser, userGender, isAdmin, isParent, isBride, isGroom, switchUserPersona, logout, pricing } = useAuth();
+  const { credits, currentUser, userGender, isAdmin, isDemo, isParent, isBride, isGroom, ownRegisteredProfile, switchUserPersona, logout, pricing } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showValidityModal, setShowValidityModal] = useState(false);
@@ -251,19 +253,30 @@ export default function Navbar({
                 </>
               )}
 
-              {/* Add Proposal / Sign In: Primary CTA Button (Always visible on mobile) */}
+              {/* Edit Proposal / Add Proposal / Sign In: Primary CTA Button */}
               {currentUser ? (
-                <button
-                  id="add-profile-btn"
-                  onClick={onOpenAddModal}
-                  className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap shrink-0 cursor-pointer"
-                  aria-label="Add a new matrimonial proposal"
-                >
-                  <Plus className="w-3.5 h-3.5 sm:hidden" />
-                  <UserPlus className="hidden sm:inline w-4 h-4" />
-                  <span>Add</span>
-                  <span className="hidden sm:inline">&nbsp;Proposal</span>
-                </button>
+                (!isAdmin && !isDemo && ownRegisteredProfile && onOpenEditModal) ? (
+                  <button
+                    id="edit-profile-btn"
+                    onClick={() => onOpenEditModal(ownRegisteredProfile)}
+                    className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap shrink-0 cursor-pointer"
+                    aria-label="Edit your matrimonial proposal"
+                  >
+                    <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>Edit</span>
+                    <span className="hidden sm:inline">&nbsp;Proposal</span>
+                  </button>
+                ) : (
+                  <button
+                    id="add-profile-btn"
+                    onClick={onOpenAddModal}
+                    className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-sm shadow-md shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] touch-target whitespace-nowrap shrink-0 cursor-pointer"
+                    aria-label="Add a new matrimonial proposal"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Add Proposal</span>
+                  </button>
+                )
               ) : (
                 <button
                   id="sign-in-btn"
@@ -394,18 +407,7 @@ export default function Navbar({
                 </div>
               )}
 
-              {/* Mobile Wallet Icon Badge for logged in users */}
-              {currentUser && (
-                <button
-                  onClick={onOpenWalletModal}
-                  className="sm:hidden inline-flex items-center gap-1 px-2 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-black shadow-sm shrink-0 cursor-pointer"
-                  title={`Credits: ${credits}`}
-                  aria-label={`Wallet balance: ${credits} credits`}
-                >
-                  <Coins className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{credits}</span>
-                </button>
-              )}
+              {/* Mobile Wallet Icon Badge HELD — payment/credits on hold */}
 
               {/* Mobile Hamburger Button: ALWAYS available on mobile (both guests & members) */}
               <button
@@ -581,22 +583,40 @@ export default function Navbar({
                 Directory Tools
               </p>
 
-              {/* Add Proposal CTA */}
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  onOpenAddModal();
-                }}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-md shadow-emerald-950/40 transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <UserPlus className="w-4 h-4 text-white" />
-                  <span>Register Proposal</span>
-                </div>
+              {/* Edit / Add Proposal CTA */}
+              {(!isAdmin && !isDemo && ownRegisteredProfile && onOpenEditModal) ? (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenEditModal(ownRegisteredProfile);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-md shadow-emerald-950/40 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Pencil className="w-4 h-4 text-white" />
+                    <span>Edit My Proposal</span>
+                  </div>
                   <span className="text-[10px] text-emerald-200 font-semibold">
-                    3-Month Active
+                    Update Details
                   </span>
-              </button>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenAddModal();
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-md shadow-emerald-950/40 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <UserPlus className="w-4 h-4 text-white" />
+                    <span>Register Proposal</span>
+                  </div>
+                    <span className="text-[10px] text-emerald-200 font-semibold">
+                      3-Month Active
+                    </span>
+                </button>
+              )}
 
               {/* Saved Favorites */}
               <button

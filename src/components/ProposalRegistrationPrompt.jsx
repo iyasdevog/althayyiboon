@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { useProfiles } from '../context/ProfilesContext';
 
 export default function ProposalRegistrationPrompt({ onOpenAddModal }) {
-  const { currentUser, isDemo, isAdmin, pricing } = useAuth();
+  const { currentUser, isDemo, isAdmin, pricing, ownRegisteredProfile } = useAuth();
   const { rawProfiles } = useProfiles();
   const [dismissed, setDismissed] = useState(false);
 
@@ -22,9 +22,9 @@ export default function ProposalRegistrationPrompt({ onOpenAddModal }) {
     return null;
   }
 
-  const hasRegisteredProposal = rawProfiles.some(
+  const hasRegisteredProposal = Boolean(ownRegisteredProfile) || Boolean(currentUser.hasRegisteredProfile) || rawProfiles.some(
     p => (p.creatorUid && p.creatorUid === currentUser.uid) ||
-         (p.creatorEmail && p.creatorEmail === currentUser.email)
+         (p.creatorEmail && currentUser.email && p.creatorEmail.toLowerCase() === currentUser.email.toLowerCase())
   ) || currentUser.isLegacyUser;
 
   if (hasRegisteredProposal) {

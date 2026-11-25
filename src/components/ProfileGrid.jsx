@@ -89,7 +89,8 @@ export default function ProfileGrid({
           <div className={`w-2 h-2 rounded-full shrink-0 ${isCampaignModeActive ? 'bg-amber-400 animate-ping' : isDemoMode && !showFavoritesOnly && !showCountNumber ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`}></div>
           {isCampaignModeActive ? (
             <span className="text-xs sm:text-sm text-emerald-300 font-bold flex items-center gap-1.5 truncate">
-              <span>ഡാറ്റാ ശേഖരണം പുരോഗമിക്കുന്നു • പ്രൊഫൈലുകൾ നിലവിൽ രഹസ്യമാണ്</span>
+              <span className="sm:hidden">Pre-Launch • Proposals Protected</span>
+              <span className="hidden sm:inline">ഡാറ്റാ ശേഖരണം പുരോഗമിക്കുന്നു • പ്രൊഫൈലുകൾ നിലവിൽ രഹസ്യമാണ്</span>
             </span>
           ) : showCountNumber ? (
             <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
