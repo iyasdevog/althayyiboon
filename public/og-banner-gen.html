@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>OG Banner Generator — Al-ThayyiBoon</title>
+<style>
+  body {
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: sans-serif;
+    padding: 20px;
+  }
+  canvas {
+    max-width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .btn {
+    margin-top: 24px;
+    padding: 14px 40px;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(37,211,102,0.4);
+    transition: transform 0.2s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .info {
+    color: #aaa;
+    margin-top: 12px;
+    font-size: 13px;
+    text-align: center;
+  }
+  .info strong { color: #25D366; }
+</style>
+</head>
+<body>
+
+<canvas id="banner" width="1200" height="630"></canvas>
+
+<button class="btn" onclick="download()">⬇️ Download og-banner.png</button>
+<p class="info">
+  Save as <strong>og-banner.png</strong> → place in <strong>public/</strong> folder → deploy<br/>
+  WhatsApp will show this as the link preview image!
+</p>
+
+<script>
+const canvas = document.getElementById('banner');
+const ctx = canvas.getContext('2d');
+const W = 1200, H = 630;
+
+// Load Malayalam font via @font-face won't work in canvas easily,
+// we'll use system fonts + fallback for the best result
+
+function drawBanner() {
+  // ── Background gradient ──────────────────────────────────────
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0,    '#062b18');
+  bg.addColorStop(0.4,  '#0d4a2f');
+  bg.addColorStop(0.75, '#0f5c38');
+  bg.addColorStop(1,    '#062b18');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Decorative circles (background bokeh) ───────────────────
+  const circles = [
+    {x:60,  y:60,  r:200, a:0.06},
+    {x:1140,y:580, r:220, a:0.06},
+    {x:600, y:0,   r:300, a:0.04},
+    {x:0,   y:630, r:200, a:0.05},
+    {x:1200,y:0,   r:180, a:0.05},
+  ];
+  circles.forEach(c => {
+    const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+    g.addColorStop(0, `rgba(212,175,55,${c.a})`);
+    g.addColorStop(1, 'rgba(212,175,55,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // ── Gold top border ──────────────────────────────────────────
+  const topBar = ctx.createLinearGradient(0,0,W,0);
+  topBar.addColorStop(0,   'rgba(212,175,55,0)');
+  topBar.addColorStop(0.2, '#d4af37');
+  topBar.addColorStop(0.5, '#f0c929');
+  topBar.addColorStop(0.8, '#d4af37');
+  topBar.addColorStop(1,   'rgba(212,175,55,0)');
+  ctx.fillStyle = topBar;
+  ctx.fillRect(0, 0, W, 5);
+
+  // bottom border
+  ctx.fillStyle = topBar;
+  ctx.fillRect(0, H-5, W, 5);
+
+  // ── Left vertical gold line ──────────────────────────────────
+  const leftLine = ctx.createLinearGradient(0,0,0,H);
+  leftLine.addColorStop(0,   'rgba(212,175,55,0)');
+  leftLine.addColorStop(0.3, 'rgba(212,175,55,0.5)');
+  leftLine.addColorStop(0.7, 'rgba(212,175,55,0.5)');
+  leftLine.addColorStop(1,   'rgba(212,175,55,0)');
+  ctx.fillStyle = leftLine;
+  ctx.fillRect(0, 0, 3, H);
+  ctx.fillRect(W-3, 0, 3, H);
+
+  // ── Geometric diamond pattern (top-right) ───────────────────
+  drawGeometricPattern(ctx, W - 180, 40, 160, 160, 0.08);
+
+  // ── Arabic calligraphy feel — ornament top center ───────────
+  ctx.save();
+  ctx.font = 'bold 32px serif';
+  ctx.fillStyle = 'rgba(212,175,55,0.5)';
+  ctx.textAlign = 'center';
+  ctx.fillText('❧  ✦  ❧', W/2, 55);
+  ctx.restore();
+
+  // ── BRAND PILL (top-left) ───────────────────────────────────
+  drawPill(ctx, 50, 70, 260, 42, 'rgba(212,175,55,0.15)', '#d4af37', 1.5);
+  ctx.save();
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillStyle = '#f0c929';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '2px';
+  ctx.fillText('✨  PRE-RELEASE CAMPAIGN  ✨', 182, 97);
+  ctx.restore();
+
+  // ── EMOJI + Brand Name (left column) ────────────────────────
+  ctx.save();
+  ctx.font = '72px serif';
+  ctx.fillText('🌿', 60, 210);
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = 'bold 56px sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 10;
+  ctx.fillText('അൽ-ത്വയ്യിബൂൻ', 60, 285);
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = '22px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  ctx.textAlign = 'left';
+  ctx.fillText('MATRIMONY  ·  KERALA & GULF', 65, 318);
+  ctx.restore();
+
+  // ── HEADLINE (main) ──────────────────────────────────────────
+  ctx.save();
+  ctx.font = 'bold 62px sans-serif';
+  ctx.textAlign = 'left';
+  // gradient text
+  const hGrad = ctx.createLinearGradient(60, 350, 60, 450);
+  hGrad.addColorStop(0, '#ffffff');
+  hGrad.addColorStop(1, 'rgba(255,255,255,0.75)');
+  ctx.fillStyle = hGrad;
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = 12;
+  ctx.fillText('മതബിരുദധാരികളായ', 60, 390);
+  ctx.fillText('ഇണകളെ തേടുന്നുണ്ടോ?', 60, 460);
+  ctx.restore();
+
+  // ── Subtext ──────────────────────────────────────────────────
+  ctx.save();
+  ctx.font = '24px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.textAlign = 'left';
+  ctx.fillText('നിങ്ങളുടെ പ്രദേശത്ത് നിന്ന് — അടുത്ത് നിന്ന് തന്നെ', 60, 508);
+  ctx.restore();
+
+  // ── Divider line ─────────────────────────────────────────────
+  const divGrad = ctx.createLinearGradient(60, 0, 580, 0);
+  divGrad.addColorStop(0,   '#d4af37');
+  divGrad.addColorStop(0.6, 'rgba(212,175,55,0.3)');
+  divGrad.addColorStop(1,   'rgba(212,175,55,0)');
+  ctx.strokeStyle = divGrad;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(60, 525);
+  ctx.lineTo(580, 525);
+  ctx.stroke();
+
+  // ── URL badge ───────────────────────────────────────────────
+  drawPill(ctx, 60, 545, 320, 44, 'rgba(37,211,102,0.15)', '#25D366', 1.5);
+  ctx.save();
+  ctx.font = 'bold 20px sans-serif';
+  ctx.fillStyle = '#25D366';
+  ctx.textAlign = 'left';
+  ctx.fillText('🌐  althayyiboon.com', 80, 572);
+  ctx.restore();
+
+  // ── RIGHT PANEL — Feature cards ──────────────────────────────
+  const cardX = 650;
+  const features = [
+    { icon: '📚', text: 'വാഫി • ഹുദവി • ഹാഫിസ്' },
+    { icon: '🎓', text: 'ഡോക്ടർ • എഞ്ചിനീയർ • PG' },
+    { icon: '📍', text: 'ജില്ല & Near-Match Filter' },
+    { icon: '🔒', text: 'Wali Verified — 100% Privacy' },
+    { icon: '🎁', text: 'Registration സൗജന്യം!' },
+  ];
+
+  features.forEach((f, i) => {
+    const fy = 110 + i * 92;
+    // card background
+    roundRect(ctx, cardX, fy, 490, 72, 14);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(212,175,55,0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // icon circle
+    ctx.beginPath();
+    ctx.arc(cardX + 40, fy + 36, 22, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(212,175,55,0.15)';
+    ctx.fill();
+
+    ctx.font = '24px serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'white';
+    ctx.fillText(f.icon, cardX + 40, fy + 44);
+
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.fillText(f.text, cardX + 74, fy + 42);
+  });
+
+  // ── Bottom right — WhatsApp join CTA ────────────────────────
+  drawPill(ctx, cardX, 580, 490, 38, 'rgba(37,211,102,0.2)', '#25D366', 1.5);
+  ctx.save();
+  ctx.font = 'bold 17px sans-serif';
+  ctx.fillStyle = '#25D366';
+  ctx.textAlign = 'center';
+  ctx.fillText('👥  WhatsApp Group Join ചെയ്ത് Early Access നേടൂ!', cardX + 245, 604);
+  ctx.restore();
+
+  // ── Watermark Arabic text ────────────────────────────────────
+  ctx.save();
+  ctx.font = '18px serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.textAlign = 'center';
+  ctx.fillText('جزاكم الله خيراً', W/2, H - 18);
+  ctx.restore();
+}
+
+// Helper: rounded rect path
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// Helper: draw a pill with border
+function drawPill(ctx, x, y, w, h, fill, stroke, sw) {
+  roundRect(ctx, x, y, w, h, h/2);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = sw;
+  ctx.stroke();
+}
+
+// Helper: geometric Islamic star pattern (simplified)
+function drawGeometricPattern(ctx, x, y, w, h, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 1;
+  const size = 30;
+  for(let i = 0; i < w/size + 1; i++) {
+    for(let j = 0; j < h/size + 1; j++) {
+      const px = x + i*size;
+      const py = y + j*size;
+      // small diamond
+      ctx.beginPath();
+      ctx.moveTo(px, py - size*0.4);
+      ctx.lineTo(px + size*0.4, py);
+      ctx.lineTo(px, py + size*0.4);
+      ctx.lineTo(px - size*0.4, py);
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+// Draw on load
+window.addEventListener('load', () => {
+  drawBanner();
+});
+
+function download() {
+  const link = document.createElement('a');
+  link.download = 'og-banner.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+</script>
+</body>
+</html>
