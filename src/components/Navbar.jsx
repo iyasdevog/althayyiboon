@@ -117,7 +117,7 @@ export default function Navbar({
               <span className="text-amber-300/90 font-medium hidden sm:inline">3-Month Valid Listings (WhatsApp Renewal)</span>
               {pricing?.campaignMode && (
                 <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] ml-1 shrink-0 border border-emerald-500/30">
-                  Free ₹0 Drive
+                  Free Drive
                 </span>
               )}
             </button>
@@ -187,7 +187,7 @@ export default function Navbar({
               {/* Only show secondary buttons (Credits, Saved, Poster Maker) for fully authenticated (non-demo) users */}
               {currentUser && !currentUser.isDemo && (
                 <>
-                  {/* In-App Wallet / Credits Counter (Tablet & Desktop only) */}
+                  {/* In-App Wallet / Credits Counter HELD — payment/credits on hold
                   <button
                     onClick={onOpenWalletModal}
                     className="hidden sm:inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-300 border border-amber-500/30 transition-all touch-target shadow-sm shrink-0 cursor-pointer"
@@ -201,6 +201,7 @@ export default function Navbar({
                       <Plus className="w-2.5 h-2.5" />
                     </span>
                   </button>
+                  */}
 
                   {/* Favorites / Saved Filter Button (Tablet & Desktop) */}
                   {onToggleShowFavorites && (
@@ -521,7 +522,7 @@ export default function Navbar({
               </div>
             )}
 
-            {/* In-App Wallet Balance Card (If Signed In) */}
+            {/* In-App Wallet Balance Card HELD — payment/credits on hold
             {currentUser && (
               <div className="mx-3.5 my-3 p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-900 to-amber-500/5 border border-amber-500/30">
                 <div className="flex items-center justify-between">
@@ -547,6 +548,7 @@ export default function Navbar({
                 </div>
               </div>
             )}
+            */}
 
             {/* 3-Month Freshness & Monthly Campaign Highlight Card */}
             <div className="mx-3.5 my-2 p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-xs space-y-1.5">
@@ -589,17 +591,11 @@ export default function Navbar({
               >
                 <div className="flex items-center gap-2.5">
                   <UserPlus className="w-4 h-4 text-white" />
-                  <span>Post Matrimonial Proposal</span>
+                  <span>Register Proposal</span>
                 </div>
-                {pricing?.campaignMode ? (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase">
-                    Free ₹0
-                  </span>
-                ) : (
                   <span className="text-[10px] text-emerald-200 font-semibold">
                     3-Month Active
                   </span>
-                )}
               </button>
 
               {/* Saved Favorites */}

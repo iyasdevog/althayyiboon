@@ -318,7 +318,7 @@ export default function SignInModal({
                 <Gift className="w-5 h-5 text-amber-400 shrink-0" />
                 <div>
                   <span className="font-bold text-emerald-300">Free Registration Campaign Active:</span>
-                  <p className="text-slate-400 mt-0.5">₹0 Listing fee + 3 complimentary direct guardian contact unlocks.</p>
+                  <p className="text-slate-400 mt-0.5">Free listing + 3 complimentary direct guardian contact unlocks.</p>
                 </div>
               </div>
             )}

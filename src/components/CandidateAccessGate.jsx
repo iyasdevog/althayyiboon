@@ -31,6 +31,7 @@ export default function CandidateAccessGate({
   const [linkError, setLinkError] = useState('');
   const [linkLoading, setLinkLoading] = useState(false);
 
+  const isManualMode = pricing?.manualPaymentMode !== false;
   const isCampaign = Boolean(pricing?.campaignMode);
   const fee = pricing?.profileSubmissionFee || 499;
 
@@ -80,11 +81,19 @@ export default function CandidateAccessGate({
             </p>
 
             {/* Campaign Offer Highlight */}
-            {isCampaign && (
+            {(isManualMode || isCampaign) && (
               <div className="max-w-xl mx-auto mb-8 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-slate-900 to-amber-950/70 border border-emerald-500/30 text-xs text-slate-200 flex items-center justify-center gap-3">
                 <Gift className="w-5 h-5 text-amber-400 shrink-0" />
                 <span className="text-left">
-                  <strong className="text-emerald-300">Free Registration Campaign Active:</strong> 100% Free Listing (₹0 fee) + 3 complimentary direct contact unlocks upon registration.
+                  {isManualMode ? (
+                    <>
+                      <strong className="text-emerald-300">Free Registration &amp; Admin Verification:</strong> 100% Free Listing (₹0) — contact details stay hidden and are coordinated by Admin after verifying proposal validity.
+                    </>
+                  ) : (
+                    <>
+                      <strong className="text-emerald-300">Free Registration Campaign Active:</strong> 100% Free Listing (₹0 fee) + 3 complimentary direct contact unlocks upon registration.
+                    </>
+                  )}
                 </span>
               </div>
             )}
@@ -126,9 +135,13 @@ export default function CandidateAccessGate({
                 <div className="w-8 h-8 rounded-xl bg-teal-500/15 text-teal-400 flex items-center justify-center font-bold mb-2.5">
                   <Users className="w-4 h-4" />
                 </div>
-                <h3 className="text-xs font-bold text-white mb-1">Direct Guardian Access</h3>
+                <h3 className="text-xs font-bold text-white mb-1">
+                  {isManualMode ? 'Admin-Verified Connections' : 'Direct Guardian Access'}
+                </h3>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Connect directly with parents or Walis via verified WhatsApp &amp; phone contacts with zero broker commissions.
+                  {isManualMode
+                    ? 'Contact details remain protected. Send a connection request and Admin will shortly contact you after verifying proposal validity.'
+                    : 'Connect directly with parents or Walis via verified WhatsApp & phone contacts with zero broker commissions.'}
                 </p>
               </div>
 

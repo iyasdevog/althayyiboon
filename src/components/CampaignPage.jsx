@@ -113,16 +113,16 @@ export default function CampaignPage({
         ? '100% സൗജന്യ രജിസ്ട്രേഷൻ + അഡ്മിൻ പരിശോധിച്ച ബന്ധപ്പെടൽ'
         : `100% സൗജന്യ രജിസ്ട്രേഷൻ + ${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് വ്യൂകൾ`,
       benefitDesc: isManualMode
-        ? 'ഈ കാലയളവിൽ പ്രൊഫൈൽ രജിസ്ട്രേഷൻ പൂർണ്ണമായും സൗജന്യമാണ് (₹0). എല്ലാ പ്രൊപ്പോസലുകളുടെയും ഫോൺ നമ്പറുകൾ സ്വകാര്യമായി സൂക്ഷിച്ചിരിക്കുന്നു — താൽപ്പര്യമുള്ള പ്രൊപ്പോസലിലേക്ക് കണക്ഷൻ അഭ്യർത്ഥന അയച്ചാൽ, പ്രൊപ്പോസലിന്റെ സാധുത പരിശോധിച്ച ശേഷം അഡ്മിൻ നിങ്ങളെ ഉടൻ ബന്ധപ്പെടുന്നതാണ്.'
-        : `ഈ സജീവ ക്യാമ്പെയ്ൻ കാലയളവിൽ പ്രൊഫൈൽ രജിസ്ട്രേഷൻ പൂർണ്ണമായും സൗജന്യമാണ് (₹0). യാതൊരു ഫീസും നൽകേണ്ടതില്ല. ഇപ്പോൾ രജിസ്റ്റർ ചെയ്യുന്ന എല്ലാവർക്കും ഡയറക്ടറി തുറക്കുമ്പോൾ `,
+        ? 'ഈ കാലയളവിൽ പ്രൊഫൈൽ രജിസ്ട്രേഷൻ പൂർണ്ണമായും സൗജന്യമാണ്. എല്ലാ പ്രൊപ്പോസലുകളുടെയും ഫോൺ നമ്പറുകൾ സ്വകാര്യമായി സൂക്ഷിച്ചിരിക്കുന്നു — താൽപ്പര്യമുള്ള പ്രൊപ്പോസലിലേക്ക് കണക്ഷൻ അഭ്യർത്ഥന അയച്ചാൽ, പ്രൊപ്പോസലിന്റെ സാധുത പരിശോധിച്ച ശേഷം അഡ്മിൻ നിങ്ങളെ ഉടൻ ബന്ധപ്പെടുന്നതാണ്.'
+        : `ഈ സജീവ ക്യാമ്പെയ്ൻ കാലയളവിൽ പ്രൊഫൈൽ രജിസ്ട്രേഷൻ പൂർണ്ണമായും സൗജന്യമാണ്. ഇപ്പോൾ രജിസ്റ്റർ ചെയ്യുന്ന എല്ലാവർക്കും ഡയറക്ടറി തുറക്കുമ്പോൾ `,
       benefitDescBold: isManualMode ? '' : `${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് അൺലോക്കുകൾ`,
       benefitDescEnd: isManualMode ? '' : ` ലഭിക്കുന്നതാണ്!`,
-      checkFree: 'രജിസ്ട്രേഷൻ തികച്ചും സൗജന്യം (₹0)',
+      checkFree: 'രജിസ്ട്രേഷൻ തികച്ചും സൗജന്യം',
       checkViews: isManualMode
         ? 'അഡ്മിൻ പരിശോധനയ്ക്ക് ശേഷം നേരിട്ട് ബന്ധപ്പെടാം'
         : `ഡയറക്ടറി തുറക്കുമ്പോൾ ${rewardCredits} സൗജന്യ കോൺടാക്റ്റ് വ്യൂകൾ`,
       checkWali: 'വലിയ്യ് & മഹ്രം സുരക്ഷ',
-      ctaRegister: 'സൗജന്യമായി രജിസ്റ്റർ ചെയ്യുക (₹0)',
+      ctaRegister: 'സൗജന്യമായി രജിസ്റ്റർ ചെയ്യുക',
       ctaExplore: 'ഡെമോ പ്രൊഫൈലുകൾ കാണുക',
       whatsappTitle: 'അൽ-ത്വയ്യിബൂൻ WhatsApp ഗ്രൂപ്പിൽ അംഗമാകൂ',
       whatsappDesc: 'പുതിയ വിവാഹാലോചനകളുടെ അപ്‌ഡേറ്റുകൾ WhatsApp-ൽ നേരിട്ട് ലഭിക്കാൻ ഗ്രൂപ്പിൽ ചേരുക.',
@@ -138,8 +138,8 @@ export default function CampaignPage({
       toggleLabel: 'English',
       toggleShort: 'EN',
       signIn: 'സൈൻ ഇൻ',
-      freeReg: 'സൗജന്യ രജിസ്ട്രേഷൻ (₹0)',
-      freeRegShort: 'രജിസ്റ്റർ (₹0)',
+      freeReg: 'സൗജന്യ രജിസ്ട്രേഷൻ',
+      freeRegShort: 'രജിസ്റ്റർ',
     },
     en: {
       preLaunch: 'Pre-Launch Registration Campaign',
@@ -160,14 +160,14 @@ export default function CampaignPage({
         ? '100% Free Registration + Admin-Verified Introductions'
         : `100% Free Registration + ${rewardCredits} Complimentary Contact Views`,
       benefitDesc: isManualMode
-        ? 'Profile registration is completely FREE (₹0) with zero online payment required. Contact details remain hidden for privacy — send a connection request on any proposal and our admin will shortly contact you after verifying the proposal validity.'
-        : `During this active campaign drive, profile registration is completely FREE (₹0). You will not be prompted for any payment. Candidates registered during the campaign will automatically receive `,
+        ? 'Profile registration is completely FREE. Contact details remain hidden for privacy — send a connection request on any proposal and our admin will shortly contact you after verifying the proposal validity.'
+        : `During this active campaign drive, profile registration is completely FREE. Candidates registered during the campaign will automatically receive `,
       benefitDescBold: isManualMode ? '' : `${rewardCredits} complimentary contact unlocks`,
       benefitDescEnd: isManualMode ? '' : ` when the directory opens on ${formattedTargetDate}!`,
-      checkFree: 'Zero Registration Fee (₹0)',
+      checkFree: 'Free Registration',
       checkViews: isManualMode ? 'Admin-Verified Connections' : `${rewardCredits} Free Contact Views at Launch`,
       checkWali: 'Wali & Modesty Protected',
-      ctaRegister: 'Register Free Proposal (₹0)',
+      ctaRegister: 'Register Free Proposal',
       ctaExplore: 'Explore Demo Directory',
       whatsappTitle: 'Join Al-ThayyiBoon WhatsApp Group',
       whatsappDesc: 'Receive newly verified proposals directly on WhatsApp as they are added.',
@@ -183,8 +183,8 @@ export default function CampaignPage({
       toggleLabel: 'മലയാളം',
       toggleShort: 'മല',
       signIn: 'Sign In',
-      freeReg: 'Free Registration (₹0)',
-      freeRegShort: 'Register (₹0)',
+      freeReg: 'Free Registration',
+      freeRegShort: 'Register',
     }
   };
 

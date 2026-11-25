@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Lock, Key, Trash2, Save, AlertCircle, BookOpen, GraduationCap } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Lock, Key, Trash2, Save, AlertCircle, BookOpen, GraduationCap, ChevronDown } from 'lucide-react';
 import { 
   KERALA_DISTRICTS, 
   ISLAMIC_QUALIFICATIONS, 
@@ -9,7 +9,7 @@ import {
   COMPLEXIONS,
   MADRASA_CLASSES
 } from '../data/mockProfiles';
-import { fuzzyMatchPlace } from '../utils/geoUtils';
+import { fuzzyMatchPlace, searchKeralaTowns } from '../utils/geoUtils';
 
 export default function EditProfileModal({ 
   profile, 
@@ -23,6 +23,19 @@ export default function EditProfileModal({
   const [pinError, setPinError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isPlaceSuggestOpen, setIsPlaceSuggestOpen] = useState(false);
+  const placeDropdownRef = useRef(null);
+  const isGroomProfile = profile.gender === 'male' || profile.basicInfo?.gender === 'Groom';
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (placeDropdownRef.current && !placeDropdownRef.current.contains(e.target)) {
+        setIsPlaceSuggestOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Initialize form state supporting both old & new schemas
   const [formData, setFormData] = useState({
@@ -112,15 +125,18 @@ export default function EditProfileModal({
         contactDetails: {
           guardianPhone: formData.contactDetails.guardianPhone,
           whatsappNumber: formData.contactDetails.whatsappNumber,
-          preferredContactMethod: formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod || 'guardian'
+          preferredContactMethod: formData.contactPreferences.contactMethod || formData.contactDetails.preferredContactMethod || 'guardian',
+          revealContact: isGroomProfile && Boolean(formData.contactPreferences.revealContact || formData.contactDetails.revealContact)
         },
         contactPreferences: {
           ...formData.contactPreferences,
           phone: formData.contactDetails.guardianPhone,
           whatsapp: formData.contactDetails.whatsappNumber,
           contactMethod: formData.contactPreferences.contactMethod || 'guardian',
-          preferredContactMethod: formData.contactPreferences.contactMethod || 'guardian'
+          preferredContactMethod: formData.contactPreferences.contactMethod || 'guardian',
+          revealContact: isGroomProfile && Boolean(formData.contactPreferences.revealContact || formData.contactDetails.revealContact)
         },
+        revealContact: isGroomProfile && Boolean(formData.contactPreferences.revealContact || formData.contactDetails.revealContact),
         preferredContactMethod: formData.contactPreferences.contactMethod || 'guardian'
       };
 
@@ -484,21 +500,78 @@ export default function EditProfileModal({
                       <label className="block text-[11px] text-slate-400 mb-1">Home District</label>
                       <select
                         value={formData.locationFamily.homeDistrict}
-                        onChange={(e) => updateSection('locationFamily', 'homeDistrict', e.target.value)}
+                        onChange={(e) => {
+                          const newDist = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            locationFamily: {
+                              ...prev.locationFamily,
+                              homeDistrict: newDist,
+                              nearestTown: ''
+                            }
+                          }));
+                          setIsPlaceSuggestOpen(true);
+                        }}
                         className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
                       >
                         {KERALA_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </div>
-                    <div>
+                    <div className="relative" ref={placeDropdownRef}>
                       <label className="block text-[11px] text-slate-400 mb-1">Nearest Major Town (For GPS Distance)</label>
-                      <input
-                        type="text"
-                        value={formData.locationFamily.nearestTown || ''}
-                        onChange={(e) => updateSection('locationFamily', 'nearestTown', e.target.value)}
-                        placeholder="e.g. Mavoor, Feroke, Manjeri, Kozhikode"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={formData.locationFamily.nearestTown || ''}
+                          onChange={(e) => {
+                            updateSection('locationFamily', 'nearestTown', e.target.value);
+                            setIsPlaceSuggestOpen(true);
+                          }}
+                          onFocus={() => setIsPlaceSuggestOpen(true)}
+                          placeholder={`Select or type town in ${formData.locationFamily.homeDistrict || 'Kerala'}`}
+                          className="w-full px-3 py-2 pr-8 rounded-xl bg-slate-950 text-white text-xs border border-slate-800"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIsPlaceSuggestOpen(prev => !prev)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-emerald-400 cursor-pointer"
+                          aria-label="Toggle nearby locations list"
+                        >
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isPlaceSuggestOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                      </div>
+                      {isPlaceSuggestOpen && (
+                        <div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl py-1 custom-scrollbar">
+                          <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-slate-950/70 border-b border-slate-800 sticky top-0">
+                            Nearby Locations in {formData.locationFamily.homeDistrict || 'Kerala'}
+                          </div>
+                          {searchKeralaTowns(formData.locationFamily.nearestTown, 25, formData.locationFamily.homeDistrict).map(town => (
+                            <button
+                              key={`${town.name}-${town.district}`}
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  locationFamily: {
+                                    ...prev.locationFamily,
+                                    nearestTown: town.name,
+                                    homeDistrict: town.district,
+                                    nativePlace: prev.locationFamily.nativePlace || town.name,
+                                    coordinates: { lat: town.lat, lng: town.lng }
+                                  }
+                                }));
+                                setIsPlaceSuggestOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-1.5 text-xs hover:bg-slate-800 flex items-center justify-between text-slate-200 transition-colors cursor-pointer"
+                            >
+                              <div>
+                                <span className="font-semibold text-emerald-300">{town.name}</span>
+                                <span className="text-[10px] text-slate-400 ml-1.5">({town.district})</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-[11px] text-slate-400 mb-1">Native Place / Village / Mahallu</label>
@@ -560,6 +633,39 @@ export default function EditProfileModal({
                       />
                     </div>
                   </div>
+
+                  {isGroomProfile ? (
+                    <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30">
+                      <label htmlFor="editRevealContactCheckbox" className="flex items-start gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          id="editRevealContactCheckbox"
+                          checked={Boolean(formData.contactPreferences.revealContact || formData.contactDetails.revealContact)}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            updateSection('contactPreferences', 'revealContact', checked);
+                            updateSection('contactDetails', 'revealContact', checked);
+                          }}
+                          className="w-4 h-4 mt-0.5 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-900 border-slate-700 cursor-pointer shrink-0"
+                        />
+                        <div>
+                          <span className="text-xs font-bold text-emerald-300 block">
+                            Reveal my contact details directly to verified Brides / Walis
+                          </span>
+                          <span className="text-[11px] text-slate-400 block mt-0.5">
+                            If unchecked, your phone/WhatsApp stays hidden and requests go through Admin.
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 flex items-center gap-2">
+                      <Lock className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span className="text-[11px] text-rose-200/90">
+                        Bride contact numbers are always hidden for privacy; requests go through Admin.
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}

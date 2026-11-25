@@ -28,8 +28,9 @@ import { useAuth } from '../context/AuthContext';
 
 // Dynamic FAQ Knowledge Base generator reflecting active admin configuration
 export function getFaqKnowledgeBase(pricing) {
-  const unlockFee = pricing?.contactUnlockFee ?? 15;
-  const isCampaign = Boolean(pricing?.campaignMode);
+  // const unlockFee = pricing?.contactUnlockFee ?? 15; // PAYMENT HELD
+  // const isCampaign = Boolean(pricing?.campaignMode); // PAYMENT HELD
+  const isManualMode = pricing?.manualPaymentMode !== false;
 
   return [
     {
@@ -37,23 +38,18 @@ export function getFaqKnowledgeBase(pricing) {
       title: '🔒 Reciprocal Privacy',
       prompt: 'How does reciprocal privacy work? Can strangers see my profile?',
       keywords: ['privacy', 'private', 'secure', 'reciprocal', 'stranger', 'photo', 'view', 'who can see', 'opposite', 'lock'],
-      response: `Al-ThayyiBoon strictly enforces **Reciprocal Modest Viewing**:
+      response: isManualMode
+        ? `Al-ThayyiBoon strictly enforces **Reciprocal Modest Viewing**:
+• **Opposite-Gender Only:** Registered Brides (or their Walis) can only view Groom proposals, and registered Grooms can only view Bride proposals.
+• **No Public Browsing:** Casual anonymous visitors and search engine bots cannot browse real candidate details.
+• **Hidden Contact Details:** Phone numbers and sensitive contact details are never exposed publicly—send a connection request and Admin will shortly contact you after verifying proposal validity.`
+        : `Al-ThayyiBoon strictly enforces **Reciprocal Modest Viewing**:
 • **Opposite-Gender Only:** Registered Brides (or their Walis) can only view Groom proposals, and registered Grooms can only view Bride proposals.
 • **No Public Browsing:** Casual anonymous visitors and search engine bots cannot browse real candidate details.
 • **Zero Web Scraping:** Phone numbers and sensitive contact details are never exposed publicly—they require reciprocal Wali authorization and contact unlock.`,
       action: { label: 'Register Proposal', type: 'open_add' }
     },
-    {
-      id: 'fee',
-      title: `💰 Registration & Contact Fee (₹${unlockFee})`,
-      prompt: `Why is there a registration fee and contact view fee (₹${unlockFee})?`,
-      keywords: ['fee', 'cost', 'charge', String(unlockFee), '15', '25', 'rupees', 'price', 'payment', 'money', 'free', 'why pay', 'unlock'],
-      response: `We charge a nominal registration fee and a tiny contact unlock fee (**₹${unlockFee} / 1 Credit**):
-1. **Eliminate Brokers & Fake Accounts:** Unlike free open groups that get flooded with spammers and middlemen, the token fee ensures only serious candidates and genuine parents join.
-2. **Platform Sustainability & Wali Verification:** It funds manual phone verification, hosting, and data security without selling user data or showing annoying pop-up ads.
-3. **Halal & Modest:** You only unlock contacts of proposals you genuinely match with.${isCampaign ? '\n\n*(Note: Free Registration Campaign is currently active: Profile registration is ₹0 and includes 3 free contact unlocks!)*' : ''}`,
-      action: { label: 'Learn About Pricing & Credits', type: 'open_wallet' }
-    },
+    // PAYMENT/FEE FAQ REMOVED — held for future re-activation
     {
       id: 'validity',
       title: '⏳ 3-Month Active Listing',
@@ -115,14 +111,15 @@ export function getFaqKnowledgeBase(pricing) {
 
 // Dynamic Feedback Area Options for Customer Improvement Suggestions
 export function getImprovementAreas(pricing) {
-  const unlockFee = pricing?.contactUnlockFee ?? 15;
+  // const unlockFee = pricing?.contactUnlockFee ?? 15; // PAYMENT HELD
+  const isManualMode = pricing?.manualPaymentMode !== false;
   return [
     { id: 'mobile_ui', label: '📱 Mobile Experience & Ergonomics', desc: 'Layout, buttons, readability on phone' },
     { id: 'location_search', label: '📍 Location & Malabar Towns', desc: 'GPS accuracy, more local village names' },
     { id: 'privacy_modesty', label: '🔒 Privacy & Modesty Controls', desc: 'Reciprocal lock, photo protection' },
     { id: 'registration_form', label: '📝 Registration Form Simplicity', desc: 'Step-by-step proposal submission' },
     { id: 'filters_sorting', label: '🔍 Filters & Search Options', desc: 'Islamic degrees, age, distance radius' },
-    { id: 'payment_unlock', label: `💳 Payment & ₹${unlockFee} Unlock System`, desc: 'UPI payment, wallet recharge convenience' },
+    // PAYMENT IMPROVEMENT AREA REMOVED — held for future re-activation
     { id: 'speed_performance', label: '⚡ Website Speed & Smoothness', desc: 'Page load times and responsiveness' },
     { id: 'new_feature', label: '✨ Other / New Feature Idea', desc: 'Any new tool or idea for the community' }
   ];
@@ -612,7 +609,7 @@ export default function FaqChatbot({
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="Ask a question about fees, privacy, etc..."
+                placeholder="Ask a question about privacy, verification, etc..."
                 className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 text-white placeholder-slate-500 border border-slate-800 focus:outline-none focus:border-emerald-500 text-xs transition-colors"
               />
               <button

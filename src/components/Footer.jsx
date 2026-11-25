@@ -77,7 +77,7 @@ export default function Footer({ onOpenAdminPortal, onOpenChatbot }) {
               <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Privacy &amp; Trust
             </h4>
             <p className="text-slate-400 leading-relaxed text-xs">
-              Direct communication is channeled strictly through registered Walis and parents. No public photo indexing, zero web scrapers, and pay-per-view contact protection.
+              Direct communication is channeled strictly through registered Walis and parents. No public photo indexing, zero web scrapers, and guardian-verified contact protection.
             </p>
             <div className="flex items-center gap-1.5 text-[11px] text-teal-300 font-semibold pt-1">
               <Lock className="w-3 h-3 text-teal-400" />

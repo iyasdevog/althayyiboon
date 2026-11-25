@@ -237,7 +237,8 @@ export default function ProfileDetailPage({
 
   const isBride = basicInfo.gender === "Bride" || profile.gender === "female";
   const isDemo = Boolean(authIsDemo || profile.isFakeData || profile.id?.startsWith('DEMO-'));
-  const isUnlocked = isContactUnlocked(profile.id);
+  const groomRevealed = !isBride && !isDemo && !isParent && Boolean(profile.revealContact || contactPreferences.revealContact || contactDetails.revealContact);
+  const isUnlocked = !isBride && (groomRevealed || isContactUnlocked(profile.id));
   const isBookmarked = bookmarks.includes(profile.id);
 
   const candidateDisplayName = isDemo
@@ -284,7 +285,7 @@ export default function ProfileDetailPage({
     }
     const res = unlockContact(profile);
     if (res.success && onShowToast) {
-      onShowToast("Guardian contact unlocked successfully! (-1 Credit)");
+      onShowToast("Guardian contact unlocked successfully!");
     } else if (res?.reason === 'insufficient_credits') {
       navigate('/wallet');
     }
@@ -921,7 +922,7 @@ export default function ProfileDetailPage({
                           ? 'This candidate profile is demonstration data. To browse verified proposals and request connections, sign in or register.'
                           : isManualMode
                             ? 'Contact details are hidden to protect candidate privacy. Send a connection request to Admin — Admin will shortly contact you after verifying the proposal validity of the requested client.'
-                            : 'To protect the modest privacy of Muslim candidates and prevent spam, guardian numbers are accessible through pay-per-view credits (1 Credit).'}
+                            : 'Contact details are hidden to protect candidate privacy. Send a connection request to Admin — Admin will shortly contact you after verifying the proposal validity.'}
                       </p>
 
                       <div className="pt-2 flex flex-wrap gap-2">
@@ -933,12 +934,11 @@ export default function ProfileDetailPage({
                           <span>
                             {isDemo
                               ? 'Sign In to Connect'
-                              : isManualMode
-                                ? 'Request Connection via Admin'
-                                : 'Unlock Guardian Contact (-1 Credit)'}
+                              : 'Request Connection via Admin'}
                           </span>
                         </button>
 
+                        {/* PAYMENT / CREDITS BUTTON HELD
                         {!isManualMode && (
                           <button
                             onClick={onOpenWalletModal ? onOpenWalletModal : () => navigate('/wallet')}
@@ -948,6 +948,7 @@ export default function ProfileDetailPage({
                             <span>{isDemo ? 'View Pricing' : 'Get Credits'}</span>
                           </button>
                         )}
+                        */}
                       </div>
                     </div>
                   )}

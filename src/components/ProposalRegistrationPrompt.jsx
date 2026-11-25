@@ -59,21 +59,22 @@ export default function ProposalRegistrationPrompt({ onOpenAddModal }) {
               </span>
               {(isManualMode || isCampaign) ? (
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                  {isManualMode ? 'Free ₹0 • Admin Verified' : 'Free ₹0 Campaign'}
+                  {isManualMode ? 'Free • Admin Verified' : 'Free Campaign'}
                 </span>
               ) : (
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
-                  Listing Fee: ₹{fee}
+                  Listing Fee: Pending
+                {/* PAYMENT BADGE HELD — ₹{fee} */}
                 </span>
               )}
             </div>
             <p className="text-xs text-slate-300 mt-1 leading-relaxed">
               {isManualMode ? (
-                <>You are signed in as <strong>{currentUser.name}</strong>, but your proposal is not yet listed. Complete your <strong>Free Registration (₹0)</strong> — all connections are verified manually by Admin.</>
+                <>You are signed in as <strong>{currentUser.name}</strong>, but your proposal is not yet listed. Complete your <strong>Free Registration</strong> — all connections are verified manually by Admin.</>
               ) : isCampaign ? (
-                <>You are signed in via Google as <strong>{currentUser.name}</strong>, but your proposal is not yet listed. Complete registration now to get <strong>100% Free Listing (₹0)</strong> + 3 free contact unlocks!</>
+                <>You are signed in via Google as <strong>{currentUser.name}</strong>, but your proposal is not yet listed. Complete registration now to get <strong>100% Free Listing</strong> + 3 free contact unlocks!</>
               ) : (
-                <>You are signed in via Google as <strong>{currentUser.name}</strong>, but your proposal is not yet listed in the directory. Complete the registration form and payment to be verified and published.</>
+                <>You are signed in via Google as <strong>{currentUser.name}</strong>, but your proposal is not yet listed in the directory. Complete the registration form to be verified and published.</>
               )}
             </p>
           </div>
@@ -86,7 +87,7 @@ export default function ProposalRegistrationPrompt({ onOpenAddModal }) {
             onClick={onOpenAddModal}
             className="flex-1 md:flex-initial py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-950/40 flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
           >
-            <span>{(isManualMode || isCampaign) ? 'Complete Free Registration (₹0)' : `Complete Registration & Listing (₹${fee})`}</span>
+            <span>{(isManualMode || isCampaign) ? 'Complete Free Registration' : 'Complete Registration'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
           <button

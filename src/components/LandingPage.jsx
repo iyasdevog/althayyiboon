@@ -48,8 +48,9 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
           a: "Click 'Request Connection' on any proposal to send a request to Admin. Admin will shortly contact you after verifying the proposal validity of the requested client. All registrations and connections are currently handled manually with zero online payment."
         }
       : {
-          q: "What is the contact unlock policy and why is there a nominal fee?",
-          a: `Contact numbers are unlocked via nominal pay-per-view credits (₹${unlockFee} / 1 credit). This nominal safeguard eliminates time-wasters, spammers, and non-serious inquiries, ensuring that only genuine families reach out.`
+          // PAYMENT FAQ REMOVED — held for future re-activation
+          q: "How do I connect with a proposal if contact details are hidden?",
+          a: "Click 'Request Connection' on any proposal to send a request to Admin. Admin will shortly contact you after verifying the proposal validity."
         },
     {
       q: "Can candidates with combined Islamic (Wafi/Wafiyya) and University degrees register?",
@@ -233,7 +234,7 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
                 onClick={() => onSignIn('groom', 'register')}
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
               >
-                <span>Register as Groom (Free ₹0)</span>
+                <span>Register as Groom (Free)</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button
@@ -286,7 +287,7 @@ export default function LandingPage({ onSignIn, onSwitchPersona, onOpenAdminPort
                 onClick={() => onSignIn('bride', 'register')}
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-rose-950/40 flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
               >
-                <span>Register as Bride (Free ₹0)</span>
+                <span>Register as Bride (Free)</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button

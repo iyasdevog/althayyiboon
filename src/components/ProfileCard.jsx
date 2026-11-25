@@ -79,7 +79,8 @@ function ProfileCard({
   } = profile;
 
   const isBride = basicInfo.gender === "Bride" || profile.gender === "female";
-  const isUnlocked = isContactUnlocked(id);
+  const groomRevealed = !isBride && !isDemo && !isParent && Boolean(profile.revealContact || contactPreferences.revealContact || contactDetails.revealContact);
+  const isUnlocked = !isBride && (groomRevealed || isContactUnlocked(id));
 
   const rawPhone = contactDetails.guardianPhone || contactPreferences.phone || "";
   const rawWhatsApp = contactDetails.whatsappNumber || contactPreferences.whatsapp || rawPhone;
@@ -123,7 +124,7 @@ function ProfileCard({
     }
     const result = unlockContact(profile);
     if (result.success && onShowToast) {
-      onShowToast(`Guardian contact unlocked successfully! (-1 Credit)`);
+      onShowToast(`Guardian contact unlocked successfully!`);
     } else if (result?.reason === 'insufficient_credits') {
       navigate('/wallet');
     }
@@ -469,7 +470,7 @@ function ProfileCard({
               title="Sign In to Connect"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>{isManualMode ? 'Connect' : `Unlock (₹${fee})`}</span>
+              <span>Connect</span>
             </button>
           ) : isParent ? (
             <span className="px-2.5 py-1.5 rounded-lg bg-teal-500/10 text-teal-300 border border-teal-500/20 text-[11px] font-semibold flex items-center gap-1 shrink-0">

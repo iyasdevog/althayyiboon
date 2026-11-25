@@ -86,7 +86,8 @@ export default function ProfileDetailModal({
   } = profile;
 
   const isBride = basicInfo.gender === "Bride" || profile.gender === "female";
-  const isUnlocked = isContactUnlocked(id);
+  const groomRevealed = !isBride && !isDemo && !isParent && Boolean(profile.revealContact || contactPreferences.revealContact || contactDetails.revealContact);
+  const isUnlocked = !isBride && (groomRevealed || isContactUnlocked(id));
   const fee = pricing.contactUnlockFee || 15;
 
   const candidateDisplayName = isDemo
@@ -130,7 +131,7 @@ export default function ProfileDetailModal({
     }
     const res = unlockContact(profile);
     if (res.success && onShowToast) {
-      onShowToast("Guardian contact unlocked successfully! (-1 Credit)");
+      onShowToast("Guardian contact unlocked successfully!");
     } else if (res?.reason === 'insufficient_credits') {
       if (onClose) onClose();
       navigate('/wallet');
@@ -652,7 +653,7 @@ export default function ProfileDetailModal({
                       className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-900/40 flex items-center justify-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
                     >
                       <Coins className="w-4 h-4" />
-                      <span>Unlock (₹{fee})</span>
+                      <span>Sign In to Connect</span>
                     </button>
                   </div>
                 ) : isParent ? (
@@ -680,7 +681,7 @@ export default function ProfileDetailModal({
                       className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer"
                     >
                       {isManualMode ? <ShieldCheck className="w-4 h-4" /> : <Coins className="w-4 h-4" />}
-                      <span>{isManualMode ? 'Request Connection' : `Unlock (₹${fee} / 1 Credit)`}</span>
+                      <span>{isManualMode ? 'Request Connection' : 'Request Connection'}</span>
                     </button>
                   </div>
                 ) : null}
@@ -706,7 +707,7 @@ export default function ProfileDetailModal({
               className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-amber-900/30 transition-all cursor-pointer"
             >
               <Coins className="w-4 h-4" />
-              <span>Unlock Guardian Contact (₹{fee})</span>
+              <span>Request Connection</span>
             </button>
           ) : isParent ? (
             <div className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-slate-900 border border-teal-500/30 text-teal-300 font-semibold text-xs text-center flex items-center justify-center gap-2">
@@ -743,7 +744,7 @@ export default function ProfileDetailModal({
               className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-900/30 transition-all cursor-pointer"
             >
               {isManualMode ? <ShieldCheck className="w-4 h-4" /> : <Coins className="w-4 h-4" />}
-              <span>{isManualMode ? 'Request Connection via Admin' : `Unlock Guardian Contact (₹${fee})`}</span>
+              <span>{isManualMode ? 'Request Connection via Admin' : 'Request Connection via Admin'}</span>
             </button>
           )}
 

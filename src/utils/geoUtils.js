@@ -510,49 +510,71 @@ export function getUserCurrentLocation() {
 }
 
 /**
- * Autocomplete helper for Kerala Towns search input
+ * Returns towns belonging to a specific Kerala district.
  */
-export function searchKeralaTowns(query, limit = 8) {
-  if (!query || !query.trim()) return KERALA_TOWNS.slice(0, limit);
+export function getTownsByDistrict(district) {
+  if (!district) return KERALA_TOWNS;
+  const target = district.toLowerCase().trim();
+  return KERALA_TOWNS.filter(t => t.district.toLowerCase() === target);
+}
+
+/**
+ * Autocomplete helper for Kerala Towns search input, optionally scoped/prioritized by district
+ */
+export function searchKeralaTowns(query, limit = 8, district = '') {
+  const distLower = (district || '').toLowerCase().trim();
+  const pool = distLower
+    ? KERALA_TOWNS.filter(t => t.district.toLowerCase() === distLower)
+    : KERALA_TOWNS;
+
+  if (!query || !query.trim()) {
+    return (pool.length > 0 ? pool : KERALA_TOWNS).slice(0, limit);
+  }
   const q = query.toLowerCase().trim();
   const normalizedQ = normalizePlaceString(q);
 
-  const scoredTowns = KERALA_TOWNS.map(town => {
-    const tName = town.name.toLowerCase();
-    const tDist = town.district.toLowerCase();
-    const normalizedName = normalizePlaceString(town.name);
-    let score = 0;
+  const scoreList = (list) =>
+    list.map(town => {
+      const tName = town.name.toLowerCase();
+      const tDist = town.district.toLowerCase();
+      const normalizedName = normalizePlaceString(town.name);
+      let score = 0;
 
-    // Exact matches
-    if (tName === q) score += 100;
-    else if (normalizedName === normalizedQ) score += 90;
-    else if (tName.startsWith(q)) score += 80;
-    else if (tName.includes(q)) score += 60;
-    else if (tDist.startsWith(q)) score += 50;
+      // Exact matches
+      if (tName === q) score += 100;
+      else if (normalizedName === normalizedQ) score += 90;
+      else if (tName.startsWith(q)) score += 80;
+      else if (tName.includes(q)) score += 60;
+      else if (tDist.startsWith(q)) score += 50;
 
-    // Aliases
-    if (town.aliases) {
-      for (const a of town.aliases) {
-        const aLower = a.toLowerCase();
-        if (aLower === q) score += 95;
-        else if (normalizePlaceString(a) === normalizedQ) score += 85;
-        else if (aLower.startsWith(q)) score += 75;
-        else if (aLower.includes(q)) score += 55;
+      // Aliases
+      if (town.aliases) {
+        for (const a of town.aliases) {
+          const aLower = a.toLowerCase();
+          if (aLower === q) score += 95;
+          else if (normalizePlaceString(a) === normalizedQ) score += 85;
+          else if (aLower.startsWith(q)) score += 75;
+          else if (aLower.includes(q)) score += 55;
+        }
       }
-    }
 
-    // Levenshtein closeness for typos
-    if (score === 0 && q.length >= 3) {
-      const dist = levenshteinDistance(q, town.name);
-      if (dist <= 2) score += (40 - dist * 10);
-    }
+      // Levenshtein closeness for typos
+      if (score === 0 && q.length >= 3) {
+        const dist = levenshteinDistance(q, town.name);
+        if (dist <= 2) score += (40 - dist * 10);
+      }
 
-    return { ...town, score };
-  });
-
-  return scoredTowns
+      return { ...town, score };
+    })
     .filter(t => t.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
+
+  if (distLower) {
+    const distMatches = scoreList(pool);
+    if (distMatches.length > 0) return distMatches;
+  }
+
+  return scoreList(KERALA_TOWNS);
 }
 

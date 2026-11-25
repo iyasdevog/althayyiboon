@@ -107,7 +107,7 @@ export default function CampaignMalayalamBanner({ onOpenAddModal }) {
             className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 font-bold text-xs sm:text-sm border border-emerald-500/40 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
           >
             <UserPlus className="w-4 h-4 text-emerald-400" />
-            <span>സൗജന്യ രജിസ്ട്രേഷൻ (₹0)</span>
+            <span>സൗജന്യ രജിസ്ട്രേഷൻ</span>
           </button>
         </div>
       </div>

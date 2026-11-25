@@ -45,16 +45,16 @@ export function isUserRegistered(user, rawProfiles = []) {
 
 export const MONTHLY_CAMPAIGN_PERKS = [
   {
-    title: '100% Free Registration (₹0)',
-    titleMl: 'പൂർണ്ണമായും സൗജന്യ രജിസ്ട്രേഷൻ (₹0)',
+    title: 'Free Registration',
+    titleMl: 'സൗജന്യ രജിസ്ട്രേഷൻ',
     desc: 'No profile listing or submission fees during the monthly 1-2 day data collection drive.',
     icon: 'Gift'
   },
   {
-    title: '3 Free Contact Unlock Credits',
-    titleMl: '3 സൗജന്യ കോൺടാക്റ്റ് അൺലോക്കുകൾ',
-    desc: 'Instant complimentary credits to view verified guardian phone & WhatsApp contacts.',
-    icon: 'Coins'
+    title: 'Admin-Verified Connections',
+    titleMl: 'അഡ്മിൻ പരിശോധിച്ച ബന്ധങ്ങൾ',
+    desc: 'Contact details remain protected. Send a request and Admin will shortly contact you after verifying proposal validity.',
+    icon: 'ShieldCheck'
   },
   {
     title: '3 Months Verified Active Listing',
@@ -160,8 +160,13 @@ export function generateWhatsAppRenewalMessage(profile, pricing = {}) {
   const candidateName = profile.basicInfo?.fullName || (profile.gender === 'female' ? 'Bride Proposal' : 'Groom Proposal');
   const guardianName = profile.contactPreferences?.guardianName || 'Guardian';
   const profileId = profile.id || 'ALTB';
-  const renewalFee = pricing.renewalFee || 199;
-  const standardFee = pricing.profileSubmissionFee || 499;
+  const isManualMode = pricing.manualPaymentMode !== false;
+  // const renewalFee = pricing.renewalFee || 199; // PAYMENT HELD
+  // const standardFee = pricing.profileSubmissionFee || 499; // PAYMENT HELD
+
+  const renewalOptionLine = isManualMode
+    ? '1️⃣ *Still searching?* Reply "RENEW" to keep your verified listing active for another 3 months.'
+    : `1️⃣ *Still searching?* Renew your verified listing for another 3 months — please reply to confirm so Admin can arrange renewal.`;
 
   const msg = 
 `*Al-ThayyiBoon Matrimonial Network* 🌿
@@ -175,7 +180,7 @@ Your matrimonial listing has completed its *3-Month Active Period* on Al-ThayyiB
 To maintain 100% genuine, updated proposals and protect candidate privacy, our platform requires a 3-month validity renewal to verify if you are still searching for alliances.
 
 📌 *Renewal Options:*
-1️⃣ *Still searching?* Renew your verified listing for another 3 months for just *₹${renewalFee}* (Special Renewal Price, Regular ₹${standardFee}).
+${renewalOptionLine}
 2️⃣ *Alliance fixed or married?* Reply to let us know so we can celebrate and archive your profile!
 3️⃣ *Pause temporarily?* Reply "PAUSE" to hide your proposal.
 

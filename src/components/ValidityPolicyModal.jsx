@@ -20,10 +20,10 @@ export default function ValidityPolicyModal({ isOpen, onClose, onOpenAddModal })
 
   if (!isOpen) return null;
 
+  const isManualMode = pricing?.manualPaymentMode !== false;
   const renewalFee = pricing?.renewalFee || 199;
   const standardFee = pricing?.profileSubmissionFee || 499;
   const isCampaign = Boolean(pricing?.campaignMode);
-  const rewardCredits = pricing?.campaignRewardCredits || 3;
   const campaignSchedule = pricing?.monthlyCampaignSchedule || '1st & 2nd of Every Month';
 
   return (
@@ -103,15 +103,21 @@ export default function ValidityPolicyModal({ isOpen, onClose, onOpenAddModal })
             <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 font-mono text-[11px] text-slate-300 space-y-1">
               <p className="text-emerald-400 font-bold">📲 WhatsApp Notification at 3 Months:</p>
               <p className="text-slate-400 italic">
-                "Assalamu Alaikum {`{Guardian}`}, Your proposal [ID: {`{ID}`}] has completed its 3-month cycle. If still searching, reply to renew your listing for another 3 months (Renewal: ₹{renewalFee}). If alliance is fixed, let us know so we can archive your profile. Jazakallahu Khair."
+                {isManualMode
+                  ? `"Assalamu Alaikum {Guardian}, Your proposal [ID: {ID}] has completed its 3-month cycle. If still searching, reply to renew your listing for another 3 months. If alliance is fixed, let us know so we can archive your profile. Jazakallahu Khair."`
+                  : `"Assalamu Alaikum {Guardian}, Your proposal [ID: {ID}] has completed its 3-month cycle. If still searching, reply to renew your listing for another 3 months. If alliance is fixed, let us know so we can archive your profile. Jazakallahu Khair."`}
               </p>
             </div>
-            <div className="flex items-center justify-between text-[11px] pt-1">
-              <span className="text-slate-400">Regular Listing: ₹{standardFee}</span>
-              <span className="text-emerald-300 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                Discounted Renewal Fee: ₹{renewalFee} (Save 60%)
-              </span>
-            </div>
+            {/* RENEWAL FEE DISPLAY HELD
+            {!isManualMode && (
+              <div className="flex items-center justify-between text-[11px] pt-1">
+                <span className="text-slate-400">Regular Listing: ₹{standardFee}</span>
+                <span className="text-emerald-300 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                  Discounted Renewal Fee: ₹{renewalFee} (Save 60%)
+                </span>
+              </div>
+            )}
+            */}
           </div>
 
           {/* Pillar 3: Monthly 1-2 Day Data Collection Campaign */}
@@ -163,7 +169,7 @@ export default function ValidityPolicyModal({ isOpen, onClose, onOpenAddModal })
             }}
             className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-950/40 flex items-center gap-2 cursor-pointer"
           >
-            <span>{isCampaign ? 'Register Proposal (Free ₹0)' : 'Register Proposal'}</span>
+            <span>{isCampaign ? 'Register Proposal' : 'Register Proposal'}</span>
           </button>
         </div>
 

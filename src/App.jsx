@@ -451,7 +451,7 @@ export default function App() {
         />
       )}
 
-      {/* In-App Wallet & Recharge Checkout Modal (when triggered via shortcut) */}
+      {/* In-App Wallet & Recharge Checkout Modal HELD
       <WalletRechargeModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -461,6 +461,7 @@ export default function App() {
           navigate('/admin');
         }}
       />
+      */}
 
       {/* Unified Sign-In & New Candidate Registration Modal */}
       <SignInModal

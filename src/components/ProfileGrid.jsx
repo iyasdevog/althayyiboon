@@ -196,8 +196,14 @@ export default function ProfileGrid({
             ഡാറ്റാ ശേഖരണം പുരോഗമിക്കുന്നു
           </h3>
 
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6 max-w-xl mx-auto font-normal">
-            അൽ-ത്വയ്യിബൂൻ പ്രീ-ലോഞ്ച് കാമ്പയിൻ കാലയളവിൽ വധൂവരന്മാരുടെ സ്വകാര്യത ഉറപ്പാക്കാൻ എല്ലാ പ്രൊഫൈലുകളും താല്ക്കാലികമായി സുരക്ഷിതമാക്കി വെച്ചിരിക്കുകയാണ്. പ്ലാറ്റ്‌ഫോം പൊതുജനങ്ങൾക്കായി തുറക്കുമ്പോൾ ആദ്യമേ വിവരങ്ങൾ അറിയാനും, <strong className="text-amber-300 font-bold">{rewardCredits} സൗജന്യ കോൺടാക്റ്റ് അൺലോക്ക് ക്രെഡിറ്റുകൾ</strong> ആസ്വദിക്കാനും ഞങ്ങളുടെ ഔദ്യോഗിക വാട്സാപ്പ് ഗ്രൂപ്പിൽ അംഗമാകൂ!
+          <p className="text-xs sm:text-sm text-slate-300 mb-6 max-w-xl mx-auto font-normal font-malayalam">
+            {pricing?.manualPaymentMode !== false
+              ? 'അൽ-ത്വയ്യിബൂൻ പ്രീ-ലോഞ്ച് കാമ്പയിൻ കാലയളവിൽ വധൂവരന്മാരുടെ സ്വകാര്യത ഉറപ്പാക്കാൻ എല്ലാ പ്രൊഫൈലുകളും താല്ക്കാലികമായി സുരക്ഷിതമാക്കി വെച്ചിരിക്കുകയാണ്. പ്ലാറ്റ്‌ഫോം തുറക്കുമ്പോൾ ആദ്യമേ വിവരങ്ങൾ അറിയാനും അഡ്മിൻ പരിശോധിച്ച പ്രൊപ്പോസൽ ബന്ധങ്ങൾ ലഭിക്കാനും ഞങ്ങളുടെ ഔദ്യോഗിക വാട്സാപ്പ് ഗ്രൂപ്പിൽ അംഗമാകൂ!'
+              : (
+                <>
+                  അൽ-ത്വയ്യിബൂൻ പ്രീ-ലോഞ്ച് കാമ്പയിൻ കാലയളവിൽ വധൂവരന്മാരുടെ സ്വകാര്യത ഉറപ്പാക്കാൻ എല്ലാ പ്രൊഫൈലുകളും താല്ക്കാലികമായി സുരക്ഷിതമാക്കി വെച്ചിരിക്കുകയാണ്. പ്ലാറ്റ്‌ഫോം പൊതുജനങ്ങൾക്കായി തുറക്കുമ്പോൾ ആദ്യമേ വിവരങ്ങൾ അറിയാനും, <strong className="text-amber-300 font-bold">{rewardCredits} സൗജന്യ കോൺടാക്റ്റ് അൺലോക്ക് ക്രെഡിറ്റുകൾ</strong> ആസ്വദിക്കാനും ഞങ്ങളുടെ ഔദ്യോഗിക വാട്സാപ്പ് ഗ്രൂപ്പിൽ അംഗമാകൂ!
+                </>
+              )}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
@@ -217,12 +223,12 @@ export default function ProfileGrid({
               className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 font-bold text-xs sm:text-sm border border-emerald-500/40 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
             >
               <UserPlus className="w-4 h-4 text-emerald-400" />
-              <span>സൗജന്യ രജിസ്ട്രേഷൻ (₹0)</span>
+              <span>സൗജന്യ രജിസ്ട്രേഷൻ</span>
             </button>
           </div>
 
           <p className="text-[11px] text-slate-400 mt-5">
-            ✨ കാമ്പയിൻ കാലയളവിൽ പ്രൊപ്പോസൽ രജിസ്ട്രേഷൻ തികച്ചും സൗജന്യമാണ് (₹0 Fee).
+            ✨ കാമ്പയിൻ കാലയളവിൽ പ്രൊപ്പോസൽ രജിസ്ട്രേഷൻ തികച്ചും സൗജന്യമാണ്.
           </p>
         </div>
       ) : profiles.length > 0 ? (

@@ -13,7 +13,10 @@ import {
   Key,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Shield,
+  ShieldCheck,
+  Lock,
   Users,
   CreditCard,
   QrCode,
@@ -148,7 +151,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
     contactDetails: {
       guardianPhone: '',
       whatsappNumber: '',
-      preferredContactMethod: 'guardian'
+      preferredContactMethod: 'guardian',
+      revealContact: false
     },
     contactPreferences: {
       guardianName: '',
@@ -159,6 +163,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
       alternateContact: '',
       contactMethod: 'guardian',
       preferredContactMethod: 'guardian',
+      revealContact: false,
       expectations: '',
     },
     security: { editPin: '' },
@@ -309,7 +314,8 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
         contactDetails: {
           guardianPhone: phone,
           whatsappNumber: whatsapp,
-          preferredContactMethod: preferredMethod
+          preferredContactMethod: preferredMethod,
+          revealContact: formData.gender === 'male' && Boolean(formData.contactPreferences.revealContact || formData.contactDetails.revealContact)
         },
         contactPreferences: {
           ...formData.contactPreferences,
@@ -317,8 +323,10 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
           whatsapp: whatsapp,
           contactMethod: preferredMethod,
           preferredContactMethod: preferredMethod,
+          revealContact: formData.gender === 'male' && Boolean(formData.contactPreferences.revealContact || formData.contactDetails.revealContact),
           secretPin: pin
         },
+        revealContact: formData.gender === 'male' && Boolean(formData.contactPreferences.revealContact || formData.contactDetails.revealContact),
         preferredContactMethod: preferredMethod,
         whatsappConsent: formData.whatsappConsent !== false,
         whatsappGroupNumber: formData.whatsappGroupNumber || whatsapp || phone,
@@ -702,11 +710,11 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                   </div>
                   {pricing?.manualPaymentMode !== false ? (
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">
-                      Free Registration (₹0) • Admin Verified
+                      Free Registration • Admin Verified
                     </span>
                   ) : pricing?.campaignMode ? (
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">
-                      Free Registration (₹0) + {pricing.campaignRewardCredits || 3} Free Views
+                      Free Registration + {pricing.campaignRewardCredits || 3} Free Views
                     </span>
                   ) : (
                     <span className="text-[10px] text-slate-400">Verified Network</span>
@@ -906,7 +914,18 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                         <label className={labelCls}>Home District (Kerala) *</label>
                         <select
                           value={formData.locationFamily.homeDistrict}
-                          onChange={e => updateSection('locationFamily', 'homeDistrict', e.target.value)}
+                          onChange={e => {
+                            const newDist = e.target.value;
+                            setFormData(prev => ({
+                              ...prev,
+                              locationFamily: {
+                                ...prev.locationFamily,
+                                homeDistrict: newDist,
+                                nearestTown: ''
+                              }
+                            }));
+                            setIsPlaceSuggestOpen(true);
+                          }}
                           className={inputCls}
                         >
                           {KERALA_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -917,20 +936,33 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                           <span>Nearest Town / City</span>
                           <span className="text-[10px] text-emerald-400 font-normal ml-1.5">(For GPS Search)</span>
                         </label>
-                        <input
-                          type="text"
-                          value={formData.locationFamily.nearestTown || ''}
-                          onChange={e => {
-                            updateSection('locationFamily', 'nearestTown', e.target.value);
-                            setIsPlaceSuggestOpen(true);
-                          }}
-                          onFocus={() => setIsPlaceSuggestOpen(true)}
-                          placeholder="e.g. Mavoor, Feroke, Manjeri, Kozhikode"
-                          className={inputCls}
-                        />
-                        {isPlaceSuggestOpen && (formData.locationFamily.nearestTown?.trim().length || 0) > 1 && (
-                          <div className="absolute z-30 left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-1 custom-scrollbar">
-                            {searchKeralaTowns(formData.locationFamily.nearestTown, 6).map(town => (
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={formData.locationFamily.nearestTown || ''}
+                            onChange={e => {
+                              updateSection('locationFamily', 'nearestTown', e.target.value);
+                              setIsPlaceSuggestOpen(true);
+                            }}
+                            onFocus={() => setIsPlaceSuggestOpen(true)}
+                            placeholder={`Select or type town in ${formData.locationFamily.homeDistrict || 'Kerala'}`}
+                            className={`${inputCls} pr-8`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setIsPlaceSuggestOpen(prev => !prev)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-emerald-400 cursor-pointer"
+                            aria-label="Toggle nearby locations list"
+                          >
+                            <ChevronDown className={`w-4 h-4 transition-transform ${isPlaceSuggestOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                        </div>
+                        {isPlaceSuggestOpen && (
+                          <div className="absolute z-30 left-0 right-0 mt-1 max-h-52 overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl py-1 custom-scrollbar">
+                            <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-slate-950/70 border-b border-slate-800 sticky top-0">
+                              Nearby Locations in {formData.locationFamily.homeDistrict || 'Kerala'}
+                            </div>
+                            {searchKeralaTowns(formData.locationFamily.nearestTown, 25, formData.locationFamily.homeDistrict).map(town => (
                               <button
                                 key={`${town.name}-${town.district}`}
                                 type="button"
@@ -1396,6 +1428,40 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                       ></textarea>
                     </div>
 
+                    {/* Groom Contact Reveal Checkbox OR Bride Privacy Notice */}
+                    {formData.gender === 'male' ? (
+                      <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 space-y-1.5">
+                        <label htmlFor="revealContactCheckbox" className="flex items-start gap-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            id="revealContactCheckbox"
+                            checked={Boolean(formData.contactPreferences.revealContact)}
+                            onChange={e => {
+                              const checked = e.target.checked;
+                              updateSection('contactPreferences', 'revealContact', checked);
+                              updateSection('contactDetails', 'revealContact', checked);
+                            }}
+                            className="w-4 h-4 mt-0.5 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-900 border-slate-700 cursor-pointer shrink-0"
+                          />
+                          <div>
+                            <span className="text-xs font-bold text-emerald-300 block">
+                              Reveal my contact details directly to verified Brides / Walis
+                            </span>
+                            <span className="text-[11px] text-slate-400 leading-relaxed block mt-0.5">
+                              Check this option if you wish to show your phone/WhatsApp number directly on your proposal. If unchecked, your contact stays hidden and requests are routed through Admin.
+                            </span>
+                          </div>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/30 flex items-start gap-2.5">
+                        <Lock className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-rose-200/90 leading-relaxed">
+                          <strong className="text-rose-300">Bride Contact Privacy:</strong> Bride phone &amp; WhatsApp numbers are always kept strictly hidden for modesty. Verified Grooms can only request a connection through Admin.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Streamlined WhatsApp Group Notification Consent */}
                     <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                       <div className="flex items-center gap-2.5">
@@ -1455,110 +1521,27 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
                           </div>
                         </div>
                         <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/30 shrink-0">
-                          Free (₹0)
+                          Free Registration
                         </span>
                       </div>
                     ) : pricing?.campaignMode ? (
                       <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-teal-950/30 border border-emerald-500/40 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 text-xs text-slate-200">
                           <Gift className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span>Campaign Drive Active: 100% Free Listing (₹0)</span>
+                          <span>Campaign Drive Active: 100% Free Listing</span>
                         </div>
                         <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/30 shrink-0">
-                          Free (₹0)
+                          Free
                         </span>
                       </div>
                     ) : (
-                      <div className="p-4 sm:p-5 rounded-2xl bg-slate-950 border border-amber-500/40 space-y-3.5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="w-4 h-4 text-amber-400 shrink-0" />
-                            <div>
-                              <span className="text-xs font-bold text-white uppercase tracking-wider block">
-                                Proposal Listing &amp; Verification Fee
-                              </span>
-                              <span className="text-[11px] text-slate-400">
-                                One-time directory verification &amp; listing charge
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-lg font-black text-amber-300">
-                              ₹{pricing?.profileSubmissionFee || 499}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* UPI Payment Instructions */}
-                        <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold text-slate-200">
-                              Direct UPI Payment (GPay / PhonePe / Paytm)
-                            </span>
-                            <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                              0% Platform Fee
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-xl border border-slate-700/80">
-                            <span className="text-xs font-mono text-emerald-300 font-bold flex-1 truncate">
-                              {pricing?.upiId || 'althayyiboon@upi'}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (navigator.clipboard) {
-                                  navigator.clipboard.writeText(pricing?.upiId || 'althayyiboon@upi');
-                                  setCopiedUpi(true);
-                                  setTimeout(() => setCopiedUpi(false), 2000);
-                                }
-                              }}
-                              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                            >
-                              <Copy className="w-3 h-3" />
-                              <span>{copiedUpi ? 'Copied!' : 'Copy UPI'}</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setShowUpiQr(prev => !prev)}
-                              className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                            >
-                              <QrCode className="w-3 h-3" />
-                              <span>{showUpiQr ? 'Hide QR' : 'Show QR'}</span>
-                            </button>
-                          </div>
-
-                          {showUpiQr && (
-                            <div className="p-3 bg-white rounded-xl flex flex-col items-center justify-center text-center animate-fade-in">
-                              <img
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
-                                  `upi://pay?pa=${pricing?.upiId || 'althayyiboon@upi'}&pn=AlThayyiBoon&am=${pricing?.profileSubmissionFee || 499}&cu=INR`
-                                )}`}
-                                alt="UPI QR Code"
-                                className="w-36 h-36 rounded-lg"
-                              />
-                              <p className="text-[10px] text-slate-900 font-bold mt-1">
-                                Scan with GPay / PhonePe / Paytm to Pay ₹{pricing?.profileSubmissionFee || 499}
-                              </p>
-                            </div>
-                          )}
-
-                          <div>
-                            <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                              UPI Transaction ID / UTR Number
-                            </label>
-                            <input
-                              type="text"
-                              value={paymentRef}
-                              onChange={e => setPaymentRef(e.target.value)}
-                              placeholder="e.g. 4289XXXXXXXX (12-digit UTR)"
-                              className="w-full px-3 py-2 rounded-xl bg-slate-950 text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:border-amber-500 text-xs font-mono"
-                            />
-                            <p className="text-[10px] text-slate-400 mt-1">
-                              Enter the 12-digit transaction reference number from your payment app after completing payment.
-                            </p>
-                          </div>
-                        </div>
+                      /* PAYMENT UI HELD — coming soon */
+                      <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-2 text-center">
+                        <ShieldCheck className="w-6 h-6 text-emerald-400 mx-auto" />
+                        <p className="text-xs font-bold text-white">Free Registration</p>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                          Registration is currently free. Admin will verify your proposal and contact you shortly.
+                        </p>
                       </div>
                     )}
                   </div>
