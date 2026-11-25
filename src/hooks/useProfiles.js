@@ -126,14 +126,14 @@ export function useProfiles() {
         return;
       }
 
-      const data = await fetchProfilesFromStore(userGender, isAdmin, currentUser?.uid);
+      const [data, customF, fReqs] = await Promise.all([
+        fetchProfilesFromStore(userGender, isAdmin, currentUser?.uid),
+        fetchApprovedCustomFilters(),
+        isAdmin ? fetchFilterRequests() : Promise.resolve(null)
+      ]);
       setProfiles(data);
-
-      const customF = await fetchApprovedCustomFilters();
       setApprovedCustomFilters(customF);
-
-      if (isAdmin) {
-        const fReqs = await fetchFilterRequests();
+      if (isAdmin && fReqs) {
         setFilterRequests(fReqs);
       }
 
