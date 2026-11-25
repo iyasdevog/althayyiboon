@@ -780,17 +780,21 @@ export async function submitConnectionRequest(requestData) {
 }
 
 export async function fetchConnectionRequests() {
+  let remoteList = [];
   try {
     const colRef = collection(db, "connectionRequests");
     const q = query(colRef, orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
     if (!snapshot.empty) {
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      remoteList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     }
   } catch (e) {
     console.warn("Firestore connectionRequests fetch notice:", e.message);
   }
-  return getLocalConnectionRequests();
+  const localList = getLocalConnectionRequests();
+  const seen = new Set(remoteList.map(r => r.id));
+  const merged = [...remoteList, ...localList.filter(r => !seen.has(r.id))];
+  return merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
 export async function updateConnectionRequestStatus(requestId, status, adminNote = "") {

@@ -841,7 +841,11 @@ export default function AdminPortalModal({
                 </button>
 
                 <button
-                  onClick={() => setActiveTab("connections")}
+                  onClick={() => {
+                    setActiveTab("connections");
+                    setLoadingConnections(true);
+                    fetchConnectionRequests().then(list => setConnectionRequests(list || [])).finally(() => setLoadingConnections(false));
+                  }}
                   className={`py-2 px-3 text-xs sm:text-sm font-semibold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
                     activeTab === "connections"
                       ? "border-emerald-500 text-emerald-300 bg-slate-900"
@@ -849,7 +853,7 @@ export default function AdminPortalModal({
                   }`}
                 >
                   <Send className="w-4 h-4 text-emerald-400" />
-                  <span>Connection Requests</span>
+                  <span>Contact Requests ({connectionRequests.length})</span>
                   {pendingConnectionCount > 0 && (
                     <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 text-[10px] font-bold flex items-center justify-center">
                       {pendingConnectionCount}
@@ -985,10 +989,10 @@ export default function AdminPortalModal({
                     <div>
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                        <span>Client Connection Requests ({connectionRequests.length})</span>
+                        <span>Contact &amp; Connection Requests ({connectionRequests.length})</span>
                       </h3>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        Verify the proposal validity of requested clients before manually sharing contacts or coordinating payment.
+                        Verify the proposal validity of requested clients before manually sharing contact details.
                       </p>
                     </div>
                     <button
@@ -1013,6 +1017,8 @@ export default function AdminPortalModal({
                       {connectionRequests.map(req => {
                         const cleanPhone = (req.requesterContact || '').replace(/[^0-9]/g, '');
                         const waNum = cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`;
+                        const targetProfile = profiles.find(p => String(p.id) === String(req.targetProfileId));
+                        const targetPhone = targetProfile?.contactDetails?.guardianPhone || targetProfile?.contactPreferences?.phone || targetProfile?.contactDetails?.whatsappNumber || '';
                         const statusColor =
                           req.status === 'verified_contacted'
                             ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
@@ -1045,6 +1051,11 @@ export default function AdminPortalModal({
                                 <span className="font-bold text-amber-300">{req.targetCandidateName}</span>{' '}
                                 <span className="font-mono text-[11px] text-slate-400">({req.targetProfileId})</span>
                                 {req.targetDistrict && <span className="text-slate-400"> • {req.targetDistrict}</span>}
+                                {targetPhone && (
+                                  <span className="ml-2 font-mono text-[11px] text-sky-300 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
+                                    Target Contact: {targetPhone}
+                                  </span>
+                                )}
                               </p>
 
                               {req.message && (
