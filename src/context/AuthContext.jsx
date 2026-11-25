@@ -8,7 +8,7 @@ import {
   firebaseSignOut 
 } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { saveSettingsToStore, subscribeToSettings } from '../firebase/profileService';
+import { saveSettingsToStore, subscribeToSettings, fetchUserOwnProfile } from '../firebase/profileService';
 
 const AuthContext = createContext();
 
@@ -57,6 +57,8 @@ export function AuthProvider({ children }) {
   // Firebase Auth user
   const [fbUser, setFbUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [ownRegisteredProfile, setOwnRegisteredProfile] = useState(null);
+  const [checkingRegistration, setCheckingRegistration] = useState(false);
 
   // Active User Account / Persona (Null by default for guest visitors)
   const [userProfile, setUserProfile] = useState(() => {
@@ -254,7 +256,10 @@ export function AuthProvider({ children }) {
       const user = result.user;
 
       // Check if user is already an existing registered candidate
-      const existingCandidate = findMatchingProfile(user, profileList);
+      let existingCandidate = findMatchingProfile(user, profileList);
+      if (!existingCandidate) {
+        existingCandidate = await fetchUserOwnProfile(user.uid, user.email);
+      }
 
       const isAuthorizedAdmin = user.email && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase());
 
@@ -292,6 +297,9 @@ export function AuthProvider({ children }) {
         isDemo: false
       };
 
+      if (existingCandidate) {
+        setOwnRegisteredProfile(existingCandidate);
+      }
       setUserProfile(profile);
       return { 
         success: true, 
@@ -331,8 +339,11 @@ export function AuthProvider({ children }) {
       }
       const user = result.user;
 
-      // Check if user is already an existing candidate
-      const existingCandidate = !isSignUp ? findMatchingProfile({ ...user, email: email.trim() }, profileList) : null;
+      // Check if user is already an existing candidate (even during Sign Up attempt or if profileList wasn't passed)
+      let existingCandidate = findMatchingProfile({ ...user, email: email.trim() }, profileList);
+      if (!existingCandidate) {
+        existingCandidate = await fetchUserOwnProfile(user.uid, user.email || email.trim());
+      }
 
       let gender = intendedRole === 'bride' ? 'female' : 'male';
       let role = intendedRole || 'groom';
@@ -360,6 +371,9 @@ export function AuthProvider({ children }) {
         hasRegisteredProfile: Boolean(existingCandidate),
         isDemo: false
       };
+      if (existingCandidate) {
+        setOwnRegisteredProfile(existingCandidate);
+      }
       setUserProfile(profile);
       return { 
         success: true, 
@@ -370,6 +384,12 @@ export function AuthProvider({ children }) {
       };
     } catch (err) {
       console.warn("Email/Password Sign-In error:", err.message);
+      if (err.code === 'auth/email-already-in-use') {
+        return {
+          success: false,
+          error: 'An account with this email already exists. Please sign in instead — only one registration is allowed per email ID.'
+        };
+      }
       return { success: false, error: err.message };
     }
   };
@@ -424,6 +444,9 @@ export function AuthProvider({ children }) {
         linkedProfile: matched
       };
 
+      if (existingCandidate) {
+        setOwnRegisteredProfile(existingCandidate);
+      }
       setUserProfile(profile);
       return { success: true, profile, isAlreadyRegistered: true, matchedProfile: matched };
     } catch (err) {
@@ -480,12 +503,14 @@ export function AuthProvider({ children }) {
       return updated;
     });
 
+    setOwnRegisteredProfile(matched);
     return { success: true, profile: matched };
   };
 
   // Mark current user as having registered their candidate profile
   const setHasRegisteredProfile = (savedProfile) => {
     if (!savedProfile) return;
+    setOwnRegisteredProfile(savedProfile);
     const isBrideGender = savedProfile.basicInfo?.gender === 'Bride' || savedProfile.gender === 'female';
     const role = isBrideGender ? 'bride' : 'groom';
     const gender = isBrideGender ? 'female' : 'male';
@@ -510,6 +535,7 @@ export function AuthProvider({ children }) {
     try {
       await firebaseSignOut(auth);
     } catch (e) {}
+    setOwnRegisteredProfile(null);
     setUserProfile(null);
   };
 
@@ -624,6 +650,71 @@ export function AuthProvider({ children }) {
     genderVerified: Boolean(fbUser.email && ADMIN_EMAILS.some(e => e.toLowerCase() === fbUser.email.toLowerCase()))
   } : null);
 
+  // Sync own registered profile from Firestore/localStorage whenever a real user is signed in
+  useEffect(() => {
+    let cancelled = false;
+    const activeUid = currentUser?.uid;
+    const activeEmail = currentUser?.email;
+    const isDemoUser = Boolean(currentUser?.isDemo);
+    const isAdminUser = currentUser?.role === 'admin' || Boolean(activeEmail && ADMIN_EMAILS.some(e => e.toLowerCase() === activeEmail.toLowerCase()));
+
+    if (!activeUid && !activeEmail) {
+      setOwnRegisteredProfile(null);
+      setCheckingRegistration(false);
+      return;
+    }
+
+    if (isDemoUser || isAdminUser) {
+      setCheckingRegistration(false);
+      return;
+    }
+
+    if (currentUser?.linkedProfile) {
+      setOwnRegisteredProfile(currentUser.linkedProfile);
+    }
+
+    setCheckingRegistration(true);
+    fetchUserOwnProfile(activeUid, activeEmail)
+      .then((matched) => {
+        if (cancelled) return;
+        if (matched) {
+          setOwnRegisteredProfile(matched);
+          const isBrideGender = matched.basicInfo?.gender === 'Bride' || matched.gender === 'female';
+          setUserProfile(prev => {
+            if (prev?.hasRegisteredProfile && prev?.profileId === matched.id && prev?.linkedProfile?.id === matched.id) {
+              return prev;
+            }
+            const base = prev || {
+              uid: activeUid,
+              name: currentUser?.name || matched.basicInfo?.fullName || 'Member',
+              email: activeEmail,
+              photoURL: currentUser?.photoURL || null
+            };
+            return {
+              ...base,
+              gender: isBrideGender ? 'female' : 'male',
+              role: isBrideGender ? 'bride' : 'groom',
+              genderVerified: true,
+              profileId: matched.id,
+              hasRegisteredProfile: true,
+              linkedProfile: matched,
+              isDemo: false
+            };
+          });
+        } else {
+          setOwnRegisteredProfile(null);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setCheckingRegistration(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.uid, currentUser?.email, currentUser?.isDemo, currentUser?.role]);
+
   const isAdmin = currentUser?.role === 'admin' || Boolean(currentUser?.email && ADMIN_EMAILS.some(e => e.toLowerCase() === currentUser.email.toLowerCase()));
   const isParent = currentUser?.role === 'parent';
   const isGroom = currentUser?.role === 'groom' || (!isParent && !isAdmin && currentUser?.gender === 'male');
@@ -687,7 +778,9 @@ export function AuthProvider({ children }) {
         signInModalPrompt,
         openSignInModal,
         closeSignInModal,
-        authLoading
+        authLoading,
+        ownRegisteredProfile,
+        checkingRegistration
       }}
     >
       {children}

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import DemoNoticeBanner from '../components/DemoNoticeBanner';
 import AddProfileModal from '../components/AddProfileModal';
+import EditProfileModal from '../components/EditProfileModal';
 import { useProfiles } from '../context/ProfilesContext';
 import { useAuth } from '../context/AuthContext';
 import { useSeo } from '../utils/useSeo';
@@ -15,8 +16,9 @@ export default function AddProfilePage({
   onShowToast
 }) {
   const navigate = useNavigate();
-  const { addNewProfile, selectedGender, totalCount, activeFilterCount, bookmarks } = useProfiles();
+  const { addNewProfile, updateProfile, deleteProfile, selectedGender, totalCount, activeFilterCount, bookmarks } = useProfiles();
   const { setHasRegisteredProfile } = useAuth();
+  const [editingProfile, setEditingProfile] = useState(null);
 
   useSeo({
     title: 'Register Matrimonial Proposal | Al-ThayyiBoon – 100% Verified Nikah Directory',
@@ -64,11 +66,25 @@ export default function AddProfilePage({
       />
 
       <main className="flex-1">
-        <AddProfileModal
-          onClose={handleClose}
-          onSubmitProfile={handleSubmit}
-          defaultGender={selectedGender !== 'All' ? selectedGender : 'Bride'}
-        />
+        {editingProfile ? (
+          <EditProfileModal
+            profile={editingProfile}
+            onClose={() => {
+              setEditingProfile(null);
+              navigate('/profiles');
+            }}
+            onSaveUpdate={updateProfile}
+            onDeleteProfile={deleteProfile}
+            isAdminOverride={false}
+          />
+        ) : (
+          <AddProfileModal
+            onClose={handleClose}
+            onSubmitProfile={handleSubmit}
+            onEditOwnProposal={(ownProfile) => setEditingProfile(ownProfile)}
+            defaultGender={selectedGender !== 'All' ? selectedGender : 'Bride'}
+          />
+        )}
       </main>
 
       <Footer onOpenAdminPortal={onOpenAdminPortal ? onOpenAdminPortal : () => navigate('/admin')} />

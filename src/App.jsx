@@ -63,7 +63,10 @@ export default function App() {
     isSignInModalOpen,
     setIsSignInModalOpen,
     signInModalPrompt,
-    setHasRegisteredProfile
+    setHasRegisteredProfile,
+    ownRegisteredProfile,
+    checkingRegistration,
+    authLoading
   } = useAuth();
 
   // Modals state
@@ -77,14 +80,14 @@ export default function App() {
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
-  const hasRegistered = isUserRegistered(currentUser, rawProfiles);
+  const hasRegistered = Boolean(ownRegisteredProfile) || isUserRegistered(currentUser, rawProfiles);
 
   // Automatically force open registration modal if user is authenticated but has not completed their proposal registration
   useEffect(() => {
-    if (currentUser && !hasRegistered && !isDemo && !isAdmin) {
+    if (!authLoading && !checkingRegistration && currentUser && !hasRegistered && !isDemo && !isAdmin) {
       setIsAddModalOpen(true);
     }
-  }, [currentUser?.uid, currentUser?.email, hasRegistered, isDemo, isAdmin]);
+  }, [authLoading, checkingRegistration, currentUser?.uid, currentUser?.email, hasRegistered, isDemo, isAdmin]);
 
   const handleOpenSignIn = (role = 'groom', mode = 'signin') => {
     setSignInDefaultRole(role || 'groom');
@@ -412,6 +415,11 @@ export default function App() {
       {isAddModalOpen && (
         <AddProfileModal
           onClose={() => setIsAddModalOpen(false)}
+          onEditOwnProposal={(ownProfile) => {
+            setIsAddModalOpen(false);
+            setIsAdminOverrideEdit(false);
+            setEditingProfile(ownProfile);
+          }}
           isForcedRegistration={Boolean(currentUser && !hasRegistered && !isDemo && !isAdmin)}
           onSubmitProfile={async (formData) => {
             const newDoc = await addNewProfile(formData);

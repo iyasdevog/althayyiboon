@@ -193,6 +193,87 @@ async function mergeAdminPrivateContacts(profilesList = []) {
   }
 }
 
+export async function fetchUserOwnProfile(uid = null, email = null) {
+  const cleanUid = uid ? String(uid).trim() : '';
+  const cleanEmail = email ? String(email).trim().toLowerCase() : '';
+  const rawEmail = email ? String(email).trim() : '';
+
+  if (!cleanUid && !cleanEmail) return null;
+
+  // Helper to merge private contact details & PIN for the profile owner
+  const attachPrivateIfOwner = async (profile) => {
+    if (!profile?.id) return profile;
+    try {
+      const privSnap = await getDoc(doc(db, "profilePrivate", profile.id));
+      if (privSnap.exists()) {
+        const priv = privSnap.data();
+        return {
+          ...profile,
+          contactDetails: {
+            ...(profile.contactDetails || {}),
+            ...(priv.contactDetails || {}),
+            guardianPhone: priv.contactDetails?.guardianPhone || priv.phone || profile.contactDetails?.guardianPhone || '',
+            whatsappNumber: priv.contactDetails?.whatsappNumber || priv.whatsapp || profile.contactDetails?.whatsappNumber || ''
+          },
+          contactPreferences: {
+            ...(profile.contactPreferences || {}),
+            phone: priv.phone || priv.contactDetails?.guardianPhone || profile.contactPreferences?.phone || '',
+            whatsapp: priv.whatsapp || priv.contactDetails?.whatsappNumber || profile.contactPreferences?.whatsapp || '',
+            secretPin: priv.secretPin || profile.contactPreferences?.secretPin || ''
+          },
+          whatsappGroupNumber: priv.whatsappGroupNumber || profile.whatsappGroupNumber || '',
+          security: priv.editPin ? { ...(profile.security || {}), editPin: priv.editPin } : profile.security,
+          loginCredentials: priv.loginCredentials || profile.loginCredentials
+        };
+      }
+    } catch (e) {
+      // Ignore if private doc isn't accessible (e.g. email-matched without uid)
+    }
+    return profile;
+  };
+
+  try {
+    const colRef = collection(db, "profiles");
+
+    if (cleanUid) {
+      const uidSnap = await getDocs(query(colRef, where("creatorUid", "==", cleanUid)));
+      if (!uidSnap.empty) {
+        const d = uidSnap.docs[0];
+        return await attachPrivateIfOwner({ id: d.id, ...d.data() });
+      }
+    }
+
+    const emailVariants = Array.from(new Set([cleanEmail, rawEmail].filter(Boolean)));
+    for (const em of emailVariants) {
+      const emailSnap = await getDocs(query(colRef, where("creatorEmail", "==", em)));
+      if (!emailSnap.empty) {
+        const d = emailSnap.docs[0];
+        return await attachPrivateIfOwner({ id: d.id, ...d.data() });
+      }
+      const prefEmailSnap = await getDocs(query(colRef, where("contactPreferences.email", "==", em)));
+      if (!prefEmailSnap.empty) {
+        const d = prefEmailSnap.docs[0];
+        return await attachPrivateIfOwner({ id: d.id, ...d.data() });
+      }
+    }
+  } catch (err) {
+    console.warn("Own profile lookup notice:", err.message);
+  }
+
+  // Fallback to localStorage cache
+  const localList = getLocalStorageProfiles();
+  const localMatch = localList.find(p => {
+    if (!p) return false;
+    const pCreatorEmail = (p.creatorEmail || '').trim().toLowerCase();
+    const pEmail = (p.email || p.contactPreferences?.email || '').trim().toLowerCase();
+    if (cleanUid && (p.creatorUid === cleanUid || p.id === cleanUid)) return true;
+    if (cleanEmail && (pCreatorEmail === cleanEmail || pEmail === cleanEmail)) return true;
+    return false;
+  });
+
+  return localMatch || null;
+}
+
 export async function fetchProfilesFromStore(authGender = null, isAdmin = false, currentUid = null) {
   try {
     const colRef = collection(db, "profiles");
@@ -224,7 +305,28 @@ export async function fetchProfilesFromStore(authGender = null, isAdmin = false,
   return getLocalStorageProfiles().map(p => sanitizeProfileForPublic(p, isAdmin, currentUid));
 }
 
-export async function saveProfileToStore(newProfileData) {
+export async function saveProfileToStore(newProfileData, options = {}) {
+  const { isAdmin = false } = options || {};
+  const normalizedCreatorEmail = (newProfileData.creatorEmail || '').trim().toLowerCase() || null;
+  const normalizedPrefEmail = (newProfileData.contactPreferences?.email || '').trim().toLowerCase() || null;
+
+  // Enforce: with one email ID only one registration is allowed (non-admin)
+  if (!isAdmin) {
+    const existingByCreator = await fetchUserOwnProfile(
+      newProfileData.creatorUid || null,
+      normalizedCreatorEmail || normalizedPrefEmail || null
+    );
+    if (existingByCreator) {
+      throw new Error("Only one proposal registration is allowed per email ID. You already have a registered proposal.");
+    }
+    if (normalizedPrefEmail && normalizedPrefEmail !== normalizedCreatorEmail) {
+      const existingByPrefEmail = await fetchUserOwnProfile(null, normalizedPrefEmail);
+      if (existingByPrefEmail) {
+        throw new Error("Only one proposal registration is allowed per email ID. This email already has a registered proposal.");
+      }
+    }
+  }
+
   const searchKeywords = generateSearchKeywords(newProfileData);
   const secretPin = newProfileData.security?.editPin || newProfileData.contactPreferences?.secretPin || "1234";
 

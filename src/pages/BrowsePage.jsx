@@ -58,20 +58,22 @@ export default function BrowsePage({
     isDemo, 
     isAdmin, 
     switchUserPersona, 
-    linkExistingProfileToAccount 
+    linkExistingProfileToAccount,
+    ownRegisteredProfile,
+    checkingRegistration
   } = useAuth();
 
   const showStatsNumbers = isStatsNumbersVisible ? isStatsNumbersVisible(rawProfiles.length) : true;
 
   // Determine if current user has an active registered proposal
-  const hasRegistered = isUserRegistered(currentUser, rawProfiles);
+  const hasRegistered = Boolean(ownRegisteredProfile) || isUserRegistered(currentUser, rawProfiles);
 
   // Automatically force open registration modal if user is logged in but hasn't submitted candidate details
   useEffect(() => {
-    if (currentUser && !hasRegistered && !isDemo && !isAdmin) {
+    if (!checkingRegistration && currentUser && !hasRegistered && !isDemo && !isAdmin) {
       onOpenAddModal?.();
     }
-  }, [currentUser, hasRegistered, isDemo, isAdmin]);
+  }, [checkingRegistration, currentUser, hasRegistered, isDemo, isAdmin]);
 
   // Dynamic SEO metadata for Directory Browse
   useSeo({

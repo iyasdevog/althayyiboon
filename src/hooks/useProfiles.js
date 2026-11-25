@@ -150,7 +150,7 @@ export function useProfiles() {
 
   // CRUD Handlers
   const addNewProfile = async (formData) => {
-    const newDoc = await saveProfileToStore(formData);
+    const newDoc = await saveProfileToStore(formData, { isAdmin });
     
     // Clear search query & quick tags so new candidate is visible
     setSearchQuery("");

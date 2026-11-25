@@ -71,8 +71,8 @@ const STEPS = [
   { num: 4, label: 'Contact', icon: Phone },
 ];
 
-export default function AddProfileModal({ onClose, onSubmitProfile, defaultGender = 'Bride', isForcedRegistration = false }) {
-  const { currentUser, loginWithGoogle, loginWithEmailPassword, setHasRegisteredProfile, pricing } = useAuth();
+export default function AddProfileModal({ onClose, onSubmitProfile, onEditOwnProposal, defaultGender = 'Bride', isForcedRegistration = false }) {
+  const { currentUser, isDemo, isAdmin, ownRegisteredProfile, loginWithGoogle, loginWithEmailPassword, setHasRegisteredProfile, pricing } = useAuth();
   const [authError, setAuthError] = useState('');
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -530,6 +530,99 @@ export default function AddProfileModal({ onClose, onSubmitProfile, defaultGende
             </form>
           )}
 
+        </div>
+      </div>
+    );
+  }
+
+  // One registration per email ID: if already signed in and registered, show message to edit proposal or wait until profiles reveal
+  const existingOwnProfile = ownRegisteredProfile || currentUser?.linkedProfile || null;
+  const isAlreadyRegisteredUser = Boolean(
+    currentUser &&
+    !isDemo &&
+    !isAdmin &&
+    (existingOwnProfile || currentUser?.hasRegisteredProfile)
+  );
+
+  if (isAlreadyRegisteredUser) {
+    const isCampaignActive = Boolean(pricing?.campaignMode);
+    const formattedRevealDate = (() => {
+      try {
+        if (!pricing?.campaignEndDate) return null;
+        return new Date(pricing.campaignEndDate).toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        });
+      } catch {
+        return pricing?.campaignEndDate || null;
+      }
+    })();
+
+    return (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Proposal Already Registered"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      >
+        <div onClick={onClose} className="fixed inset-0 bg-slate-950/85 backdrop-blur-md" />
+        <div className="relative w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-8 text-center z-10 shadow-2xl animate-fade-in my-auto">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 mx-auto mb-4 flex items-center justify-center shadow-lg">
+            <CheckCircle className="w-7 h-7" />
+          </div>
+
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold mb-3">
+            <Lock className="w-3 h-3" />
+            <span>One Registration Per Email ID</span>
+          </span>
+
+          <h3 className="text-xl font-black text-white mb-2">
+            Your Proposal is Already Registered
+          </h3>
+
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
+            You are signed in as <strong className="text-white">{currentUser.email || currentUser.name}</strong>. Only one proposal registration is allowed per email ID.
+          </p>
+
+          <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 leading-relaxed mb-6 text-left space-y-1.5">
+            <p className="flex items-start gap-2">
+              <Clock className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <span>
+                {isCampaignActive && formattedRevealDate
+                  ? <>Please wait until profiles are revealed when the directory opens on <strong className="text-emerald-300">{formattedRevealDate}</strong>, or edit your existing proposal below.</>
+                  : <>You can <strong className="text-emerald-300">edit your existing proposal</strong> anytime or wait until profiles are revealed.</>}
+              </span>
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            {existingOwnProfile && onEditOwnProposal && (
+              <button
+                type="button"
+                onClick={() => onEditOwnProposal(existingOwnProfile)}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-950/50 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Key className="w-4 h-4" />
+                <span>Edit My Proposal</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs sm:text-sm border border-slate-700 transition-colors cursor-pointer"
+            >
+              Wait Until Profiles Reveal
+            </button>
+          </div>
         </div>
       </div>
     );
