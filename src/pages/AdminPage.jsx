@@ -5,6 +5,7 @@ import { useProfiles } from '../context/ProfilesContext';
 
 export default function AdminPage({
   onSelectEditProfile,
+  onOpenAddModal,
   onShowToast
 }) {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export default function AdminPage({
         onBulkDelete={bulkDeleteProfiles}
         onBulkUpdateStatus={bulkUpdateStatus}
         onSelectEditProfile={onSelectEditProfile}
+        onOpenAddProfile={onOpenAddModal}
         filterRequests={filterRequests}
         onApproveFilterRequest={handleApproveFilterRequest}
         onRejectFilterRequest={handleRejectFilterRequest}

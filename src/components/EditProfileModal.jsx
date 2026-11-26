@@ -10,6 +10,7 @@ import {
   MADRASA_CLASSES
 } from '../data/mockProfiles';
 import { fuzzyMatchPlace, searchKeralaTowns } from '../utils/geoUtils';
+import { useAuth } from '../context/AuthContext';
 
 export default function EditProfileModal({ 
   profile, 
@@ -18,14 +19,15 @@ export default function EditProfileModal({
   onDeleteProfile,
   isAdminOverride 
 }) {
+  const { isAdmin } = useAuth();
+  const canAdminEdit = Boolean(isAdminOverride || isAdmin);
   const [pinEntered, setPinEntered] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(isAdminOverride);
+  const [isAuthenticated, setIsAuthenticated] = useState(canAdminEdit);
   const [pinError, setPinError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isPlaceSuggestOpen, setIsPlaceSuggestOpen] = useState(false);
   const placeDropdownRef = useRef(null);
-  const isGroomProfile = profile.gender === 'male' || profile.basicInfo?.gender === 'Groom';
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -38,10 +40,12 @@ export default function EditProfileModal({
   }, []);
 
   // Initialize form state supporting both old & new schemas
+  const initialGenderLabel = profile.basicInfo?.gender || (profile.gender === 'female' ? 'Bride' : 'Groom');
   const [formData, setFormData] = useState({
     profileCreatedBy: profile.profileCreatedBy || profile.registeredBy || "Parent",
     status: profile.status || "approved",
-    basicInfo: { color: "", ...profile.basicInfo },
+    gender: initialGenderLabel === 'Bride' ? 'female' : 'male',
+    basicInfo: { color: "", gender: initialGenderLabel, ...profile.basicInfo },
     islamicQualification: Array.isArray(profile.islamicQualification)
       ? profile.islamicQualification
       : (profile.islamicBackground?.qualification ? [profile.islamicBackground.qualification] : ['Wafi']),
@@ -67,6 +71,8 @@ export default function EditProfileModal({
     },
     security: { editPin: profile.security?.editPin || profile.contactPreferences?.secretPin || "1234" }
   });
+
+  const isGroomProfile = formData.basicInfo?.gender === 'Groom' || formData.gender === 'male';
 
   const handlePinVerify = (e) => {
     e.preventDefault();
@@ -102,8 +108,16 @@ export default function EditProfileModal({
       );
       const coordinates = matchedGeo ? { lat: matchedGeo.lat, lng: matchedGeo.lng } : null;
 
+      const normalizedGenderLabel = formData.basicInfo?.gender === 'Bride' ? 'Bride' : 'Groom';
+      const normalizedGenderCode = normalizedGenderLabel === 'Bride' ? 'female' : 'male';
+
       const payload = {
         ...formData,
+        gender: normalizedGenderCode,
+        basicInfo: {
+          ...formData.basicInfo,
+          gender: normalizedGenderLabel
+        },
         coordinates,
         locationFamily: {
           ...formData.locationFamily,
@@ -305,6 +319,54 @@ export default function EditProfileModal({
                     ))}
                   </div>
                 </div>
+
+                {/* Admin-only Bride / Groom Category Correction */}
+                {canAdminEdit && (
+                  <div className="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="text-xs font-bold text-amber-300 uppercase tracking-wider">
+                        Proposal Category (Admin Fix)
+                      </label>
+                      <span className="text-[10px] text-slate-400">Fix Bride / Groom selection</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData(p => ({
+                            ...p,
+                            gender: 'female',
+                            basicInfo: { ...p.basicInfo, gender: 'Bride' }
+                          }))
+                        }
+                        className={`p-2 rounded-xl text-center border transition-all cursor-pointer text-xs font-bold ${
+                          formData.basicInfo?.gender === 'Bride'
+                            ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 shadow-sm'
+                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        Bride (Female)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData(p => ({
+                            ...p,
+                            gender: 'male',
+                            basicInfo: { ...p.basicInfo, gender: 'Groom' }
+                          }))
+                        }
+                        className={`p-2 rounded-xl text-center border transition-all cursor-pointer text-xs font-bold ${
+                          formData.basicInfo?.gender === 'Groom'
+                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-sm'
+                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        Groom (Male)
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Profile Registered By / Created By */}
                 <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">

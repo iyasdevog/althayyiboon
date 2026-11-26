@@ -15,31 +15,52 @@ export const KERALA_DISTRICTS = [
   "Pathanamthitta"
 ];
 
-export const ISLAMIC_QUALIFICATIONS = [
-  "Wafi",
-  "Wafiyya",
-  "Hudawi",
-  "Zahravi",
-  "Baqavi",
-  "Faizy",
-  "Saqafi",
-  "Sa-adi",
-  "Hasani",
-  "Adani",
-  "Bathooliyya",
-  "Falil",
-  "Falila",
-  "Sidheequi",
-  "Anwari",
-  "Latheefi",
-  "Marjani",
-  "Furqani",
-  "Hafiz / Hafiza",
-  "Afzal-ul-Ulama",
-  "Madrasa",
-  "Custom / Other",
-  "None"
-];
+export const ISLAMIC_QUALIFICATIONS = Array.from(
+  new Map(
+    [
+      "Wafi",
+      "Wafiyya",
+      "Hudawi",
+      "Zahravi",
+      "Baqavi",
+      "Faizy",
+      "Saqafi",
+      "Sa-adi",
+      "Hasani",
+      "Adani",
+      "Bathooliyya",
+      "Falil",
+      "Falila",
+      "Sidheequi",
+      "Anwari",
+      "Latheefi",
+      "Marjani",
+      "Furqani",
+      "Aslami",
+      "Jalali",
+      "Mahiri",
+      "Darimi",
+      "Mueeni",
+      "Dars",
+      "Hadiya",
+      "Rabbani",
+      "Mahdiyya",
+      "Alhadi",
+      "Uloomi",
+      "Azhari",
+      "Zuhri",
+      "Nizami",
+      "Yamani",
+      "Hashimi",
+      "Ahsani",
+      "Hafiz / Hafiza",
+      "Afzal-ul-Ulama",
+      "Madrasa",
+      "Custom / Other",
+      "None"
+    ].map(item => [item.trim().toLowerCase(), item.trim()])
+  ).values()
+);
 
 // Highest Madrasa Class (Standards 1 to 12)
 export const MADRASA_CLASSES = [

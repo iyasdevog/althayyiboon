@@ -302,6 +302,7 @@ export default function App() {
                 setIsAdminOverrideEdit(true);
                 setEditingProfile(p);
               }}
+              onOpenAddModal={() => setIsAddModalOpen(true)}
               onShowToast={showToast}
             />
           } 
@@ -427,8 +428,11 @@ export default function App() {
               setHasRegisteredProfile(newDoc);
             }
             const propType = newDoc.basicInfo?.gender === 'Bride' || newDoc.gender === 'female' ? 'Bride' : 'Groom';
-            showToast(`Proposal for ${propType} added successfully! You can now browse all matches.`);
+            showToast(`Proposal for ${propType} added successfully!`);
             setIsAddModalOpen(false);
+            if (window.location.pathname === '/admin') {
+              return;
+            }
             if (newDoc?.id) {
               navigate(`/profile/${newDoc.id}`);
             } else {

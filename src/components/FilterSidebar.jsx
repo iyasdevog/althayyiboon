@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { 
   KERALA_DISTRICTS, 
+  ISLAMIC_QUALIFICATIONS,
   SUBJECT_CATEGORIES,
   SECTS, 
   MARITAL_STATUSES, 
@@ -37,18 +38,8 @@ import {
   getUserCurrentLocation 
 } from '../utils/geoUtils';
 
-// Primary Islamic Qualifications
-const PRIMARY_ISLAMIC_QUALIFICATIONS = [
-  "Wafi",
-  "Wafiyya",
-  "Hudawi",
-  "Zahravi",
-  "Baqavi",
-  "Faizy",
-  "Saqafi",
-  "Madrasa",
-  "Custom / Other"
-];
+// Primary Islamic Qualifications for Directory Filters (deduplicated, excluding 'None')
+const PRIMARY_ISLAMIC_QUALIFICATIONS = ISLAMIC_QUALIFICATIONS.filter(q => q.toLowerCase() !== 'none');
 
 export default function FilterSidebar({ 
   filters, 
@@ -481,9 +472,12 @@ export default function FilterSidebar({
                 </div>
               )}
 
-              {/* Custom community approved filters */}
+              {/* Custom community approved filters (deduplicated against primary list) */}
               {approvedCustomFilters
-                .filter(f => f.category === "Islamic Qualification")
+                .filter(f =>
+                  f.category === "Islamic Qualification" &&
+                  !PRIMARY_ISLAMIC_QUALIFICATIONS.some(pq => pq.toLowerCase() === (f.name || '').trim().toLowerCase())
+                )
                 .map(f => {
                   const isChecked = filters.islamicQualifications?.includes(f.name);
                   return (

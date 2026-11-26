@@ -39,7 +39,8 @@ import {
   Clock,
   RotateCcw,
   CheckCircle2,
-  Loader2
+  Loader2,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -56,6 +57,7 @@ export default function AdminPortalModal({
   onDeleteProfile, 
   onUpdateProfile, 
   onSelectEditProfile,
+  onOpenAddProfile,
   filterRequests = [],
   onApproveFilterRequest,
   onRejectFilterRequest,
@@ -957,8 +959,19 @@ export default function AdminPortalModal({
                 </button>
               </div>
 
-              {/* Dedicated CSV Export Button Container */}
-              <div className="flex items-center gap-2 shrink-0 pb-1.5 sm:pb-1 pl-2 sm:pl-3 border-l border-slate-800">
+              {/* Dedicated Add Profile & CSV Export Buttons */}
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pb-1.5 sm:pb-1 pl-2 sm:pl-3 border-l border-slate-800">
+                {onOpenAddProfile && (
+                  <button
+                    onClick={onOpenAddProfile}
+                    className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+                    title="Add proposal on behalf of a parent or candidate"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span className="hidden xs:inline">Add</span>
+                    <span className="hidden sm:inline">Profile</span>
+                  </button>
+                )}
                 <button
                   onClick={handleExportCSV}
                   className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors shadow-sm cursor-pointer"

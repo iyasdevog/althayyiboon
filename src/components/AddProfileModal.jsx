@@ -109,7 +109,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, onEditOwnPro
     whatsappConsent: true,
     whatsappGroupNumber: '',
     basicInfo: {
-      fullName: (currentUser?.name && currentUser.name !== 'Member') ? currentUser.name : '',
+      fullName: (!isAdmin && currentUser?.name && currentUser.name !== 'Member') ? currentUser.name : '',
       gender: initialGender,
       age: 23,
       dob: '',
@@ -159,7 +159,7 @@ export default function AddProfileModal({ onClose, onSubmitProfile, onEditOwnPro
       relation: 'Father',
       phone: '',
       whatsapp: '',
-      email: currentUser?.email || '',
+      email: !isAdmin ? (currentUser?.email || '') : '',
       alternateContact: '',
       contactMethod: 'guardian',
       preferredContactMethod: 'guardian',
@@ -348,9 +348,12 @@ export default function AddProfileModal({ onClose, onSubmitProfile, onEditOwnPro
           username: `ALTB-${Date.now().toString().slice(-4)}`,
           password: pin || `altb${Date.now().toString().slice(-4)}`
         },
-        creatorUid: currentUser?.uid || null,
-        creatorEmail: currentUser?.email || null,
+        creatorUid: isAdmin ? null : (currentUser?.uid || null),
+        creatorEmail: isAdmin
+          ? ((formData.contactPreferences?.email || '').trim().toLowerCase() || null)
+          : (currentUser?.email || null),
         creatorName: currentUser?.name || null,
+        addedByAdmin: Boolean(isAdmin),
         security: { editPin: pin }
       };
 
@@ -687,6 +690,11 @@ export default function AddProfileModal({ onClose, onSubmitProfile, onEditOwnPro
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-base sm:text-lg font-bold text-white">Create New Proposal</h2>
+                  {isAdmin && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                      Admin Entry
+                    </span>
+                  )}
                   {isForcedRegistration && (
                     <span className="hidden xs:inline-block px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
                       Required
